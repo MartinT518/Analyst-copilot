@@ -1,7 +1,8 @@
 """Code parser for extracting structured information from codebases."""
 
 import os
-import subprocess  # nosec B404
+import subprocess
+import shlex
 from defusedxml import ElementTree as ET
 from typing import Dict, List, Any, Optional
 from pathlib import Path

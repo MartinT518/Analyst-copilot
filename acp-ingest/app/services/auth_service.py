@@ -384,16 +384,7 @@ class AuthService:
         if user_count > 0:
             return None
         
-            # Create default admin
-            admin_data = UserCreate(
-                username="admin",
-                email="admin@localhost",
-                password=os.getenv("DEFAULT_ADMIN_PASSWORD", "changeme123"),  # Should be changed immediately
-                role="admin"
-            )
-        
-        admin_user = self.create_user(admin_data, db)
-        logger.warning("Created default admin user. Please change the password immediately!")
-        
-        return admin_user
+        # No users exist - admin should be created via bootstrap script
+        logger.info("No users found. Use bootstrap script to create initial admin user.")
+        return None
 

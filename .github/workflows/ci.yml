@@ -32,7 +32,7 @@ jobs:
 
       - name: Run Bandit security scan
         run: |
-          bandit -r acp-ingest/ acp-agents/ -f json -o bandit-report.json || true
+          bandit -r acp-ingest/ acp-agents/ -f json -o bandit-report.json
           bandit -r acp-ingest/ acp-agents/ -f txt
 
       - name: Run Safety check
