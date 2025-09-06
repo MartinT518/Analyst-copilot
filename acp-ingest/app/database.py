@@ -32,7 +32,7 @@ Base = declarative_base()
 def get_db() -> Generator[Session, None, None]:
     """
     Dependency to get database session.
-    
+
     Yields:
         Session: Database session
     """
@@ -51,7 +51,7 @@ def get_db() -> Generator[Session, None, None]:
 def get_db_context() -> Generator[Session, None, None]:
     """
     Context manager for database sessions.
-    
+
     Yields:
         Session: Database session
     """
@@ -70,7 +70,7 @@ def get_db_context() -> Generator[Session, None, None]:
 def init_db() -> None:
     """Initialize database tables."""
     from .models import Base
-    
+
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables created successfully")
@@ -82,7 +82,7 @@ def init_db() -> None:
 def check_db_connection() -> bool:
     """
     Check if database connection is working.
-    
+
     Returns:
         bool: True if connection is working, False otherwise
     """
@@ -97,25 +97,27 @@ def check_db_connection() -> bool:
 
 class DatabaseManager:
     """Database manager for handling connections and operations."""
-    
+
     def __init__(self):
         self.engine = engine
         self.SessionLocal = SessionLocal
-    
+
     def create_tables(self):
         """Create all database tables."""
         from .models import Base
+
         Base.metadata.create_all(bind=self.engine)
-    
+
     def drop_tables(self):
         """Drop all database tables."""
         from .models import Base
+
         Base.metadata.drop_all(bind=self.engine)
-    
+
     def get_session(self) -> Session:
         """Get a new database session."""
         return self.SessionLocal()
-    
+
     def health_check(self) -> dict:
         """Perform database health check."""
         try:
@@ -129,12 +131,8 @@ class DatabaseManager:
                     "checked_out_connections": self.engine.pool.checkedout(),
                 }
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e)
-            }
+            return {"status": "unhealthy", "error": str(e)}
 
 
 # Global database manager instance
 db_manager = DatabaseManager()
-

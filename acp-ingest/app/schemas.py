@@ -9,6 +9,7 @@ from enum import Enum
 
 class SensitivityLevel(str, Enum):
     """Sensitivity levels for data classification."""
+
     PUBLIC = "public"
     INTERNAL = "internal"
     CONFIDENTIAL = "confidential"
@@ -17,6 +18,7 @@ class SensitivityLevel(str, Enum):
 
 class SourceType(str, Enum):
     """Supported source types for ingestion."""
+
     JIRA_CSV = "jira_csv"
     CONFLUENCE_HTML = "confluence_html"
     CONFLUENCE_XML = "confluence_xml"
@@ -28,6 +30,7 @@ class SourceType(str, Enum):
 
 class JobStatus(str, Enum):
     """Job processing status."""
+
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
@@ -36,6 +39,7 @@ class JobStatus(str, Enum):
 
 class UserRole(str, Enum):
     """User roles for RBAC."""
+
     ANALYST = "analyst"
     REVIEWER = "reviewer"
     ADMIN = "admin"
@@ -44,32 +48,50 @@ class UserRole(str, Enum):
 # Request schemas
 class IngestUploadRequest(BaseModel):
     """Schema for file upload requests."""
+
     origin: str = Field(..., description="Customer or source identifier")
     sensitivity: SensitivityLevel = Field(..., description="Data sensitivity level")
-    source_type: Optional[SourceType] = Field(None, description="Source type (auto-detected if not provided)")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
+    source_type: Optional[SourceType] = Field(
+        None, description="Source type (auto-detected if not provided)"
+    )
+    metadata: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
 
 
 class IngestPasteRequest(BaseModel):
     """Schema for paste text requests."""
-    text: str = Field(..., min_length=1, max_length=100000, description="Text content to ingest")
+
+    text: str = Field(
+        ..., min_length=1, max_length=100000, description="Text content to ingest"
+    )
     origin: str = Field(..., description="Customer or source identifier")
     ticket_id: Optional[str] = Field(None, description="Ticket or document ID")
     sensitivity: SensitivityLevel = Field(..., description="Data sensitivity level")
-    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata")
+    metadata: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
 
 
 class ChunkSearchRequest(BaseModel):
     """Schema for semantic search requests."""
+
     query: str = Field(..., min_length=1, max_length=1000, description="Search query")
-    limit: int = Field(default=10, ge=1, le=100, description="Maximum number of results")
-    similarity_threshold: float = Field(default=0.7, ge=0.0, le=1.0, description="Minimum similarity score")
-    filters: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Metadata filters")
+    limit: int = Field(
+        default=10, ge=1, le=100, description="Maximum number of results"
+    )
+    similarity_threshold: float = Field(
+        default=0.7, ge=0.0, le=1.0, description="Minimum similarity score"
+    )
+    filters: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Metadata filters"
+    )
 
 
 # Response schemas
 class ChunkResponse(BaseModel):
     """Schema for knowledge chunk responses."""
+
     id: UUID
     source_type: str
     source_location: Optional[str]
@@ -86,6 +108,7 @@ class ChunkResponse(BaseModel):
 
 class JobResponse(BaseModel):
     """Schema for job status responses."""
+
     id: UUID
     status: JobStatus
     source_type: str
@@ -105,6 +128,7 @@ class JobResponse(BaseModel):
 
 class SearchResult(BaseModel):
     """Schema for search result items."""
+
     chunk: ChunkResponse
     similarity_score: float
     rank: int
@@ -112,6 +136,7 @@ class SearchResult(BaseModel):
 
 class SearchResponse(BaseModel):
     """Schema for search responses."""
+
     query: str
     results: List[SearchResult]
     total_results: int
@@ -120,14 +145,18 @@ class SearchResponse(BaseModel):
 
 class IngestResponse(BaseModel):
     """Schema for ingestion responses."""
+
     job_id: UUID
     status: JobStatus
     message: str
-    estimated_processing_time: Optional[int] = Field(None, description="Estimated processing time in seconds")
+    estimated_processing_time: Optional[int] = Field(
+        None, description="Estimated processing time in seconds"
+    )
 
 
 class HealthResponse(BaseModel):
     """Schema for health check responses."""
+
     status: str
     version: str
     timestamp: datetime
@@ -136,6 +165,7 @@ class HealthResponse(BaseModel):
 
 class ErrorResponse(BaseModel):
     """Schema for error responses."""
+
     error: str
     message: str
     details: Optional[Dict[str, Any]] = None
@@ -145,14 +175,16 @@ class ErrorResponse(BaseModel):
 # User management schemas
 class UserCreate(BaseModel):
     """Schema for user creation."""
+
     username: str = Field(..., min_length=3, max_length=100)
-    email: str = Field(..., regex=r'^[^@]+@[^@]+\.[^@]+$')
+    email: str = Field(..., regex=r"^[^@]+@[^@]+\.[^@]+$")
     password: str = Field(..., min_length=8)
     role: UserRole = Field(default=UserRole.ANALYST)
 
 
 class UserResponse(BaseModel):
     """Schema for user responses."""
+
     id: UUID
     username: str
     email: str
@@ -167,6 +199,7 @@ class UserResponse(BaseModel):
 
 class TokenResponse(BaseModel):
     """Schema for authentication token responses."""
+
     access_token: str
     token_type: str = "bearer"
     expires_in: int
@@ -175,6 +208,7 @@ class TokenResponse(BaseModel):
 # API Key schemas
 class APIKeyCreate(BaseModel):
     """Schema for API key creation."""
+
     name: str = Field(..., min_length=1, max_length=100)
     permissions: List[str] = Field(default_factory=list)
     expires_in_days: Optional[int] = Field(None, ge=1, le=365)
@@ -182,6 +216,7 @@ class APIKeyCreate(BaseModel):
 
 class APIKeyResponse(BaseModel):
     """Schema for API key responses."""
+
     id: UUID
     name: str
     key: Optional[str] = Field(None, description="Only returned on creation")
@@ -198,6 +233,7 @@ class APIKeyResponse(BaseModel):
 # Statistics and monitoring schemas
 class ProcessingStats(BaseModel):
     """Schema for processing statistics."""
+
     total_jobs: int
     completed_jobs: int
     failed_jobs: int
@@ -209,6 +245,7 @@ class ProcessingStats(BaseModel):
 
 class SystemStatus(BaseModel):
     """Schema for system status."""
+
     database_connected: bool
     vector_db_connected: bool
     embedding_service_available: bool
@@ -216,4 +253,3 @@ class SystemStatus(BaseModel):
     redis_connected: bool
     disk_usage_percent: float
     memory_usage_percent: float
-

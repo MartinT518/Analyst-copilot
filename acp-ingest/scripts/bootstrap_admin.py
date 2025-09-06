@@ -30,10 +30,10 @@ logger = structlog.get_logger(__name__)
 
 def generate_strong_password(length: int = 16) -> str:
     """Generate a strong random password.
-    
+
     Args:
         length: Length of the password
-        
+
     Returns:
         Strong random password
     """
@@ -42,63 +42,65 @@ def generate_strong_password(length: int = 16) -> str:
     uppercase = string.ascii_uppercase
     digits = string.digits
     special = "!@#$%^&*()_+-=[]{}|;:,.<>?"
-    
+
     # Ensure at least one character from each set
     password = [
         secrets.choice(lowercase),
         secrets.choice(uppercase),
         secrets.choice(digits),
-        secrets.choice(special)
+        secrets.choice(special),
     ]
-    
+
     # Fill the rest with random characters
     all_chars = lowercase + uppercase + digits + special
     for _ in range(length - 4):
         password.append(secrets.choice(all_chars))
-    
+
     # Shuffle the password
     secrets.SystemRandom().shuffle(password)
-    
-    return ''.join(password)
+
+    return "".join(password)
 
 
 def create_admin_user() -> tuple[str, str]:
     """Create the initial admin user.
-    
+
     Returns:
         Tuple of (username, password)
     """
     settings = get_settings()
     auth_service = AuthService()
-    
+
     # Check if any users already exist
     db = next(get_db())
     try:
         existing_users = db.query(User).count()
         if existing_users > 0:
-            logger.warning("Users already exist in the database. Skipping admin user creation.")
+            logger.warning(
+                "Users already exist in the database. Skipping admin user creation."
+            )
             return None, None
-        
+
         # Generate strong password
         password = generate_strong_password()
-        
+
         # Create admin user
         admin_data = UserCreate(
             username="admin",
             email=os.getenv("ADMIN_EMAIL", "admin@localhost"),
             password=password,
-            role="admin"
+            role="admin",
         )
-        
+
         admin_user = auth_service.create_user(admin_data, db)
-        
+
         if admin_user:
             logger.info("Admin user created successfully", username=admin_user.username)
             return admin_user.username, password
         else:
             logger.error("Failed to create admin user")
             return None, None
-            
+
     except Exception as e:
         logger.error("Error creating admin user", error=str(e))
         return None, None
@@ -110,7 +112,7 @@ def main():
     """Main bootstrap function."""
     print("🔐 Analyst Copilot - Admin User Bootstrap")
     print("=" * 50)
-    
+
     # Check if we're in the right environment
     if os.getenv("ENVIRONMENT") == "production":
         print("⚠️  WARNING: Running in production environment!")
@@ -118,10 +120,10 @@ def main():
         if response.lower() != "yes":
             print("❌ Admin user creation cancelled.")
             sys.exit(1)
-    
+
     # Create admin user
     username, password = create_admin_user()
-    
+
     if username and password:
         print(f"✅ Admin user created successfully!")
         print(f"   Username: {username}")

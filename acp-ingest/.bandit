@@ -4,8 +4,8 @@ skips = B105,B106  # Skip hardcoded password false positives for metrics and aud
 
 # Security rules enforcement
 # B104: Hardcoded bind all interfaces - Use 127.0.0.1 by default
-# B105: Hardcoded password string - All secrets must come from env vars
-# B106: Hardcoded password funcarg - Exception for metric labels
+# B105: Hardcoded password string - All secrets must come from env vars, exception for metric labels
+# B106: Hardcoded password funcarg - Exception for metric labels (not actual passwords)
 # B108: Hardcoded tmp directory - Use tempfile.gettempdir()
 # B110: Try except pass - All exceptions must be handled
 # B311: Standard pseudo-random generators - Use secrets module

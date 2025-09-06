@@ -16,10 +16,7 @@ settings = get_settings()
 TEST_DATABASE_URL = "sqlite:///./test.db"
 
 # Create a new database engine for testing
-engine = create_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
+engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 
 # Create a new sessionmaker for testing
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -39,9 +36,9 @@ def db_session(db_engine):
     connection = db_engine.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
-    
+
     yield session
-    
+
     session.close()
     transaction.rollback()
     connection.close()
@@ -50,20 +47,17 @@ def db_session(db_engine):
 @pytest.fixture(scope="function")
 def test_client(db_session):
     """Fixture for the test client."""
-    
+
     def override_get_db():
         try:
             yield db_session
         finally:
             db_session.close()
-    
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     with TestClient(app) as client:
         yield client
-    
+
     # Clean up dependency overrides
     app.dependency_overrides = {}
-
-
-

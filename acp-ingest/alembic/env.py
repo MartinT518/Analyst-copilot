@@ -41,10 +41,7 @@ DLQBase.metadata = target_metadata
 
 def get_database_url():
     """Get database URL from environment or config."""
-    return os.getenv(
-        "DATABASE_URL",
-        config.get_main_option("sqlalchemy.url")
-    )
+    return os.getenv("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
 
 
 def run_migrations_offline() -> None:
@@ -83,7 +80,7 @@ async def run_async_migrations() -> None:
     """Run migrations in async mode."""
     configuration = config.get_section(config.config_ini_section)
     configuration["sqlalchemy.url"] = get_database_url()
-    
+
     connectable = async_engine_from_config(
         configuration,
         prefix="sqlalchemy.",

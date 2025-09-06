@@ -13,9 +13,18 @@ import uvicorn
 
 from .config import get_settings
 from .security_config import get_security_config
-from .observability.logging import setup_logging, log_request_start, log_request_end, get_logger
+from .observability.logging import (
+    setup_logging,
+    log_request_start,
+    log_request_end,
+    get_logger,
+)
 from .observability.tracing import setup_tracing
-from .observability.metrics import setup_metrics, metrics_middleware, get_metrics_endpoint
+from .observability.metrics import (
+    setup_metrics,
+    metrics_middleware,
+    get_metrics_endpoint,
+)
 from .auth.oauth2 import get_auth_manager
 from .database import engine, Base
 from .api import ingest, search, health
@@ -36,7 +45,7 @@ setup_logging(
     service_version="1.0.0",
     log_level=settings.LOG_LEVEL,
     log_format=settings.LOG_FORMAT,
-    log_file=settings.LOG_FILE
+    log_file=settings.LOG_FILE,
 )
 
 logger = get_logger(__name__)
@@ -47,14 +56,18 @@ tracing_manager = setup_tracing(
     service_version="1.0.0",
     jaeger_endpoint=os.getenv("OTEL_EXPORTER_JAEGER_ENDPOINT"),
     otlp_endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
-    environment=settings.ENVIRONMENT
+    environment=settings.ENVIRONMENT,
 )
 
 # Setup Prometheus metrics
 metrics_collector = setup_metrics(
     service_name="acp-ingest",
     service_version="1.0.0",
-    port=int(os.getenv("PROMETHEUS_PORT", "9090")) if os.getenv("PROMETHEUS_ENABLED", "true").lower() == "true" else None
+    port=(
+        int(os.getenv("PROMETHEUS_PORT", "9090"))
+        if os.getenv("PROMETHEUS_ENABLED", "true").lower() == "true"
+        else None
+    ),
 )
 
 # Initialize authentication manager
@@ -66,14 +79,16 @@ async def lifespan(app: FastAPI):
     """Application lifespan manager with comprehensive initialization."""
     # Startup
     logger.info("Starting ACP Ingest service with Phase 0 foundation")
-    
+
     # Validate security configuration
     security_errors = security_config.validate_production_security()
     if security_errors:
-        error_msg = "Security validation failed:\n" + "\n".join(f"- {error}" for error in security_errors)
+        error_msg = "Security validation failed:\n" + "\n".join(
+            f"- {error}" for error in security_errors
+        )
         logger.error(error_msg)
         raise ValueError(error_msg)
-    
+
     # Create database tables
     try:
         Base.metadata.create_all(bind=engine)
@@ -81,12 +96,14 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error("Failed to create database tables", error=str(e))
         raise
-    
+
     # Ensure required directories exist
     ensure_directory(settings.UPLOAD_DIR)
-    ensure_directory(os.path.dirname(settings.LOG_FILE) if settings.LOG_FILE else "/app/logs")
+    ensure_directory(
+        os.path.dirname(settings.LOG_FILE) if settings.LOG_FILE else "/app/logs"
+    )
     logger.info("Required directories created/verified")
-    
+
     # Initialize observability
     try:
         # Instrument FastAPI with OpenTelemetry
@@ -96,11 +113,11 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error("Failed to setup OpenTelemetry", error=str(e))
         # Don't fail startup if tracing fails
-    
+
     logger.info("ACP Ingest service startup completed successfully")
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down ACP Ingest service")
 
@@ -112,7 +129,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add security middleware
@@ -128,7 +145,7 @@ app.add_middleware(
 if not settings.DEBUG:
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["*"]  # Configure appropriately for production
+        allowed_hosts=["*"],  # Configure appropriately for production
     )
 
 # Add metrics middleware
@@ -140,20 +157,20 @@ app.middleware("http")(metrics_middleware)
 async def request_logging_middleware(request: Request, call_next):
     """Middleware to log requests with correlation IDs."""
     start_time = time.time()
-    
+
     # Generate correlation ID
     correlation_id = log_request_start(
         method=request.method,
         path=request.url.path,
-        user_id=getattr(request.state, 'user_id', None)
+        user_id=getattr(request.state, "user_id", None),
     )
-    
+
     # Add correlation ID to request state
     request.state.correlation_id = correlation_id
-    
+
     # Process request
     response = call_next(request)
-    
+
     # Log request completion
     duration_ms = (time.time() - start_time) * 1000
     log_request_end(
@@ -161,12 +178,12 @@ async def request_logging_middleware(request: Request, call_next):
         path=request.url.path,
         status_code=response.status_code,
         duration_ms=duration_ms,
-        user_id=getattr(request.state, 'user_id', None)
+        user_id=getattr(request.state, "user_id", None),
     )
-    
+
     # Add correlation ID to response headers
     response.headers["X-Correlation-ID"] = correlation_id
-    
+
     return response
 
 
@@ -174,20 +191,20 @@ async def request_logging_middleware(request: Request, call_next):
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Global exception handler with structured logging."""
-    correlation_id = getattr(request.state, 'correlation_id', None)
-    
+    correlation_id = getattr(request.state, "correlation_id", None)
+
     logger.error(
         "Unhandled exception",
         correlation_id=correlation_id,
         path=request.url.path,
         method=request.method,
         error=str(exc),
-        exc_info=True
+        exc_info=True,
     )
-    
+
     # Record error metrics
     metrics_collector.record_error(type(exc).__name__)
-    
+
     if settings.DEBUG:
         return JSONResponse(
             status_code=500,
@@ -195,16 +212,16 @@ async def global_exception_handler(request: Request, exc: Exception):
                 "detail": str(exc),
                 "type": type(exc).__name__,
                 "path": request.url.path,
-                "correlation_id": correlation_id
-            }
+                "correlation_id": correlation_id,
+            },
         )
     else:
         return JSONResponse(
             status_code=500,
             content={
                 "detail": "Internal server error",
-                "correlation_id": correlation_id
-            }
+                "correlation_id": correlation_id,
+            },
         )
 
 
@@ -212,23 +229,20 @@ async def global_exception_handler(request: Request, exc: Exception):
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     """HTTP exception handler with structured logging."""
-    correlation_id = getattr(request.state, 'correlation_id', None)
-    
+    correlation_id = getattr(request.state, "correlation_id", None)
+
     logger.warning(
         "HTTP exception",
         correlation_id=correlation_id,
         path=request.url.path,
         method=request.method,
         status_code=exc.status_code,
-        detail=exc.detail
+        detail=exc.detail,
     )
-    
+
     return JSONResponse(
         status_code=exc.status_code,
-        content={
-            "detail": exc.detail,
-            "correlation_id": correlation_id
-        }
+        content={"detail": exc.detail, "correlation_id": correlation_id},
     )
 
 
@@ -241,7 +255,7 @@ async def root():
         "version": "1.0.0",
         "status": "running",
         "docs_url": "/docs" if settings.DEBUG else None,
-        "environment": settings.ENVIRONMENT
+        "environment": settings.ENVIRONMENT,
     }
 
 
@@ -252,38 +266,39 @@ async def health_check():
     try:
         # Check database connectivity
         from sqlalchemy import text
+
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        
+
         # Check Redis connectivity
         import redis
+
         redis_client = redis.from_url(settings.REDIS_URL)
         redis_client.ping()
-        
+
         # Check ChromaDB connectivity
         import httpx
+
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://{settings.CHROMA_HOST}:{settings.CHROMA_PORT}/api/v1/heartbeat")
+            response = await client.get(
+                f"http://{settings.CHROMA_HOST}:{settings.CHROMA_PORT}/api/v1/heartbeat"
+            )
             response.raise_for_status()
-        
+
         return {
             "status": "healthy",
             "timestamp": time.time(),
             "services": {
                 "database": "healthy",
                 "redis": "healthy",
-                "chroma": "healthy"
-            }
+                "chroma": "healthy",
+            },
         }
     except Exception as e:
         logger.error("Health check failed", error=str(e))
         return JSONResponse(
             status_code=503,
-            content={
-                "status": "unhealthy",
-                "error": str(e),
-                "timestamp": time.time()
-            }
+            content={"status": "unhealthy", "error": str(e), "timestamp": time.time()},
         )
 
 
@@ -300,20 +315,19 @@ async def login():
     """Initiate OAuth2 login flow."""
     try:
         from .auth.oauth2 import OAuth2Service
+
         oauth2_service = OAuth2Service(security_config)
-        
+
         # Generate state for CSRF protection
         import secrets
+
         state = secrets.token_urlsafe(32)
-        
+
         # Store state in session (in production, use Redis or database)
         # For now, we'll return the authorization URL
         auth_url = await oauth2_service.get_authorization_url(state)
-        
-        return {
-            "authorization_url": auth_url,
-            "state": state
-        }
+
+        return {"authorization_url": auth_url, "state": state}
     except Exception as e:
         logger.error("Login initiation failed", error=str(e))
         raise HTTPException(status_code=500, detail="Failed to initiate login")
@@ -324,11 +338,12 @@ async def auth_callback(code: str, state: str):
     """Handle OAuth2 callback."""
     try:
         from .auth.oauth2 import OAuth2Service
+
         oauth2_service = OAuth2Service(security_config)
-        
+
         # Exchange code for token
         token_response = await oauth2_service.exchange_code_for_token(code, state)
-        
+
         return token_response
     except Exception as e:
         logger.error("Auth callback failed", error=str(e))
@@ -337,12 +352,14 @@ async def auth_callback(code: str, state: str):
 
 # Protected endpoints
 @app.get("/api/v1/profile")
-async def get_profile(current_user: dict = Depends(auth_manager.get_current_active_user)):
+async def get_profile(
+    current_user: dict = Depends(auth_manager.get_current_active_user),
+):
     """Get current user profile."""
     return {
         "user_id": current_user["sub"],
         "email": current_user["email"],
-        "name": current_user.get("name", "")
+        "name": current_user.get("name", ""),
     }
 
 
@@ -360,5 +377,5 @@ if __name__ == "__main__":
         port=settings.port,
         reload=settings.DEBUG,
         log_level=settings.LOG_LEVEL.lower(),
-        access_log=True
+        access_log=True,
     )
