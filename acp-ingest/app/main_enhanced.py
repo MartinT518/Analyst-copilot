@@ -356,8 +356,8 @@ if __name__ == "__main__":
     # Run with uvicorn
     uvicorn.run(
         "app.main_enhanced:app",
-        host="0.0.0.0",
-        port=8000,
+        host=settings.host,
+        port=settings.port,
         reload=settings.DEBUG,
         log_level=settings.LOG_LEVEL.lower(),
         access_log=True

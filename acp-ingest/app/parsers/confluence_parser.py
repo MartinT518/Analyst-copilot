@@ -5,7 +5,7 @@ import re
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from bs4 import BeautifulSoup, Tag
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
 
 logger = logging.getLogger(__name__)
 

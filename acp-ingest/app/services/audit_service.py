@@ -20,8 +20,8 @@ class AuditAction(Enum):
     LOGIN_SUCCESS = "auth.login.success"
     LOGIN_FAILURE = "auth.login.failure"
     LOGOUT = "auth.logout"
-    TOKEN_REFRESH = "auth.token.refresh"
-    PASSWORD_CHANGE = "auth.password.change"
+    TOKEN_REFRESH = "auth.token.refresh"  # nosec B105
+    PASSWORD_CHANGE = "auth.password.change"  # nosec B105
     
     # User management actions
     USER_CREATE = "user.create"

@@ -216,10 +216,10 @@ async def get_config():
 
 if __name__ == "__main__":
     # Run with uvicorn
-    uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=8000,
+        uvicorn.run(
+            "app.main:app",
+            host=settings.host,
+            port=settings.port,
         reload=settings.DEBUG,
         log_level=settings.LOG_LEVEL.lower(),
         access_log=True

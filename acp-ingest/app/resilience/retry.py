@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-import random
+import secrets
 from typing import Callable, Any, Optional, List, Type, Union
 from functools import wraps
 import structlog
@@ -62,7 +62,7 @@ class RetryConfig:
         # Add jitter if enabled
         if self.jitter:
             jitter_range = delay * 0.1  # 10% jitter
-            delay += random.uniform(-jitter_range, jitter_range)
+            delay += secrets.randbelow(int(jitter_range * 200)) / 100 - jitter_range
         
         return max(0, delay)
 

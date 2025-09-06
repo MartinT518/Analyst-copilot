@@ -557,8 +557,9 @@ class IngestService:
                         headers={"Authorization": f"Bearer {settings.api_key}"}
                     )
                     llm_service_available = response.status_code == 200
-            except:
-                pass
+            except Exception as e:
+                logger.warning(f"LLM service health check failed: {e}")
+                llm_service_available = False
         
         # Get system resource usage (simplified)
         import psutil

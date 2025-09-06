@@ -359,16 +359,16 @@ class MetricsCollector:
         ).observe(duration)
         
         if prompt_tokens > 0:
-            self.llm_tokens_total.labels(
-                model=model,
-                token_type="prompt",
-                service=self.service_name
-            ).inc(prompt_tokens)
+                self.llm_tokens_total.labels(
+                    model=model,
+                    token_type="prompt",  # nosec B106
+                    service=self.service_name
+                ).inc(prompt_tokens)
         
         if completion_tokens > 0:
             self.llm_tokens_total.labels(
                 model=model,
-                token_type="completion",
+                token_type="completion",  # nosec B106
                 service=self.service_name
             ).inc(completion_tokens)
     

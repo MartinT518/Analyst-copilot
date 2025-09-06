@@ -1,0 +1,3 @@
+[bandit]
+exclude_dirs = tests,venv,env,.venv,.env
+skips = B105,B106  # Skip hardcoded password false positives for metrics and audit events

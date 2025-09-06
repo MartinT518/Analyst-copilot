@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     environment: str = "production"
     
     # Server settings
-    host: str = "0.0.0.0"
+    host: str = "127.0.0.1"  # Default to localhost for security
     port: int = 8000
     workers: int = 1
     reload: bool = False
@@ -349,7 +349,7 @@ def validate_settings():
     errors = []
     
     # Check required settings
-    if not settings.secret_key or settings.secret_key == "your-secret-key-change-this-in-production":
+        if not settings.secret_key or settings.secret_key == "your-secret-key-change-this-in-production":  # nosec B105
         errors.append("SECRET_KEY must be set to a secure value in production")
     
     if is_production():

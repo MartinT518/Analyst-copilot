@@ -48,7 +48,8 @@ class ExportService:
     """Service for exporting data in various formats."""
     
     def __init__(self):
-        self.temp_dir = Path("/tmp/acp_exports")
+        import tempfile
+        self.temp_dir = Path(tempfile.gettempdir()) / "acp_exports"
         self.temp_dir.mkdir(exist_ok=True)
     
     async def export_search_results(

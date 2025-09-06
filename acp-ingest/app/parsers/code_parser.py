@@ -1,8 +1,8 @@
 """Code parser for extracting structured information from codebases."""
 
 import os
-import subprocess
-import xml.etree.ElementTree as ET
+import subprocess  # nosec B404
+from defusedxml import ElementTree as ET
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 import logging
