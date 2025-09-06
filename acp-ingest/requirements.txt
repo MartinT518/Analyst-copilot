@@ -11,6 +11,7 @@ psycopg2-binary==2.9.9
 sqlalchemy==2.0.23
 alembic==1.13.1
 chromadb==0.4.18
+psycopg2-extras==0.1.0
 
 # Authentication and security
 python-jose[cryptography]==3.3.0

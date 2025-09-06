@@ -136,7 +136,7 @@ class Settings(BaseSettings):
     
     # CORS settings
     cors_enabled: bool = True
-    cors_origins: List[str] = ["*"]
+    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
     cors_methods: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     cors_headers: List[str] = ["*"]
     
@@ -251,6 +251,39 @@ def get_settings() -> Settings:
     return settings
 
 
+async def get_settings_with_vault() -> Settings:
+    """Get application settings with Vault integration."""
+    from .services.vault_service import vault_service
+    
+    # Initialize Vault if configured
+    if settings.vault_url:
+        await vault_service.initialize()
+        
+        # Override sensitive settings with Vault values
+        if vault_service.authenticated:
+            # Get database URL from Vault
+            db_url = await vault_service.get_secret("acp/database", "url")
+            if db_url:
+                settings.database_url = db_url
+            
+            # Get Redis URL from Vault
+            redis_url = await vault_service.get_secret("acp/redis", "url")
+            if redis_url:
+                settings.redis_url = redis_url
+            
+            # Get secret key from Vault
+            secret_key = await vault_service.get_secret("acp/jwt", "secret_key")
+            if secret_key:
+                settings.secret_key = secret_key
+            
+            # Get API key from Vault
+            api_key = await vault_service.get_secret("acp/llm", "api_key")
+            if api_key:
+                settings.api_key = api_key
+    
+    return settings
+
+
 def is_development() -> bool:
     """Check if running in development mode."""
     return settings.environment.lower() in ["development", "dev", "local"]
@@ -326,7 +359,7 @@ def validate_settings():
         if not settings.ssl_enabled:
             errors.append("SSL should be enabled in production")
         
-        if settings.cors_origins == ["*"]:
+        if "*" in settings.cors_origins:
             errors.append("CORS origins should be restricted in production")
     
     # Check Vault configuration

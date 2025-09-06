@@ -21,6 +21,8 @@ from ..parsers.jira_parser import JiraParser
 from ..parsers.confluence_parser import ConfluenceParser
 from ..parsers.pdf_parser import PDFParser
 from ..parsers.markdown_parser import MarkdownParser
+from ..parsers.code_parser import CodeParser
+from ..parsers.db_schema_parser import DatabaseSchemaParser
 from ..utils.pii_detector import PIIDetector
 from ..utils.chunker import TextChunker
 from ..utils.file_utils import detect_file_type, save_upload_file
@@ -46,6 +48,8 @@ class IngestService:
             'confluence_xml': ConfluenceParser(),
             'pdf': PDFParser(),
             'markdown': MarkdownParser(),
+            'code': CodeParser(),
+            'database_schema': DatabaseSchemaParser(),
         }
         
         # Ensure upload directory exists

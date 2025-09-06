@@ -72,7 +72,7 @@ services:
       - LLM_ENDPOINT=${LLM_ENDPOINT:-https://ai.int.cyber.ee/openai}
       - EMBEDDING_ENDPOINT=${EMBEDDING_ENDPOINT:-http://ai.int.cyber.ee:8083/v1}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - SECRET_KEY=${SECRET_KEY}
       - DEBUG=${DEBUG:-false}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FORMAT=${LOG_FORMAT:-json}
@@ -97,6 +97,43 @@ services:
       retries: 3
     restart: unless-stopped
 
+  # ACP Agents Service
+  acp-agents:
+    build:
+      context: ./acp-agents
+      dockerfile: Dockerfile
+    container_name: acp-agents
+    environment:
+      - DATABASE_URL=postgresql://acp_user:acp_password@postgres:5432/acp_db
+      - REDIS_URL=redis://redis:6379/1
+      - LLM_ENDPOINT=${LLM_ENDPOINT:-https://ai.int.cyber.ee/openai}
+      - EMBEDDING_ENDPOINT=${EMBEDDING_ENDPOINT:-http://ai.int.cyber.ee:8083/v1}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - INGEST_SERVICE_URL=http://acp-ingest:8000
+      - DEBUG=${DEBUG:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FORMAT=${LOG_FORMAT:-json}
+    volumes:
+      - ./logs:/app/logs
+    ports:
+      - "8001:8001"
+    networks:
+      - acp-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      acp-ingest:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
   # Background Worker (Celery)
   acp-worker:
     build:
@@ -112,7 +149,7 @@ services:
       - LLM_ENDPOINT=${LLM_ENDPOINT:-https://ai.int.cyber.ee/openai}
       - EMBEDDING_ENDPOINT=${EMBEDDING_ENDPOINT:-http://ai.int.cyber.ee:8083/v1}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - SECRET_KEY=${SECRET_KEY}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
       - ./uploads:/app/uploads

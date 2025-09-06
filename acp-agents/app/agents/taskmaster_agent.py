@@ -5,12 +5,11 @@ from typing import Type, List, Dict, Any
 import structlog
 
 from .base_agent import BaseAgent
-from ..schemas.common_schemas import AgentType
-from ..schemas.agent_schemas import (
+from ..schemas import (
     TaskmasterInput, 
     TaskmasterOutput, 
     DeveloperTask,
-    AcceptanceCriteria,
+    UserStory,
     TechnicalNote
 )
 
@@ -23,7 +22,7 @@ class TaskmasterAgent(BaseAgent):
     def __init__(self, llm_service, knowledge_service, audit_service):
         """Initialize the Taskmaster agent."""
         super().__init__(
-            agent_type=AgentType.TASKMASTER,
+            agent_type="taskmaster",
             llm_service=llm_service,
             knowledge_service=knowledge_service,
             audit_service=audit_service
@@ -132,7 +131,7 @@ PROJECT CONSTRAINTS:
 {constraints_text}
 
 TASK GENERATION INSTRUCTIONS:
-1. Create up to {self.settings.taskmaster_max_tasks} developer tasks that implement the TO-BE vision
+1. Create up to 20 developer tasks that implement the TO-BE vision
 2. Break down complex requirements into manageable tasks
 3. Create user stories following Agile best practices
 4. Define comprehensive acceptance criteria for each task
@@ -221,26 +220,30 @@ Respond with a JSON object containing:
             tasks = []
             for task_data in response_data.get("tasks", []):
                 try:
-                    # Create acceptance criteria
-                    acceptance_criteria = []
-                    for ac_data in task_data.get("acceptance_criteria", []):
-                        criteria = AcceptanceCriteria(
-                            criteria_id=ac_data.get("criteria_id", f"ac_{len(acceptance_criteria)+1}"),
-                            description=ac_data.get("description", ""),
-                            test_scenario=ac_data.get("test_scenario", ""),
-                            priority=ac_data.get("priority", "medium")
+                    # Create user stories
+                    user_stories = []
+                    for story_data in task_data.get("user_stories", []):
+                        story = UserStory(
+                            story_id=story_data.get("story_id", f"story_{len(user_stories)+1}"),
+                            title=story_data.get("title", ""),
+                            description=story_data.get("description", ""),
+                            acceptance_criteria=story_data.get("acceptance_criteria", []),
+                            priority=story_data.get("priority", "medium"),
+                            story_points=story_data.get("story_points"),
+                            epic=story_data.get("epic"),
+                            labels=story_data.get("labels", [])
                         )
-                        acceptance_criteria.append(criteria)
+                        user_stories.append(story)
                     
                     # Create technical notes
                     technical_notes = []
-                    for tn_data in task_data.get("technical_notes", []):
+                    for note_data in task_data.get("technical_notes", []):
                         note = TechnicalNote(
-                            note_id=tn_data.get("note_id", f"tn_{len(technical_notes)+1}"),
-                            category=tn_data.get("category", "implementation"),
-                            description=tn_data.get("description", ""),
-                            impact=tn_data.get("impact", "medium"),
-                            references=tn_data.get("references", [])
+                            note_id=note_data.get("note_id", f"note_{len(technical_notes)+1}"),
+                            category=note_data.get("category", "implementation"),
+                            description=note_data.get("description", ""),
+                            impact=note_data.get("impact", "medium"),
+                            references=note_data.get("references", [])
                         )
                         technical_notes.append(note)
                     
@@ -249,14 +252,14 @@ Respond with a JSON object containing:
                         task_id=task_data.get("task_id", f"task_{len(tasks)+1}"),
                         title=task_data.get("title", ""),
                         description=task_data.get("description", ""),
-                        user_story=task_data.get("user_story", ""),
-                        acceptance_criteria=acceptance_criteria,
+                        user_stories=user_stories,
                         technical_notes=technical_notes,
-                        estimated_effort=task_data.get("estimated_effort", "3"),
+                        estimated_effort=task_data.get("estimated_effort", "3 days"),
                         priority=task_data.get("priority", "medium"),
                         dependencies=task_data.get("dependencies", []),
                         labels=task_data.get("labels", []),
-                        epic=task_data.get("epic", None)
+                        epic=task_data.get("epic"),
+                        metadata=task_data.get("metadata", {})
                     )
                     tasks.append(task)
                     
@@ -268,7 +271,7 @@ Respond with a JSON object containing:
             confidence_factors = {
                 "requirements_clarity": self._assess_requirements_clarity(input_data.to_be_document),
                 "gap_analysis_depth": min(1.0, len(input_data.gap_analysis) / 5.0),
-                "tasks_generated": min(1.0, len(tasks) / self.settings.taskmaster_max_tasks),
+                "tasks_generated": min(1.0, len(tasks) / 20.0),
                 "technical_context": min(1.0, len(technical_knowledge) / 3.0),
                 "implementation_approach": 1.0 if input_data.implementation_approach else 0.5
             }
@@ -288,7 +291,7 @@ Respond with a JSON object containing:
                 timeline_estimate=response_data.get("timeline_estimate", "8-12 weeks estimated"),
                 metadata={
                     "tasks_generated": len(tasks),
-                    "total_acceptance_criteria": sum(len(task.acceptance_criteria) for task in tasks),
+                    "total_user_stories": sum(len(task.user_stories) for task in tasks),
                     "total_technical_notes": sum(len(task.technical_notes) for task in tasks),
                     "gaps_addressed": len(input_data.gap_analysis),
                     "technical_references": len(technical_knowledge)
@@ -373,4 +376,3 @@ Respond with a JSON object containing:
                 score += 0.1
         
         return min(1.0, score)
-

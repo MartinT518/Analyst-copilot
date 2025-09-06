@@ -7,14 +7,6 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, Type
 from datetime import datetime
 import structlog
-import httpx
-from pydantic import BaseModel, ValidationError
-
-from ..config import get_settings
-from ..schemas.common_schemas import BaseAgentInput, BaseAgentOutput, AgentType, KnowledgeReference
-from ..services.llm_service import LLMService
-from ..services.knowledge_service import KnowledgeService
-from ..services.audit_service import AuditService
 
 logger = structlog.get_logger(__name__)
 
@@ -24,10 +16,10 @@ class BaseAgent(ABC):
     
     def __init__(
         self,
-        agent_type: AgentType,
-        llm_service: LLMService,
-        knowledge_service: KnowledgeService,
-        audit_service: AuditService
+        agent_type: str,
+        llm_service,
+        knowledge_service,
+        audit_service
     ):
         """Initialize the base agent.
         
@@ -41,8 +33,7 @@ class BaseAgent(ABC):
         self.llm_service = llm_service
         self.knowledge_service = knowledge_service
         self.audit_service = audit_service
-        self.settings = get_settings()
-        self.logger = logger.bind(agent_type=agent_type.value)
+        self.logger = logger.bind(agent_type=agent_type)
         
         # Performance tracking
         self.total_requests = 0
@@ -52,18 +43,18 @@ class BaseAgent(ABC):
         
     @property
     @abstractmethod
-    def input_schema(self) -> Type[BaseAgentInput]:
+    def input_schema(self) -> Type:
         """Return the input schema for this agent."""
         pass
     
     @property
     @abstractmethod
-    def output_schema(self) -> Type[BaseAgentOutput]:
+    def output_schema(self) -> Type:
         """Return the output schema for this agent."""
         pass
     
     @abstractmethod
-    async def _process_request(self, input_data: BaseAgentInput) -> BaseAgentOutput:
+    async def _process_request(self, input_data) -> Any:
         """Process the agent request. Must be implemented by subclasses.
         
         Args:
@@ -80,7 +71,7 @@ class BaseAgent(ABC):
         pass
     
     @abstractmethod
-    def _get_user_prompt(self, input_data: BaseAgentInput) -> str:
+    def _get_user_prompt(self, input_data) -> str:
         """Get the user prompt for this agent."""
         pass
     
@@ -98,7 +89,7 @@ class BaseAgent(ABC):
             Exception: If agent execution fails
         """
         start_time = time.time()
-        request_id = input_data.get('request_id', f"{self.agent_type.value}_{int(time.time())}")
+        request_id = input_data.get('request_id', f"{self.agent_type}_{int(time.time())}")
         
         self.logger.info("Starting agent execution", request_id=request_id)
         
@@ -108,9 +99,9 @@ class BaseAgent(ABC):
             
             # Log audit event
             await self.audit_service.log_agent_start(
+                job_id=request_id,
                 agent_type=self.agent_type,
-                request_id=request_id,
-                input_data=input_data
+                step="execution"
             )
             
             # Process request
@@ -131,37 +122,21 @@ class BaseAgent(ABC):
             
             # Log audit event
             await self.audit_service.log_agent_complete(
+                job_id=request_id,
                 agent_type=self.agent_type,
-                request_id=request_id,
-                output_data=output_dict,
-                duration_seconds=duration
+                step="execution",
+                duration_seconds=duration,
+                output_summary={"output_type": type(output).__name__}
             )
             
             self.logger.info(
                 "Agent execution completed successfully",
                 request_id=request_id,
                 duration_seconds=duration,
-                confidence=output.confidence
+                confidence=getattr(output, 'confidence', None)
             )
             
             return output_dict
-            
-        except ValidationError as e:
-            duration = time.time() - start_time
-            self.total_requests += 1
-            self.failed_requests += 1
-            
-            error_msg = f"Input validation failed: {e}"
-            self.logger.error("Agent execution failed", request_id=request_id, error=error_msg)
-            
-            await self.audit_service.log_agent_error(
-                agent_type=self.agent_type,
-                request_id=request_id,
-                error_message=error_msg,
-                duration_seconds=duration
-            )
-            
-            raise
             
         except Exception as e:
             duration = time.time() - start_time
@@ -172,10 +147,10 @@ class BaseAgent(ABC):
             self.logger.error("Agent execution failed", request_id=request_id, error=error_msg)
             
             await self.audit_service.log_agent_error(
+                job_id=request_id,
                 agent_type=self.agent_type,
-                request_id=request_id,
-                error_message=error_msg,
-                duration_seconds=duration
+                step="execution",
+                error_message=error_msg
             )
             
             raise
@@ -203,8 +178,8 @@ class BaseAgent(ABC):
         return await self.llm_service.generate_response(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            temperature=temperature or self.settings.llm_temperature,
-            max_tokens=max_tokens or self.settings.llm_max_tokens,
+            temperature=temperature,
+            max_tokens=max_tokens,
             json_mode=json_mode
         )
     
@@ -213,7 +188,7 @@ class BaseAgent(ABC):
         query: str,
         limit: int = 10,
         filters: Optional[Dict[str, Any]] = None
-    ) -> List[KnowledgeReference]:
+    ) -> List[Any]:
         """Search the knowledge base.
         
         Args:
@@ -321,7 +296,7 @@ class BaseAgent(ABC):
         )
         
         return {
-            "agent_type": self.agent_type.value,
+            "agent_type": self.agent_type,
             "total_requests": self.total_requests,
             "successful_requests": self.successful_requests,
             "failed_requests": self.failed_requests,
@@ -347,7 +322,7 @@ class BaseAgent(ABC):
             healthy = llm_healthy and knowledge_healthy
             
             return {
-                "agent_type": self.agent_type.value,
+                "agent_type": self.agent_type,
                 "healthy": healthy,
                 "llm_service": llm_healthy,
                 "knowledge_service": knowledge_healthy,
@@ -357,8 +332,7 @@ class BaseAgent(ABC):
         except Exception as e:
             self.logger.error("Health check failed", error=str(e))
             return {
-                "agent_type": self.agent_type.value,
+                "agent_type": self.agent_type,
                 "healthy": False,
                 "error": str(e)
             }
-

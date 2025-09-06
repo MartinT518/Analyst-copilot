@@ -77,4 +77,3 @@ textstat==0.7.3
 
 # Error tracking
 sentry-sdk[fastapi]==1.38.0
-
