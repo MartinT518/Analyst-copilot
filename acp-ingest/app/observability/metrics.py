@@ -324,14 +324,14 @@ class MetricsCollector:
         )
 
         if prompt_tokens > 0:
-            self.llm_tokens_total.labels(  # nosec B106 - metric labels, not passwords
+            self.llm_tokens_total.labels(
                 model=model,
                 token_type="prompt",
                 service=self.service_name,
             ).inc(prompt_tokens)
 
         if completion_tokens > 0:
-            self.llm_tokens_total.labels(  # nosec B106 - metric labels, not passwords
+            self.llm_tokens_total.labels(
                 model=model,
                 token_type="completion",
                 service=self.service_name,

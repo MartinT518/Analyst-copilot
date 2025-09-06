@@ -1,6 +1,13 @@
-[bandit]
-exclude_dirs = tests,venv,env,.venv,.env
-skips = B105,B106  # Skip hardcoded password false positives for metrics and audit events
+exclude_dirs:
+  - tests
+  - venv
+  - env
+  - .venv
+  - .env
+
+skips:
+  - B105  # Hardcoded password string - Exception for metric labels
+  - B106  # Hardcoded password funcarg - Exception for metric labels
 
 # Security rules enforcement
 # B104: Hardcoded bind all interfaces - Use 127.0.0.1 by default
