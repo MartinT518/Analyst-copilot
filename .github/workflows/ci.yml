@@ -159,7 +159,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd acp-frontend
-          npm install
+          npm install --legacy-peer-deps
 
       - name: Run linting
         run: |
