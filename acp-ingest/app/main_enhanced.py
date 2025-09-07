@@ -3,31 +3,31 @@
 import os
 import time
 from contextlib import asynccontextmanager
-from typing import Dict, Any
+from typing import Any, Dict
 
-from fastapi import FastAPI, Request, HTTPException, Depends
+import uvicorn
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
-import uvicorn
 
+from .api import health, ingest, search
+from .auth.oauth2 import get_auth_manager
 from .config import get_settings
-from .security_config import get_security_config
+from .database import Base, engine
 from .observability.logging import (
-    setup_logging,
-    log_request_start,
-    log_request_end,
     get_logger,
+    log_request_end,
+    log_request_start,
+    setup_logging,
+)
+from .observability.metrics import (
+    get_metrics_endpoint,
+    metrics_middleware,
+    setup_metrics,
 )
 from .observability.tracing import setup_tracing
-from .observability.metrics import (
-    setup_metrics,
-    metrics_middleware,
-    get_metrics_endpoint,
-)
-from .auth.oauth2 import get_auth_manager
-from .database import engine, Base
-from .api import ingest, search, health
+from .security_config import get_security_config
 from .utils.file_utils import ensure_directory
 
 # Initialize security configuration with fail-fast validation

@@ -1,20 +1,21 @@
 """Authentication service for user management and API key validation."""
 
-import logging
 import hashlib
+import logging
 import secrets
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..database import get_db
-from ..models import User, APIKey, AuditLog
-from ..schemas import UserCreate, UserResponse, TokenResponse
+from ..models import APIKey, AuditLog, User
+from ..schemas import TokenResponse, UserCreate, UserResponse
 
 logger = logging.getLogger(__name__)
 settings = get_settings()

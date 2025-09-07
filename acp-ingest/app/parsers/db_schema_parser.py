@@ -1,12 +1,13 @@
 """Database schema parser for extracting structured information from databases."""
 
 import asyncio
-from typing import Dict, List, Any, Optional
+import logging
+from typing import Any, Dict, List, Optional
+
 import psycopg2
 import psycopg2.extras
-from sqlalchemy import create_engine, text, MetaData, Table, Column, ForeignKey
+from sqlalchemy import Column, ForeignKey, MetaData, Table, create_engine, text
 from sqlalchemy.engine import Engine
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -169,7 +170,7 @@ class DatabaseSchemaParser:
         try:
             # Get tables
             tables_query = """
-            SELECT 
+            SELECT
                 t.table_name,
                 t.table_type,
                 obj_description(c.oid) as table_comment
@@ -187,7 +188,7 @@ class DatabaseSchemaParser:
 
                 # Get columns for this table
                 columns_query = """
-                SELECT 
+                SELECT
                     c.column_name,
                     c.data_type,
                     c.is_nullable,
@@ -222,7 +223,7 @@ class DatabaseSchemaParser:
 
                 # Get foreign keys
                 fk_query = """
-                SELECT 
+                SELECT
                     kcu.column_name,
                     ccu.table_name AS foreign_table_name,
                     ccu.column_name AS foreign_column_name,
@@ -232,7 +233,7 @@ class DatabaseSchemaParser:
                     ON tc.constraint_name = kcu.constraint_name
                 JOIN information_schema.constraint_column_usage AS ccu
                     ON ccu.constraint_name = tc.constraint_name
-                WHERE tc.constraint_type = 'FOREIGN KEY' 
+                WHERE tc.constraint_type = 'FOREIGN KEY'
                     AND tc.table_name = :table_name
                 """
 
@@ -250,7 +251,7 @@ class DatabaseSchemaParser:
 
                 # Get indexes
                 index_query = """
-                SELECT 
+                SELECT
                     i.relname as index_name,
                     a.attname as column_name,
                     ix.indisunique as is_unique,

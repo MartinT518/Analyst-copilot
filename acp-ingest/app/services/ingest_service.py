@@ -1,31 +1,32 @@
 """Ingest service for processing and indexing documents."""
 
-import os
-import json
 import asyncio
+import json
 import logging
-import tempfile
+import os
 import shutil
+import tempfile
 from datetime import datetime, timedelta
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 from uuid import UUID
+
 import aiofiles
 import httpx
-from sqlalchemy.orm import Session
 from fastapi import UploadFile
+from sqlalchemy.orm import Session
 
 from ..config import get_settings
-from ..models import IngestJob, KnowledgeChunk, AuditLog
-from ..schemas import IngestPasteRequest, JobResponse, SystemStatus, ProcessingStats
-from ..parsers.jira_parser import JiraParser
-from ..parsers.confluence_parser import ConfluenceParser
-from ..parsers.pdf_parser import PDFParser
-from ..parsers.markdown_parser import MarkdownParser
+from ..models import AuditLog, IngestJob, KnowledgeChunk
 from ..parsers.code_parser import CodeParser
+from ..parsers.confluence_parser import ConfluenceParser
 from ..parsers.db_schema_parser import DatabaseSchemaParser
-from ..utils.pii_detector import PIIDetector
+from ..parsers.jira_parser import JiraParser
+from ..parsers.markdown_parser import MarkdownParser
+from ..parsers.pdf_parser import PDFParser
+from ..schemas import IngestPasteRequest, JobResponse, ProcessingStats, SystemStatus
 from ..utils.chunker import TextChunker
 from ..utils.file_utils import detect_file_type, save_upload_file
+from ..utils.pii_detector import PIIDetector
 from .vector_service import VectorService
 
 logger = logging.getLogger(__name__)

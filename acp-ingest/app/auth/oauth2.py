@@ -1,12 +1,13 @@
 """OAuth2/OIDC authentication implementation."""
 
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import httpx
 import jwt
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
-from fastapi import HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import structlog
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from ..security_config import SecurityConfig
 

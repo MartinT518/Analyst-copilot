@@ -1,14 +1,15 @@
 """Structured logging with correlation IDs for ACP services."""
 
+import json
 import logging
 import sys
 import uuid
-from typing import Optional, Dict, Any
 from contextvars import ContextVar
+from datetime import datetime
+from typing import Any, Dict, Optional
+
 import structlog
 from structlog.stdlib import LoggerFactory
-import json
-from datetime import datetime
 
 # Context variable for correlation ID
 correlation_id: ContextVar[Optional[str]] = ContextVar("correlation_id", default=None)

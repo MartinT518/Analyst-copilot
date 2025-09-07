@@ -36,5 +36,3 @@ docker-compose restart <service-name>
 ```
 
 If the problem persists, you can check the logs for the affected service to get more information.
-
-

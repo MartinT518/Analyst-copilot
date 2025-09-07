@@ -1,10 +1,9 @@
 """Tests for the search API endpoints."""
 
 import pytest
+from app.models import KnowledgeChunk
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-
-from app.models import KnowledgeChunk
 
 
 def test_search_knowledge(test_client: TestClient, db_session: Session):

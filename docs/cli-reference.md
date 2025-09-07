@@ -34,5 +34,3 @@ For more information about the available options for each command, you can use t
 ```bash
 acp ingest upload --help
 ```
-
-

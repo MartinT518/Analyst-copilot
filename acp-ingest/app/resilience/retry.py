@@ -1,10 +1,11 @@
 """Retry logic implementation for resilient service calls."""
 
 import asyncio
-import time
 import secrets
-from typing import Callable, Any, Optional, List, Type, Union
+import time
 from functools import wraps
+from typing import Any, Callable, List, Optional, Type, Union
+
 import structlog
 
 logger = structlog.get_logger(__name__)

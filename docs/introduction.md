@@ -17,5 +17,3 @@ The Analyst Copilot is a sophisticated, on-premises AI-powered system designed t
 - **Business Intelligence**: Process sales data, customer feedback, and market research to gain a deeper understanding of your business.
 - **Compliance and Auditing**: Review legal documents, contracts, and financial records to ensure compliance with regulations.
 - **Research and Development**: Analyze scientific papers, patents, and technical documents to accelerate research and innovation.
-
-

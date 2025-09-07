@@ -546,7 +546,6 @@ async def _wait_for_jobs(client: ACPClient, job_ids: list):
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
-
         pending_jobs = set(job_ids)
         task = progress.add_task(f"Waiting for {len(pending_jobs)} jobs...", total=None)
 

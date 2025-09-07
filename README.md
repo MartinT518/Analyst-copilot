@@ -115,6 +115,52 @@ Once running, visit `http://localhost:8000/docs` for interactive API documentati
 
 ## Development
 
+### Pre-commit Hooks Setup
+
+To ensure consistent code quality and formatting, we use pre-commit hooks. Set them up once:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install the git hook scripts
+pre-commit install
+
+# Optional: Run against all files
+pre-commit run --all-files
+```
+
+The pre-commit hooks will automatically:
+- Format code with Black
+- Sort imports with isort
+- Lint with flake8
+- Run security scans with Bandit
+- Check for common issues (trailing whitespace, large files, etc.)
+
+### Development Workflow
+
+1. **Clone and setup**:
+```bash
+git clone <repository-url>
+cd Analyst-copilot
+pip install -r acp-ingest/requirements.txt
+pre-commit install
+```
+
+2. **Make changes** and commit:
+```bash
+git add .
+git commit -m "Your commit message"
+# Pre-commit hooks run automatically
+```
+
+3. **If hooks fail**, fix the issues and commit again:
+```bash
+# Hooks will auto-fix formatting issues
+git add .
+git commit -m "Fix formatting issues"
+```
+
 See [Development Guide](docs/development.md) for detailed development instructions.
 
 ## Deployment
@@ -124,4 +170,3 @@ See [Deployment Guide](docs/deployment.md) for production deployment instruction
 ## License
 
 [Your License Here]
-

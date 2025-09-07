@@ -2,8 +2,9 @@
 
 import logging
 import re
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from bs4 import BeautifulSoup, Tag
 from defusedxml import ElementTree as ET
 

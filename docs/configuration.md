@@ -40,5 +40,3 @@ The following table lists all the available environment variables and their defa
 | `WORKERS` | The number of Uvicorn workers. | `1` |
 | `COMPOSE_PROJECT_NAME` | The name of the Docker Compose project. | `acp` |
 | `COMPOSE_FILE` | The path to the Docker Compose file. | `docker-compose.yml` |
-
-

@@ -2,8 +2,8 @@
 
 import logging
 import re
-from typing import List, Dict, Any, Optional, Set
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,15 @@
 """Enhanced audit logging service with immutable audit trails."""
 
-import json
 import hashlib
+import json
 from datetime import datetime
-from typing import Dict, Any, Optional, List
 from enum import Enum
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc
+from typing import Any, Dict, List, Optional
 
 from app.models import AuditLog, User
 from app.utils.logging_config import get_logger
+from sqlalchemy import and_, desc, or_
+from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
 

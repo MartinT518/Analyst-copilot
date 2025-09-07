@@ -1,18 +1,18 @@
 """Metrics service for observability and monitoring."""
 
 import time
-from typing import Dict, Any, Optional, List
-from datetime import datetime, timedelta
 from contextlib import contextmanager
+from datetime import datetime, timedelta
 from functools import wraps
+from typing import Any, Dict, List, Optional
 
 try:
     from prometheus_client import (
-        Counter,
-        Histogram,
-        Gauge,
-        Info,
         CollectorRegistry,
+        Counter,
+        Gauge,
+        Histogram,
+        Info,
         generate_latest,
     )
 
@@ -20,10 +20,10 @@ try:
 except ImportError:
     PROMETHEUS_AVAILABLE = False
 
-from sqlalchemy.orm import Session
 from app.config import get_settings
-from app.models import IngestJob, KnowledgeChunk, AuditLog
+from app.models import AuditLog, IngestJob, KnowledgeChunk
 from app.utils.logging_config import get_logger
+from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
 settings = get_settings()

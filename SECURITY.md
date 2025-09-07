@@ -206,6 +206,6 @@ If you discover a security vulnerability, please report it responsibly:
 
 ---
 
-**Last Updated**: 2025-09-06  
-**Version**: 1.0  
+**Last Updated**: 2025-09-06
+**Version**: 1.0
 **Next Review**: 2025-12-06

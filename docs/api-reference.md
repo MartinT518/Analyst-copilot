@@ -31,5 +31,3 @@ Authorization: Bearer <your-api-key>
 - **GET /health/ready**: Kubernetes readiness probe.
 
 For detailed information about the request and response formats for each endpoint, please refer to the OpenAPI documentation at `http://localhost:8000/docs`.
-
-

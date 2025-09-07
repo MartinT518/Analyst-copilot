@@ -1,16 +1,15 @@
 """Health check API endpoints."""
 
 import asyncio
-from typing import Dict, Any
 from datetime import datetime
+from typing import Any, Dict
 
+from app.config import get_settings
+from app.database import get_db
+from app.utils.logging_config import get_logger
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
 from sqlalchemy.orm import Session
-
-from app.database import get_db
-from app.config import get_settings
-from app.utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["health"])

@@ -2,11 +2,12 @@
 
 import logging
 import logging.config
-import sys
 import os
-from typing import Dict, Any
-import structlog
+import sys
 from datetime import datetime
+from typing import Any, Dict
+
+import structlog
 
 
 def setup_logging(

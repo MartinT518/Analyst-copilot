@@ -1,8 +1,9 @@
 """HashiCorp Vault integration for secrets management."""
 
-import os
 import logging
-from typing import Optional, Dict, Any
+import os
+from typing import Any, Dict, Optional
+
 import hvac
 from hvac.exceptions import VaultError
 

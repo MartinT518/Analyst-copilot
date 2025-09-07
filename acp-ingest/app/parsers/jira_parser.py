@@ -1,10 +1,11 @@
 """Jira CSV parser for processing exported Jira tickets."""
 
-import logging
 import csv
 import io
-from typing import List, Dict, Any, Optional
+import logging
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 
 logger = logging.getLogger(__name__)

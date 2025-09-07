@@ -1,21 +1,22 @@
 """Prometheus metrics for ACP services."""
 
 import time
-from typing import Optional, Dict, Any, List
-from prometheus_client import (
-    Counter,
-    Histogram,
-    Gauge,
-    Info,
-    Enum,
-    CollectorRegistry,
-    generate_latest,
-    CONTENT_TYPE_LATEST,
-    start_http_server,
-)
+from typing import Any, Dict, List, Optional
+
+import structlog
 from fastapi import Request, Response
 from fastapi.responses import PlainTextResponse
-import structlog
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    Counter,
+    Enum,
+    Gauge,
+    Histogram,
+    Info,
+    generate_latest,
+    start_http_server,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -324,14 +325,14 @@ class MetricsCollector:
         )
 
         if prompt_tokens > 0:
-            self.llm_tokens_total.labels(
+            self.llm_tokens_total.labels(  # nosec B106
                 model=model,
                 token_type="prompt",
                 service=self.service_name,
             ).inc(prompt_tokens)
 
         if completion_tokens > 0:
-            self.llm_tokens_total.labels(
+            self.llm_tokens_total.labels(  # nosec B106
                 model=model,
                 token_type="completion",
                 service=self.service_name,

@@ -1,16 +1,16 @@
 """Security tests for ACP services."""
 
-import pytest
-import tempfile
 import os
+import tempfile
 from unittest.mock import Mock, patch
-from defusedxml.ElementTree import ParseError
 
-from app.security_config import SecurityConfig, validate_security_config
+import pytest
 from app.parsers.code_parser import CodeParser
 from app.parsers.confluence_parser import ConfluenceParser
 from app.resilience.retry import RetryConfig, RetryManager
+from app.security_config import SecurityConfig, validate_security_config
 from app.services.export_service import ExportService
+from defusedxml.ElementTree import ParseError
 
 
 class TestSecurityConfig:
@@ -273,8 +273,8 @@ class TestSecretsManagement:
 
     def test_no_hardcoded_secrets_in_code(self):
         """Test that no hardcoded secrets exist in the codebase."""
-        import re
         import os
+        import re
 
         # Patterns that might indicate hardcoded secrets
         secret_patterns = [

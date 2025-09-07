@@ -1,7 +1,8 @@
 """Configuration management for ACP Ingest service."""
 
 import os
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseSettings, validator
 
 
@@ -368,8 +369,9 @@ def validate_settings(settings_instance=None):
     # Check required settings
     if (
         not settings_instance.secret_key
-        or settings_instance.secret_key == "your-secret-key-change-this-in-production"
-    ):  # nosec B105
+        or settings_instance.secret_key
+        == "your-secret-key-change-this-in-production"  # nosec B105
+    ):
         errors.append("SECRET_KEY must be set to a secure value in production")
 
     if settings_instance.is_production():

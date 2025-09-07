@@ -1,16 +1,15 @@
 """Search API endpoints."""
 
-from typing import Optional, Dict, Any, List
 from datetime import datetime
-
-from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+from typing import Any, Dict, List, Optional
 
 from app.database import get_db
-from app.services.search_service import SearchService
 from app.services.auth_service import get_current_user
+from app.services.search_service import SearchService
 from app.utils.logging_config import get_logger, get_performance_logger
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
 performance_logger = get_performance_logger()

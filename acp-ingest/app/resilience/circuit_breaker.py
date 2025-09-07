@@ -2,8 +2,9 @@
 
 import asyncio
 import time
-from typing import Callable, Any, Optional, Dict, Type
 from enum import Enum
+from typing import Any, Callable, Dict, Optional, Type
+
 import structlog
 
 logger = structlog.get_logger(__name__)

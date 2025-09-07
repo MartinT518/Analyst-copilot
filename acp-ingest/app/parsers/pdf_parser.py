@@ -1,10 +1,11 @@
 """PDF parser with OCR support for processing PDF documents."""
 
 import logging
-import tempfile
 import os
-from typing import List, Dict, Any, Optional
+import tempfile
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import PyPDF2
 import pytesseract
 from pdf2image import convert_from_path

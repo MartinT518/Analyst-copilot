@@ -1,12 +1,13 @@
 """Code parser for extracting structured information from codebases."""
 
-import os
-import subprocess  # nosec B404
-import shlex
-from defusedxml import ElementTree as ET
-from typing import Dict, List, Any, Optional
-from pathlib import Path
 import logging
+import os
+import shlex
+import subprocess  # nosec B404
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from defusedxml import ElementTree as ET
 
 logger = logging.getLogger(__name__)
 

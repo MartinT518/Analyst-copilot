@@ -3,8 +3,4 @@
 from .workflow_orchestrator import WorkflowOrchestrator
 from .langgraph_workflow import LangGraphWorkflow
 
-__all__ = [
-    "WorkflowOrchestrator",
-    "LangGraphWorkflow"
-]
-
+__all__ = ["WorkflowOrchestrator", "LangGraphWorkflow"]

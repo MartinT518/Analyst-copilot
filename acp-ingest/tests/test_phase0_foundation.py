@@ -1,21 +1,21 @@
 """Tests for Phase 0 foundation systems."""
 
-import pytest
 import asyncio
-from unittest.mock import Mock, patch, AsyncMock
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+from app.auth.oauth2 import OAuth2Service
+from app.main_enhanced import app
+from app.observability.logging import get_logger, setup_logging
+from app.observability.metrics import MetricsCollector
+from app.observability.tracing import setup_tracing
+from app.resilience.circuit_breaker import CircuitBreaker, CircuitState
+from app.resilience.dead_letter_queue import DeadLetterQueue, JobStatus
+from app.resilience.retry import RetryConfig, RetryManager
+from app.security_config import SecurityConfig, validate_security_config
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from app.main_enhanced import app
-from app.security_config import SecurityConfig, validate_security_config
-from app.observability.logging import setup_logging, get_logger
-from app.observability.metrics import MetricsCollector
-from app.observability.tracing import setup_tracing
-from app.auth.oauth2 import OAuth2Service
-from app.resilience.circuit_breaker import CircuitBreaker, CircuitState
-from app.resilience.retry import RetryConfig, RetryManager
-from app.resilience.dead_letter_queue import DeadLetterQueue, JobStatus
 
 
 class TestSecurityConfig:

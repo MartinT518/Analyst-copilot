@@ -1,12 +1,12 @@
 """Role-Based Access Control (RBAC) service."""
 
-from enum import Enum
-from typing import Dict, List, Set, Optional, Any
 from datetime import datetime
-from sqlalchemy.orm import Session
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
-from app.models import User, Role, Permission, UserRole, RolePermission
+from app.models import Permission, Role, RolePermission, User, UserRole
 from app.utils.logging_config import get_logger
+from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
 

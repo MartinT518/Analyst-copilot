@@ -1,10 +1,9 @@
 """Tests for the ingest API endpoints."""
 
 import pytest
+from app.models import IngestJob
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-
-from app.models import IngestJob
 
 
 def test_upload_file(test_client: TestClient, db_session: Session):

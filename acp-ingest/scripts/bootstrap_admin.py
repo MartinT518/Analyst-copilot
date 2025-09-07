@@ -11,19 +11,19 @@ Usage:
 """
 
 import os
-import sys
 import secrets
 import string
+import sys
 from pathlib import Path
 
 # Add the app directory to the Python path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import structlog
+from app.config import get_settings
 from app.database import get_db
 from app.models import User, UserCreate
 from app.services.auth_service import AuthService
-from app.config import get_settings
-import structlog
 
 logger = structlog.get_logger(__name__)
 

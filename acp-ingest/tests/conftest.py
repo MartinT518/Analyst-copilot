@@ -1,13 +1,12 @@
 """Pytest configuration and fixtures."""
 
 import pytest
+from app.config import get_settings
+from app.database import Base, get_db
+from app.main import app
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
-from app.main import app
-from app.database import Base, get_db
-from app.config import get_settings
 
 # Get settings
 settings = get_settings()

@@ -1,41 +1,40 @@
 """Ingest API endpoints."""
 
-import os
 import json
+import os
 import uuid
-from typing import Optional, Dict, Any, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from fastapi import (
-    APIRouter,
-    UploadFile,
-    File,
-    Form,
-    HTTPException,
-    Depends,
-    BackgroundTasks,
-)
-from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
-
+from app.config import get_settings
 from app.database import get_db
 from app.models import IngestJob, KnowledgeChunk
 from app.schemas import (
-    IngestJobResponse,
     IngestJobCreate,
-    PasteRequest,
+    IngestJobResponse,
     JobStatusResponse,
+    PasteRequest,
 )
-from app.services.ingest_service import IngestService
 from app.services.auth_service import get_current_user
-from app.utils.file_utils import save_upload_file, detect_file_type, get_file_info
+from app.services.ingest_service import IngestService
+from app.utils.file_utils import detect_file_type, get_file_info, save_upload_file
 from app.utils.logging_config import (
-    get_logger,
     get_audit_logger,
+    get_logger,
     get_performance_logger,
 )
-from app.config import get_settings
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+)
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
 audit_logger = get_audit_logger()

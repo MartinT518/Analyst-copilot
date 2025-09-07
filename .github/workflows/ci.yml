@@ -32,8 +32,8 @@ jobs:
 
       - name: Run Bandit security scan
         run: |
-          bandit -r acp-ingest/ acp-agents/ -f json -o bandit-report.json -s B105,B106 --exclude acp-ingest/tests,acp-agents/tests
-          bandit -r acp-ingest/ acp-agents/ -f txt -s B105,B106 --exclude acp-ingest/tests,acp-agents/tests
+          bandit -c .bandit -r acp-ingest/ acp-agents/ -f json -o bandit-report.json
+          bandit -c .bandit -r acp-ingest/ acp-agents/ -f txt
 
       - name: Run Safety check
         run: |

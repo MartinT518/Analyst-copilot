@@ -2,19 +2,18 @@
 
 import os
 from contextlib import asynccontextmanager
-from typing import Dict, Any
+from typing import Any, Dict
 
-from fastapi import FastAPI, Request, HTTPException
+import uvicorn
+from app.api import health, ingest, search
+from app.config import get_settings
+from app.database import Base, engine
+from app.utils.file_utils import ensure_directory
+from app.utils.logging_config import LoggingMiddleware, get_logger, setup_logging
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
-import uvicorn
-
-from app.config import get_settings
-from app.database import engine, Base
-from app.api import ingest, search, health
-from app.utils.logging_config import setup_logging, get_logger, LoggingMiddleware
-from app.utils.file_utils import ensure_directory
 
 # Setup logging
 settings = get_settings()

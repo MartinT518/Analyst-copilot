@@ -312,7 +312,6 @@ def reprocess_failed_jobs(max_retries: int = 3) -> Dict[str, Any]:
                     keyword in job.error_message.lower()
                     for keyword in ["timeout", "connection", "temporary", "network"]
                 ):
-
                     # Reset job for reprocessing
                     job.status = "pending"
                     job.error_message = None

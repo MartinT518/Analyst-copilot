@@ -1,3 +1,6 @@
+# Development tools
+pre-commit==3.6.0
+
 # Core FastAPI and web framework
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
@@ -140,4 +143,3 @@ zstandard==0.22.0
 
 # Network utilities
 dnspython==2.4.2
-

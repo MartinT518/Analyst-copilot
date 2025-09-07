@@ -6,13 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Progress } from '@/components/ui/progress.jsx'
-import { 
-  Brain, 
-  Upload, 
-  Search, 
-  FileText, 
-  CheckCircle, 
-  Clock, 
+import {
+  Brain,
+  Upload,
+  Search,
+  FileText,
+  CheckCircle,
+  Clock,
   AlertCircle,
   Download,
   Settings,
@@ -39,7 +39,7 @@ function Dashboard() {
       estimatedCompletion: '2024-12-05T14:00:00Z'
     },
     {
-      id: 'wf_002', 
+      id: 'wf_002',
       title: 'API Integration Task Breakdown',
       status: 'completed',
       progress: 100,
@@ -226,7 +226,7 @@ function Dashboard() {
                             {workflow.agent}
                           </Badge>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div className="flex items-center justify-between text-sm text-gray-600">
                             <span>Progress</span>
@@ -234,7 +234,7 @@ function Dashboard() {
                           </div>
                           <Progress value={workflow.progress} className="h-2" />
                         </div>
-                        
+
                         <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
                           <span>Started: {new Date(workflow.created).toLocaleTimeString()}</span>
                           <div className="flex items-center space-x-1">
@@ -333,7 +333,7 @@ function UploadPage() {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const files = Array.from(e.dataTransfer.files)
       setUploadedFiles(prev => [...prev, ...files.map(file => ({
@@ -342,7 +342,7 @@ function UploadPage() {
         type: file.type,
         status: 'uploading'
       }))])
-      
+
       // Simulate upload progress
       setTimeout(() => {
         setUploadedFiles(prev => prev.map(f => ({ ...f, status: 'completed' })))
@@ -362,8 +362,8 @@ function UploadPage() {
           <CardContent className="p-8">
             <div
               className={`border-2 border-dashed rounded-lg p-12 text-center transition-all duration-200 ${
-                dragActive 
-                  ? 'border-indigo-500 bg-indigo-50' 
+                dragActive
+                  ? 'border-indigo-500 bg-indigo-50'
                   : 'border-gray-300 hover:border-gray-400'
               }`}
               onDragEnter={handleDrag}
@@ -423,7 +423,7 @@ function SearchPage() {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
-    
+
     setIsSearching(true)
     // Simulate search
     setTimeout(() => {
@@ -478,7 +478,7 @@ function SearchPage() {
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
-              <Button 
+              <Button
                 onClick={handleSearch}
                 disabled={isSearching}
                 className="bg-indigo-600 hover:bg-indigo-700"
@@ -547,4 +547,3 @@ function App() {
 }
 
 export default App
-

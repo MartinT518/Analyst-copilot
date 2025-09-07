@@ -2,7 +2,8 @@
 
 import logging
 import uuid
-from typing import List, Dict, Any, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 

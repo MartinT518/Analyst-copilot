@@ -2,14 +2,15 @@
 
 import logging
 import time
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
+
 import httpx
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..models import KnowledgeChunk
-from ..schemas import SearchResult, ChunkResponse
+from ..schemas import ChunkResponse, SearchResult
 from .vector_service import VectorService
 
 logger = logging.getLogger(__name__)

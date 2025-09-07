@@ -440,7 +440,7 @@ tar -xzf chroma_data_backup.tar.gz -C /
    ```bash
    # Check PostgreSQL status
    sudo systemctl status postgresql
-   
+
    # Check connection
    psql -h localhost -U acp_user -d acp_db -c "SELECT 1;"
    ```
@@ -449,7 +449,7 @@ tar -xzf chroma_data_backup.tar.gz -C /
    ```bash
    # Check Redis status
    sudo systemctl status redis-server
-   
+
    # Test connection
    redis-cli ping
    ```
@@ -542,4 +542,3 @@ After successful deployment:
 5. **Training**: Train your team on the CLI and API usage
 
 For advanced configuration and customization, refer to the detailed documentation in the `docs/` directory.
-
