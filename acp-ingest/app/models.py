@@ -1,6 +1,8 @@
 """Database models for the ACP Ingest service."""
 
 import uuid
+from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy import (
     JSON,
@@ -75,11 +77,11 @@ class Permission(Base):
 
     __tablename__ = "permissions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), unique=True, index=True, nullable=False)
-    description = Column(Text)
-    resource_type = Column(String(50))
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(100), unique=True, index=True, nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    resource_type: Mapped[str | None] = mapped_column(String(50))
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     role_permissions = relationship("RolePermission", back_populates="permission")
@@ -90,12 +92,14 @@ class UserRole(Base):
 
     __tablename__ = "user_roles"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
-    assigned_by = Column(Integer, ForeignKey("users.id"))
-    assigned_at = Column(DateTime(timezone=True), server_default=func.now())
-    expires_at = Column(DateTime(timezone=True))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    role_id: Mapped[int] = mapped_column(Integer, ForeignKey("roles.id"), nullable=False)
+    assigned_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    assigned_at: Mapped[DateTime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    expires_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
 
     # Relationships
     user = relationship("User", back_populates="user_roles", foreign_keys=[user_id])
@@ -111,10 +115,12 @@ class RolePermission(Base):
 
     __tablename__ = "role_permissions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
-    permission_id = Column(Integer, ForeignKey("permissions.id"), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    role_id: Mapped[int] = mapped_column(Integer, ForeignKey("roles.id"), nullable=False)
+    permission_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("permissions.id"), nullable=False
+    )
+    created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     role = relationship("Role", back_populates="role_permissions")
@@ -129,21 +135,25 @@ class IngestJob(Base):
 
     __tablename__ = "ingest_jobs"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    source_type = Column(String(50), nullable=False, index=True)
-    origin = Column(String(255), nullable=False)
-    sensitivity = Column(String(20), nullable=False, index=True)
-    uploader = Column(Integer, ForeignKey("users.id"), nullable=False)
-    file_path = Column(String(500))
-    file_size = Column(Integer)
-    original_filename = Column(String(255))
-    status = Column(String(20), default="pending", index=True)
-    error_message = Column(Text)
-    chunks_created = Column(Integer, default=0)
-    metadata = Column(JSON)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    started_at = Column(DateTime(timezone=True))
-    completed_at = Column(DateTime(timezone=True))
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
+    )
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    origin: Mapped[str] = mapped_column(String(255), nullable=False)
+    sensitivity: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    uploader: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    file_path: Mapped[str | None] = mapped_column(String(500))
+    file_size: Mapped[int | None] = mapped_column(Integer)
+    original_filename: Mapped[str | None] = mapped_column(String(255))
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    chunks_created: Mapped[int] = mapped_column(Integer, default=0)
+    metadata: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Relationships
     uploader_user = relationship("User", back_populates="ingest_jobs")
@@ -161,21 +171,29 @@ class KnowledgeChunk(Base):
 
     __tablename__ = "knowledge_chunks"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    ingest_job_id = Column(UUID(as_uuid=True), ForeignKey("ingest_jobs.id"))
-    source_type = Column(String(50), nullable=False, index=True)
-    source_location = Column(String(500))
-    chunk_text = Column(Text, nullable=False)
-    chunk_index = Column(Integer)
-    metadata = Column(JSON)
-    embedding_model = Column(String(100))
-    embedding_version = Column(String(20))
-    vector_id = Column(String(100), unique=True, index=True)
-    sensitive = Column(Boolean, default=False, index=True)
-    redacted = Column(Boolean, default=False)
-    pii_types = Column(JSON)  # List of detected PII types
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
+    )
+    ingest_job_id: Mapped[UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("ingest_jobs.id")
+    )
+    source_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    source_location: Mapped[str | None] = mapped_column(String(500))
+    chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
+    chunk_index: Mapped[int | None] = mapped_column(Integer)
+    metadata: Mapped[dict | None] = mapped_column(JSON)
+    embedding_model: Mapped[str | None] = mapped_column(String(100))
+    embedding_version: Mapped[str | None] = mapped_column(String(20))
+    vector_id: Mapped[str | None] = mapped_column(String(100), unique=True, index=True)
+    sensitive: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    redacted: Mapped[bool] = mapped_column(Boolean, default=False)
+    pii_types: Mapped[list | None] = mapped_column(JSON)  # List of detected PII types
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now()
+    )
 
     # Relationships
     ingest_job = relationship("IngestJob", back_populates="knowledge_chunks")

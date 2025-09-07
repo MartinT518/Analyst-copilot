@@ -150,7 +150,7 @@ async def upload_file(
             action="file_upload",
             user_id=current_user.get("user_id") if current_user else "anonymous",
             resource_type="ingest_job",
-            resource_id=job.id,
+            resource_id=str(job.id),
             details={
                 "filename": file.filename,
                 "source_type": source_type,
@@ -171,15 +171,15 @@ async def upload_file(
 
         logger.info(
             "File uploaded successfully",
-            job_id=job.id,
+            job_id=str(job.id),
             filename=file.filename,
             source_type=source_type,
             origin=origin,
         )
 
         return UploadResponse(
-            job_id=job.id,
-            status=job.status,
+            job_id=str(job.id),
+            status=str(job.status),
             message="File uploaded successfully and queued for processing",
             file_info=file_info,
         )
@@ -273,7 +273,7 @@ async def paste_text(
             action="text_paste",
             user_id=current_user.get("user_id") if current_user else "anonymous",
             resource_type="ingest_job",
-            resource_id=job.id,
+            resource_id=str(job.id),
             details={
                 "text_length": len(request.text),
                 "origin": request.origin,
@@ -293,14 +293,14 @@ async def paste_text(
 
         logger.info(
             "Text pasted successfully",
-            job_id=job.id,
+            job_id=str(job.id),
             text_length=len(request.text),
             origin=request.origin,
         )
 
         return PasteResponse(
-            job_id=job.id,
-            status=job.status,
+            job_id=str(job.id),
+            status=str(job.status),
             message="Text pasted successfully and queued for processing",
             text_length=len(request.text),
         )
@@ -358,7 +358,7 @@ async def get_job_status(
 
         return JobStatusResponse(
             id=job.id,
-            status=job.status,
+            status=str(job.status),
             origin=job.origin,
             source_type=job.source_type,
             sensitivity=job.sensitivity,
@@ -432,7 +432,7 @@ async def list_jobs(
             job_responses.append(
                 IngestJobResponse(
                     id=job.id,
-                    status=job.status,
+                    status=str(job.status),
                     origin=job.origin,
                     source_type=job.source_type,
                     sensitivity=job.sensitivity,
