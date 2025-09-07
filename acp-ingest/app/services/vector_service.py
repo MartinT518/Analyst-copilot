@@ -2,7 +2,7 @@
 
 import logging
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings
@@ -67,7 +67,7 @@ class VectorService:
         try:
             if self.client:
                 # Try to get collection info
-                collections = self.client.list_collections()
+                self.client.list_collections()
                 return "healthy"
             else:
                 return "unhealthy"
@@ -75,9 +75,7 @@ class VectorService:
             logger.error(f"Vector service health check failed: {e}")
             return "unhealthy"
 
-    async def add_vector(
-        self, embedding: List[float], metadata: Dict[str, Any], text: str
-    ) -> str:
+    async def add_vector(self, embedding: List[float], metadata: Dict[str, Any], text: str) -> str:
         """
         Add a vector to the collection.
 
@@ -215,9 +213,7 @@ class VectorService:
             Optional[Dict[str, Any]]: Vector data or None if not found
         """
         try:
-            results = self.collection.get(
-                ids=[vector_id], include=["documents", "metadatas"]
-            )
+            results = self.collection.get(ids=[vector_id], include=["documents", "metadatas"])
 
             if results["ids"] and results["ids"][0]:
                 return {

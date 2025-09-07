@@ -1,7 +1,7 @@
 """Knowledge service for context retrieval."""
 
-import asyncio
-from typing import List, Dict, Any, Optional
+from typing import Any, Dict, List, Optional
+
 import httpx
 import structlog
 
@@ -104,9 +104,7 @@ class KnowledgeService:
                 )
                 results.append(reference)
 
-            self.logger.info(
-                "Knowledge search completed", query=query, results_count=len(results)
-            )
+            self.logger.info("Knowledge search completed", query=query, results_count=len(results))
 
             return results
 
@@ -151,14 +149,10 @@ class KnowledgeService:
             )
 
         except Exception as e:
-            self.logger.error(
-                "Failed to get knowledge chunk", chunk_id=chunk_id, error=str(e)
-            )
+            self.logger.error("Failed to get knowledge chunk", chunk_id=chunk_id, error=str(e))
             return None
 
-    async def get_related_chunks(
-        self, chunk_id: str, limit: int = 5
-    ) -> List[KnowledgeReference]:
+    async def get_related_chunks(self, chunk_id: str, limit: int = 5) -> List[KnowledgeReference]:
         """Get chunks related to a specific chunk.
 
         Args:
@@ -182,9 +176,7 @@ class KnowledgeService:
             )
 
         except Exception as e:
-            self.logger.error(
-                "Failed to get related chunks", chunk_id=chunk_id, error=str(e)
-            )
+            self.logger.error("Failed to get related chunks", chunk_id=chunk_id, error=str(e))
             return []
 
     async def health_check(self) -> bool:

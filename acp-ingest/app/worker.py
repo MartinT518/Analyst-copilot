@@ -1,18 +1,17 @@
 """Celery worker for background job processing."""
 
-import os
 import asyncio
+import os
 from datetime import datetime
-from typing import Dict, Any
-
-from celery import Celery
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from typing import Any, Dict
 
 from app.config import get_settings
 from app.models import IngestJob
 from app.services.ingest_service import IngestService
-from app.utils.logging_config import setup_logging, get_logger
+from app.utils.logging_config import get_logger, setup_logging
+from celery import Celery
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 # Setup logging
 settings = get_settings()
@@ -114,9 +113,7 @@ def process_ingest_job(self, job_id: str) -> Dict[str, Any]:
         asyncio.set_event_loop(loop)
 
         try:
-            result = loop.run_until_complete(
-                ingest_service.process_job_async(job_id, db)
-            )
+            result = loop.run_until_complete(ingest_service.process_job_async(job_id, db))
             logger.info("Job processing completed", job_id=job_id, result=result)
             return result
         finally:
@@ -135,9 +132,7 @@ def process_ingest_job(self, job_id: str) -> Dict[str, Any]:
                 job.completed_at = datetime.utcnow()
                 db.commit()
         except Exception as db_error:
-            logger.error(
-                "Failed to update job status", job_id=job_id, error=str(db_error)
-            )
+            logger.error("Failed to update job status", job_id=job_id, error=str(db_error))
 
         return {"status": "error", "message": str(e)}
 
@@ -180,9 +175,7 @@ def cleanup_old_jobs() -> Dict[str, Any]:
                 # Delete associated chunks
                 from app.models import KnowledgeChunk
 
-                db.query(KnowledgeChunk).filter(
-                    KnowledgeChunk.job_id == job.id
-                ).delete()
+                db.query(KnowledgeChunk).filter(KnowledgeChunk.job_id == job.id).delete()
 
                 # Delete job file if it exists
                 if job.file_path and os.path.exists(job.file_path):
@@ -334,9 +327,7 @@ def reprocess_failed_jobs(max_retries: int = 3) -> Dict[str, Any]:
 
         db.commit()
 
-        logger.info(
-            "Failed job reprocessing completed", reprocessed_count=reprocessed_count
-        )
+        logger.info("Failed job reprocessing completed", reprocessed_count=reprocessed_count)
 
         return {
             "status": "success",
@@ -368,12 +359,8 @@ def update_job_metrics() -> Dict[str, Any]:
         # Get job statistics
         total_jobs = db.query(IngestJob).count()
         pending_jobs = db.query(IngestJob).filter(IngestJob.status == "pending").count()
-        processing_jobs = (
-            db.query(IngestJob).filter(IngestJob.status == "processing").count()
-        )
-        completed_jobs = (
-            db.query(IngestJob).filter(IngestJob.status == "completed").count()
-        )
+        processing_jobs = db.query(IngestJob).filter(IngestJob.status == "processing").count()
+        completed_jobs = db.query(IngestJob).filter(IngestJob.status == "completed").count()
         failed_jobs = db.query(IngestJob).filter(IngestJob.status == "failed").count()
 
         # Get chunk statistics
@@ -389,9 +376,7 @@ def update_job_metrics() -> Dict[str, Any]:
                 "processing": processing_jobs,
                 "completed": completed_jobs,
                 "failed": failed_jobs,
-                "success_rate": (
-                    (completed_jobs / total_jobs * 100) if total_jobs > 0 else 0
-                ),
+                "success_rate": ((completed_jobs / total_jobs * 100) if total_jobs > 0 else 0),
             },
             "chunks": {"total": total_chunks},
         }

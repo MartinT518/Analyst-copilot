@@ -9,7 +9,6 @@ from app.database import get_db
 from app.utils.logging_config import get_logger
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import text
-from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
 router = APIRouter(tags=["health"])
@@ -20,7 +19,7 @@ async def check_database() -> Dict[str, Any]:
     """Check database connectivity."""
     try:
         db = next(get_db())
-        result = db.execute(text("SELECT 1")).fetchone()
+        db.execute(text("SELECT 1")).fetchone()
         db.close()
 
         return {
@@ -91,9 +90,7 @@ async def check_llm_endpoint() -> Dict[str, Any]:
             if settings.OPENAI_API_KEY:
                 headers["Authorization"] = f"Bearer {settings.OPENAI_API_KEY}"
 
-            response = await client.get(
-                f"{settings.LLM_ENDPOINT}/v1/models", headers=headers
-            )
+            response = await client.get(f"{settings.LLM_ENDPOINT}/v1/models", headers=headers)
 
             if response.status_code == 200:
                 return {"status": "healthy", "details": "LLM endpoint accessible"}
@@ -122,9 +119,7 @@ async def check_embedding_endpoint() -> Dict[str, Any]:
             if settings.OPENAI_API_KEY:
                 headers["Authorization"] = f"Bearer {settings.OPENAI_API_KEY}"
 
-            response = await client.get(
-                f"{settings.EMBEDDING_ENDPOINT}/models", headers=headers
-            )
+            response = await client.get(f"{settings.EMBEDDING_ENDPOINT}/models", headers=headers)
 
             if response.status_code == 200:
                 return {"status": "healthy", "details": "Embedding endpoint accessible"}
@@ -228,9 +223,7 @@ async def health_check():
         }
 
         # Determine overall status
-        all_healthy = all(
-            service.get("status") == "healthy" for service in services.values()
-        )
+        all_healthy = all(service.get("status") == "healthy" for service in services.values())
         overall_status = "healthy" if all_healthy else "unhealthy"
 
         response = {
@@ -286,9 +279,7 @@ async def readiness_probe():
         critical_services = {"database": db_check, "redis": redis_check}
 
         # Ready if critical services are healthy
-        ready = all(
-            service.get("status") == "healthy" for service in critical_services.values()
-        )
+        ready = all(service.get("status") == "healthy" for service in critical_services.values())
 
         response = {
             "status": "ready" if ready else "not_ready",
@@ -364,18 +355,10 @@ async def get_metrics():
         try:
             # Get job metrics
             total_jobs = db.query(IngestJob).count()
-            pending_jobs = (
-                db.query(IngestJob).filter(IngestJob.status == "pending").count()
-            )
-            processing_jobs = (
-                db.query(IngestJob).filter(IngestJob.status == "processing").count()
-            )
-            completed_jobs = (
-                db.query(IngestJob).filter(IngestJob.status == "completed").count()
-            )
-            failed_jobs = (
-                db.query(IngestJob).filter(IngestJob.status == "failed").count()
-            )
+            pending_jobs = db.query(IngestJob).filter(IngestJob.status == "pending").count()
+            processing_jobs = db.query(IngestJob).filter(IngestJob.status == "processing").count()
+            completed_jobs = db.query(IngestJob).filter(IngestJob.status == "completed").count()
+            failed_jobs = db.query(IngestJob).filter(IngestJob.status == "failed").count()
 
             # Get chunk metrics
             total_chunks = db.query(KnowledgeChunk).count()
@@ -391,9 +374,7 @@ async def get_metrics():
                     "processing": processing_jobs,
                     "completed": completed_jobs,
                     "failed": failed_jobs,
-                    "success_rate": (
-                        (completed_jobs / total_jobs * 100) if total_jobs > 0 else 0
-                    ),
+                    "success_rate": ((completed_jobs / total_jobs * 100) if total_jobs > 0 else 0),
                 },
                 "chunks": {"total": total_chunks},
                 "disk": {
@@ -410,9 +391,7 @@ async def get_metrics():
 
     except Exception as e:
         logger.error("Metrics collection error", error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to collect metrics: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to collect metrics: {str(e)}")
 
 
 @router.get("/version")

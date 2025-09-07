@@ -1,17 +1,13 @@
 """Core code analysis service for extracting structured information from codebases."""
 
 import ast
-import os
 import asyncio
-from typing import Dict, List, Any, Optional, Set
+import os
 from pathlib import Path
-import structlog
-import tree_sitter
-from tree_sitter import Language, Parser
-import libcst as cst
-from jedi import Script
-import magic
+from typing import Any, Dict, List, Optional
+
 import chardet
+import structlog
 
 from ..config import get_settings
 
@@ -134,11 +130,7 @@ class CodeAnalysisService:
                     "total_lines_analyzed": self.total_lines_analyzed,
                     "errors_encountered": self.errors_encountered,
                     "languages_detected": list(
-                        set(
-                            r.get("language")
-                            for r in analysis_results
-                            if r.get("language")
-                        )
+                        set(r.get("language") for r in analysis_results if r.get("language"))
                     ),
                 },
             }
@@ -212,9 +204,7 @@ class CodeAnalysisService:
             repo = git.Repo(repo_path)
 
             git_info = {
-                "current_branch": repo.active_branch.name
-                if repo.active_branch
-                else "detached",
+                "current_branch": repo.active_branch.name if repo.active_branch else "detached",
                 "commit_count": len(list(repo.iter_commits())),
                 "last_commit": {
                     "hash": repo.head.commit.hexsha[:8],
@@ -255,23 +245,18 @@ class CodeAnalysisService:
 
         for root, dirs, files in os.walk(repo_path):
             # Filter directories to avoid walking excluded paths
-            dirs[:] = [
-                d for d in dirs if not exclude_spec.match_file(str(Path(root) / d))
-            ]
+            dirs[:] = [d for d in dirs if not exclude_spec.match_file(str(Path(root) / d))]
 
             for file in files:
                 file_path = Path(root) / file
                 relative_path = file_path.relative_to(repo_path)
 
                 # Check if file matches include patterns and doesn't match exclude patterns
-                if include_spec.match_file(
+                if include_spec.match_file(str(relative_path)) and not exclude_spec.match_file(
                     str(relative_path)
-                ) and not exclude_spec.match_file(str(relative_path)):
+                ):
                     # Check file extension
-                    if (
-                        file_path.suffix.lower()
-                        in self.settings.allowed_file_extensions
-                    ):
+                    if file_path.suffix.lower() in self.settings.allowed_file_extensions:
                         # Check file size
                         try:
                             size_mb = file_path.stat().st_size / (1024 * 1024)
@@ -339,9 +324,7 @@ class CodeAnalysisService:
             return analysis
 
         except Exception as e:
-            self.logger.warning(
-                "File analysis failed", file_path=str(file_path), error=str(e)
-            )
+            self.logger.warning("File analysis failed", file_path=str(file_path), error=str(e))
             return {
                 "file_path": str(file_path.relative_to(repo_path)),
                 "error": str(e),
@@ -439,9 +422,7 @@ class CodeAnalysisService:
         except Exception:
             return "unknown"
 
-    async def _analyze_python_file(
-        self, content: str, file_path: Path
-    ) -> Dict[str, Any]:
+    async def _analyze_python_file(self, content: str, file_path: Path) -> Dict[str, Any]:
         """Analyze Python file using AST.
 
         Args:
@@ -468,13 +449,9 @@ class CodeAnalysisService:
                     class_info = {
                         "name": node.name,
                         "line_number": node.lineno,
-                        "methods": [
-                            n.name for n in node.body if isinstance(n, ast.FunctionDef)
-                        ],
+                        "methods": [n.name for n in node.body if isinstance(n, ast.FunctionDef)],
                         "docstring": ast.get_docstring(node),
-                        "decorators": [
-                            self._get_decorator_name(d) for d in node.decorator_list
-                        ],
+                        "decorators": [self._get_decorator_name(d) for d in node.decorator_list],
                     }
                     analysis["classes"].append(class_info)
 
@@ -484,9 +461,7 @@ class CodeAnalysisService:
                         "line_number": node.lineno,
                         "args": [arg.arg for arg in node.args.args],
                         "docstring": ast.get_docstring(node),
-                        "decorators": [
-                            self._get_decorator_name(d) for d in node.decorator_list
-                        ],
+                        "decorators": [self._get_decorator_name(d) for d in node.decorator_list],
                         "is_async": isinstance(node, ast.AsyncFunctionDef),
                     }
                     analysis["functions"].append(func_info)
@@ -524,9 +499,7 @@ class CodeAnalysisService:
                             )
 
             # Calculate complexity (simplified)
-            analysis["complexity_score"] = (
-                len(analysis["functions"]) + len(analysis["classes"]) * 2
-            )
+            analysis["complexity_score"] = len(analysis["functions"]) + len(analysis["classes"]) * 2
 
         except SyntaxError as e:
             analysis["syntax_error"] = str(e)
@@ -634,9 +607,7 @@ class CodeAnalysisService:
 
         return analysis
 
-    async def _analyze_generic_file(
-        self, content: str, file_path: Path
-    ) -> Dict[str, Any]:
+    async def _analyze_generic_file(self, content: str, file_path: Path) -> Dict[str, Any]:
         """Analyze generic text file.
 
         Args:
@@ -732,9 +703,9 @@ class CodeAnalysisService:
         insights["dependency_analysis"] = {
             "total_imports": len(all_imports),
             "unique_modules": len(import_counts),
-            "most_used_modules": sorted(
-                import_counts.items(), key=lambda x: x[1], reverse=True
-            )[:10],
+            "most_used_modules": sorted(import_counts.items(), key=lambda x: x[1], reverse=True)[
+                :10
+            ],
         }
 
         # Code quality metrics
@@ -746,11 +717,10 @@ class CodeAnalysisService:
             "total_lines_of_code": total_lines,
             "files_with_errors": sum(1 for r in analysis_results if "error" in r),
             "analysis_coverage": (
-                total_files - sum(1 for r in analysis_results if "error" in r)
-            )
-            / total_files
-            if total_files > 0
-            else 0,
+                (total_files - sum(1 for r in analysis_results if "error" in r)) / total_files
+                if total_files > 0
+                else 0
+            ),
         }
 
         return insights

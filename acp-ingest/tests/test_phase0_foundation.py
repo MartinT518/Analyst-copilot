@@ -1,7 +1,7 @@
 """Tests for Phase 0 foundation systems."""
 
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 from app.auth.oauth2 import OAuth2Service
@@ -12,7 +12,7 @@ from app.observability.tracing import setup_tracing
 from app.resilience.circuit_breaker import CircuitBreaker, CircuitState
 from app.resilience.dead_letter_queue import DeadLetterQueue, JobStatus
 from app.resilience.retry import RetryConfig, RetryManager
-from app.security_config import SecurityConfig, validate_security_config
+from app.security_config import SecurityConfig
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -168,9 +168,7 @@ class TestResilience:
 
     def test_circuit_breaker(self):
         """Test circuit breaker functionality."""
-        circuit = CircuitBreaker(
-            failure_threshold=2, recovery_timeout=1, name="test-circuit"
-        )
+        circuit = CircuitBreaker(failure_threshold=2, recovery_timeout=1, name="test-circuit")
 
         # Test successful call
         def success_func():
@@ -201,9 +199,7 @@ class TestResilience:
 
     def test_retry_logic(self):
         """Test retry logic functionality."""
-        config = RetryConfig(
-            max_attempts=3, backoff_factor=1.0, max_delay=1.0, min_delay=0.1
-        )
+        config = RetryConfig(max_attempts=3, backoff_factor=1.0, max_delay=1.0, min_delay=0.1)
 
         retry_manager = RetryManager(config)
 
@@ -293,9 +289,7 @@ class TestIntegration:
                     # Mock HTTP client
                     mock_response = Mock()
                     mock_response.raise_for_status.return_value = None
-                    mock_httpx.return_value.__aenter__.return_value.get.return_value = (
-                        mock_response
-                    )
+                    mock_httpx.return_value.__aenter__.return_value.get.return_value = mock_response
 
                     response = client.get("/health")
                     assert response.status_code == 200

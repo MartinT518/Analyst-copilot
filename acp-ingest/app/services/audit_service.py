@@ -6,9 +6,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from app.models import AuditLog, User
+from app.models import AuditLog
 from app.utils.logging_config import get_logger
-from sqlalchemy import and_, desc, or_
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
@@ -326,9 +326,7 @@ class AuditService:
             "redaction_count": redaction_count,
             "original_length": original_length,
             "redacted_length": redacted_length,
-            "reduction_percentage": round(
-                (1 - redacted_length / original_length) * 100, 2
-            ),
+            "reduction_percentage": round((1 - redacted_length / original_length) * 100, 2),
         }
 
         await self.log_event(
@@ -379,9 +377,7 @@ class AuditService:
             db=db,
         )
 
-    def verify_audit_chain(
-        self, db: Session, limit: Optional[int] = None
-    ) -> Dict[str, Any]:
+    def verify_audit_chain(self, db: Session, limit: Optional[int] = None) -> Dict[str, Any]:
         """
         Verify the integrity of the audit log chain.
 
@@ -592,9 +588,7 @@ class AuditService:
                 user_counts[user_id] += 1
 
             # Top users by activity
-            top_users = sorted(user_counts.items(), key=lambda x: x[1], reverse=True)[
-                :10
-            ]
+            top_users = sorted(user_counts.items(), key=lambda x: x[1], reverse=True)[:10]
 
             return {
                 "total_events": total_events,

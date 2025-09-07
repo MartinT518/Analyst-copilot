@@ -1,8 +1,6 @@
 """Confluence HTML/XML parser for processing exported Confluence pages."""
 
 import logging
-import re
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from bs4 import BeautifulSoup, Tag
@@ -43,9 +41,7 @@ class ConfluenceParser:
         # Tags to ignore
         self.ignore_tags = ["script", "style", "nav", "footer", "header", "aside"]
 
-    async def parse(
-        self, content: str, metadata: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    async def parse(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Parse Confluence HTML/XML content.
 
@@ -69,9 +65,7 @@ class ConfluenceParser:
             logger.error(f"Failed to parse Confluence content: {e}")
             raise
 
-    async def _parse_html(
-        self, content: str, metadata: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    async def _parse_html(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Parse Confluence HTML export.
 
@@ -115,9 +109,7 @@ class ConfluenceParser:
             logger.error(f"Failed to parse HTML content: {e}")
             raise
 
-    async def _parse_xml(
-        self, content: str, metadata: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    async def _parse_xml(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Parse Confluence XML export.
 
@@ -514,7 +506,7 @@ class ConfluenceParser:
                 return True
             else:
                 # Try to parse as HTML
-                soup = BeautifulSoup(content, "html.parser")
+                BeautifulSoup(content, "html.parser")
                 # Check for common Confluence indicators
                 confluence_indicators = [
                     "confluence",
@@ -524,9 +516,7 @@ class ConfluenceParser:
                 ]
 
                 content_lower = content.lower()
-                return any(
-                    indicator in content_lower for indicator in confluence_indicators
-                )
+                return any(indicator in content_lower for indicator in confluence_indicators)
 
         except Exception:
             return False

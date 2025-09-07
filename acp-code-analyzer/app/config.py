@@ -1,7 +1,7 @@
 """Configuration settings for the ACP Code Analyzer service."""
 
-import os
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -27,12 +27,8 @@ class Settings(BaseSettings):
     )
 
     # Ingest service integration
-    ingest_service_url: str = Field(
-        default="http://localhost:8000", env="INGEST_SERVICE_URL"
-    )
-    ingest_service_api_key: Optional[str] = Field(
-        default=None, env="INGEST_SERVICE_API_KEY"
-    )
+    ingest_service_url: str = Field(default="http://localhost:8000", env="INGEST_SERVICE_URL")
+    ingest_service_api_key: Optional[str] = Field(default=None, env="INGEST_SERVICE_API_KEY")
 
     # Code analysis settings
     max_file_size_mb: int = Field(default=10, env="MAX_FILE_SIZE_MB")

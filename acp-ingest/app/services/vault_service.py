@@ -48,9 +48,7 @@ class VaultService:
             elif self.settings.vault_auth_method == "kubernetes":
                 await self._authenticate_with_kubernetes()
             else:
-                logger.error(
-                    f"Unsupported Vault auth method: {self.settings.vault_auth_method}"
-                )
+                logger.error(f"Unsupported Vault auth method: {self.settings.vault_auth_method}")
                 return False
 
             # Test connection
@@ -176,8 +174,7 @@ class VaultService:
             status = self.client.sys.read_health_status()
 
             return {
-                "healthy": status.get("initialized", False)
-                and not status.get("sealed", True),
+                "healthy": status.get("initialized", False) and not status.get("sealed", True),
                 "initialized": status.get("initialized", False),
                 "sealed": status.get("sealed", True),
                 "version": status.get("version", "unknown"),
@@ -205,9 +202,7 @@ class VaultService:
 vault_service = VaultService()
 
 
-async def get_vault_secret(
-    path: str, key: Optional[str] = None, fallback: Any = None
-) -> Any:
+async def get_vault_secret(path: str, key: Optional[str] = None, fallback: Any = None) -> Any:
     """Convenience function to get secrets from Vault with fallback.
 
     Args:

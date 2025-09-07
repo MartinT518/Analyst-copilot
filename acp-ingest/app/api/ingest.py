@@ -33,7 +33,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
@@ -204,9 +204,7 @@ async def upload_file(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(
-            "File upload failed", error=str(e), filename=file.filename if file else None
-        )
+        logger.error("File upload failed", error=str(e), filename=file.filename if file else None)
 
         # Log performance failure
         duration_ms = (datetime.utcnow() - start_time).total_seconds() * 1000
@@ -371,9 +369,7 @@ async def get_job_status(
                 raise HTTPException(status_code=403, detail="Access denied")
 
         # Get chunk count
-        chunk_count = (
-            db.query(KnowledgeChunk).filter(KnowledgeChunk.job_id == job_id).count()
-        )
+        chunk_count = db.query(KnowledgeChunk).filter(KnowledgeChunk.job_id == job_id).count()
 
         logger.debug("Job status retrieved", job_id=job_id, status=job.status)
 
@@ -395,9 +391,7 @@ async def get_job_status(
         raise
     except Exception as e:
         logger.error("Failed to get job status", job_id=job_id, error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get job status: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get job status: {str(e)}")
 
 
 @router.get("/jobs", response_model=JobListResponse)
@@ -445,16 +439,12 @@ async def list_jobs(
         total = query.count()
 
         # Apply pagination and ordering
-        jobs = (
-            query.order_by(IngestJob.created_at.desc()).offset(skip).limit(limit).all()
-        )
+        jobs = query.order_by(IngestJob.created_at.desc()).offset(skip).limit(limit).all()
 
         # Convert to response models
         job_responses = []
         for job in jobs:
-            chunk_count = (
-                db.query(KnowledgeChunk).filter(KnowledgeChunk.job_id == job.id).count()
-            )
+            chunk_count = db.query(KnowledgeChunk).filter(KnowledgeChunk.job_id == job.id).count()
 
             job_responses.append(
                 IngestJobResponse(
@@ -522,9 +512,7 @@ async def delete_job(
             try:
                 os.remove(job.file_path)
             except Exception as e:
-                logger.warning(
-                    "Failed to delete file", file_path=job.file_path, error=str(e)
-                )
+                logger.warning("Failed to delete file", file_path=job.file_path, error=str(e))
 
         # Log audit event
         audit_logger.log_event(
@@ -582,9 +570,7 @@ async def retry_job(
 
         # Check if job can be retried
         if job.status not in ["failed", "completed"]:
-            raise HTTPException(
-                status_code=400, detail="Job cannot be retried in current status"
-            )
+            raise HTTPException(status_code=400, detail="Job cannot be retried in current status")
 
         # Reset job status
         job.status = "pending"
@@ -688,9 +674,7 @@ async def get_ingest_stats(
             },
             "source_types": source_type_stats,
             "total_chunks": total_chunks,
-            "success_rate": (
-                (completed_jobs / total_jobs * 100) if total_jobs > 0 else 0
-            ),
+            "success_rate": ((completed_jobs / total_jobs * 100) if total_jobs > 0 else 0),
         }
 
         logger.debug("Ingest stats retrieved", stats=stats)

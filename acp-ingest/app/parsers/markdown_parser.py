@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import markdown
-from markdown.extensions import codehilite, tables, toc
 
 logger = logging.getLogger(__name__)
 
@@ -34,15 +33,11 @@ class MarkdownParser:
         )
 
         # Patterns for extracting metadata
-        self.frontmatter_pattern = re.compile(
-            r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL | re.MULTILINE
-        )
+        self.frontmatter_pattern = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.DOTALL | re.MULTILINE)
         self.title_pattern = re.compile(r"^#\s+(.+)$", re.MULTILINE)
         self.heading_pattern = re.compile(r"^(#{1,6})\s+(.+)$", re.MULTILINE)
 
-    async def parse(
-        self, content: str, metadata: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    async def parse(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Parse Markdown content.
 
@@ -67,9 +62,7 @@ class MarkdownParser:
 
             if not documents:
                 # Treat as single document
-                document = await self._parse_single_document(
-                    content, frontmatter, metadata, 0
-                )
+                document = await self._parse_single_document(content, frontmatter, metadata, 0)
                 if document:
                     documents = [document]
 
@@ -106,9 +99,7 @@ class MarkdownParser:
         # Split content at each H1
         for i, match in enumerate(h1_matches):
             start_pos = match.start()
-            end_pos = (
-                h1_matches[i + 1].start() if i + 1 < len(h1_matches) else len(content)
-            )
+            end_pos = h1_matches[i + 1].start() if i + 1 < len(h1_matches) else len(content)
 
             section_content = content[start_pos:end_pos].strip()
 

@@ -465,9 +465,7 @@ def safe_remove_directory(dir_path: str) -> bool:
         return False
 
 
-def validate_file_path(
-    file_path: str, allowed_dirs: Optional[List[str]] = None
-) -> bool:
+def validate_file_path(file_path: str, allowed_dirs: Optional[List[str]] = None) -> bool:
     """
     Validate file path for security.
 

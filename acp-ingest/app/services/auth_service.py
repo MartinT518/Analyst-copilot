@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..database import get_db
 from ..models import APIKey, AuditLog, User
-from ..schemas import TokenResponse, UserCreate, UserResponse
+from ..schemas import UserCreate
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -61,9 +61,7 @@ class AuthService:
         if expires_delta:
             expire = datetime.utcnow() + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(
-                minutes=settings.access_token_expire_minutes
-            )
+            expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
 
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
@@ -85,9 +83,7 @@ class AuthService:
         except JWTError:
             return None
 
-    def authenticate_user(
-        self, username: str, password: str, db: Session
-    ) -> Optional[User]:
+    def authenticate_user(self, username: str, password: str, db: Session) -> Optional[User]:
         """
         Authenticate a user with username and password.
 
@@ -120,16 +116,12 @@ class AuthService:
         # Check if username or email already exists
         existing_user = (
             db.query(User)
-            .filter(
-                (User.username == user_data.username) | (User.email == user_data.email)
-            )
+            .filter((User.username == user_data.username) | (User.email == user_data.email))
             .first()
         )
 
         if existing_user:
-            raise HTTPException(
-                status_code=400, detail="Username or email already registered"
-            )
+            raise HTTPException(status_code=400, detail="Username or email already registered")
 
         # Create new user
         hashed_password = self.get_password_hash(user_data.password)
@@ -396,7 +388,5 @@ class AuthService:
             return None
 
         # No users exist - admin should be created via bootstrap script
-        logger.info(
-            "No users found. Use bootstrap script to create initial admin user."
-        )
+        logger.info("No users found. Use bootstrap script to create initial admin user.")
         return None

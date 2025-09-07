@@ -1,16 +1,17 @@
 """Clarifier agent for generating clarifying questions from user requests."""
 
 import json
-from typing import Type, List, Dict, Any
+from typing import Dict, List, Type
+
 import structlog
 
-from .base_agent import BaseAgent
-from ..schemas.common_schemas import AgentType
 from ..schemas.agent_schemas import (
+    ClarificationQuestion,
     ClarifierInput,
     ClarifierOutput,
-    ClarificationQuestion,
 )
+from ..schemas.common_schemas import AgentType
+from .base_agent import BaseAgent
 
 logger = structlog.get_logger(__name__)
 
@@ -117,15 +118,11 @@ Ensure all questions are specific, actionable, and focused on gathering the info
         Returns:
             Clarifier output with questions and analysis
         """
-        self.logger.info(
-            "Processing clarification request", request_id=input_data.request_id
-        )
+        self.logger.info("Processing clarification request", request_id=input_data.request_id)
 
         try:
             # Search knowledge base for relevant context
-            knowledge_refs = await self._search_knowledge(
-                query=input_data.user_request, limit=5
-            )
+            knowledge_refs = await self._search_knowledge(query=input_data.user_request, limit=5)
 
             # Log knowledge access
             await self.audit_service.log_knowledge_access(
@@ -175,9 +172,7 @@ Ensure all questions are specific, actionable, and focused on gathering the info
 
             # Calculate confidence based on various factors
             confidence_factors = {
-                "request_clarity": self._assess_request_clarity(
-                    input_data.user_request
-                ),
+                "request_clarity": self._assess_request_clarity(input_data.user_request),
                 "knowledge_availability": min(1.0, len(knowledge_refs) / 3.0),
                 "questions_generated": min(
                     1.0, len(questions) / self.settings.clarifier_max_questions
@@ -203,9 +198,7 @@ Ensure all questions are specific, actionable, and focused on gathering the info
                     "knowledge_references_used": len(knowledge_refs),
                     "questions_generated": len(questions),
                     "domain_context_provided": bool(input_data.domain_context),
-                    "existing_requirements_count": len(
-                        input_data.existing_requirements
-                    ),
+                    "existing_requirements_count": len(input_data.existing_requirements),
                 },
             )
 
@@ -252,16 +245,12 @@ Ensure all questions are specific, actionable, and focused on gathering the info
             "need",
             "require",
         ]
-        specificity_count = sum(
-            1 for word in specific_words if word.lower() in request.lower()
-        )
+        specificity_count = sum(1 for word in specific_words if word.lower() in request.lower())
         score += min(0.2, specificity_count * 0.05)
 
         # Question words (indicate uncertainty)
         question_words = ["what", "how", "when", "where", "why", "which", "who"]
-        question_count = sum(
-            1 for word in question_words if word.lower() in request.lower()
-        )
+        question_count = sum(1 for word in question_words if word.lower() in request.lower())
         score -= min(0.2, question_count * 0.03)
 
         # Technical terms (indicate domain knowledge)
@@ -273,9 +262,7 @@ Ensure all questions are specific, actionable, and focused on gathering the info
             "integration",
             "workflow",
         ]
-        tech_count = sum(
-            1 for term in technical_terms if term.lower() in request.lower()
-        )
+        tech_count = sum(1 for term in technical_terms if term.lower() in request.lower())
         score += min(0.1, tech_count * 0.02)
 
         return max(0.0, min(1.0, score))
@@ -326,9 +313,7 @@ Generate up to 3 follow-up questions that dive deeper into areas that need more 
                     )
                     follow_ups.append(question)
                 except Exception as e:
-                    self.logger.warning(
-                        "Failed to parse follow-up question", error=str(e)
-                    )
+                    self.logger.warning("Failed to parse follow-up question", error=str(e))
                     continue
 
             return follow_ups

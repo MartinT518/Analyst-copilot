@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 
 class SensitivityLevel(str, Enum):
@@ -63,9 +63,7 @@ class IngestUploadRequest(BaseModel):
 class IngestPasteRequest(BaseModel):
     """Schema for paste text requests."""
 
-    text: str = Field(
-        ..., min_length=1, max_length=100000, description="Text content to ingest"
-    )
+    text: str = Field(..., min_length=1, max_length=100000, description="Text content to ingest")
     origin: str = Field(..., description="Customer or source identifier")
     ticket_id: Optional[str] = Field(None, description="Ticket or document ID")
     sensitivity: SensitivityLevel = Field(..., description="Data sensitivity level")
@@ -78,15 +76,11 @@ class ChunkSearchRequest(BaseModel):
     """Schema for semantic search requests."""
 
     query: str = Field(..., min_length=1, max_length=1000, description="Search query")
-    limit: int = Field(
-        default=10, ge=1, le=100, description="Maximum number of results"
-    )
+    limit: int = Field(default=10, ge=1, le=100, description="Maximum number of results")
     similarity_threshold: float = Field(
         default=0.7, ge=0.0, le=1.0, description="Minimum similarity score"
     )
-    filters: Optional[Dict[str, Any]] = Field(
-        default_factory=dict, description="Metadata filters"
-    )
+    filters: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Metadata filters")
 
 
 # Response schemas

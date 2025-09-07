@@ -1,12 +1,9 @@
 """Database schema parser for extracting structured information from databases."""
 
-import asyncio
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-import psycopg2
-import psycopg2.extras
-from sqlalchemy import Column, ForeignKey, MetaData, Table, create_engine, text
+from sqlalchemy import MetaData, create_engine, text
 from sqlalchemy.engine import Engine
 
 logger = logging.getLogger(__name__)
@@ -19,9 +16,7 @@ class DatabaseSchemaParser:
         """Initialize the database schema parser."""
         self.supported_databases = ["postgresql", "mysql", "sqlite", "oracle", "mssql"]
 
-    async def parse(
-        self, content: str, metadata: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    async def parse(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Parse database schema and extract structured information.
 
         Args:
@@ -203,9 +198,7 @@ class DatabaseSchemaParser:
                 ORDER BY c.ordinal_position
                 """
 
-                columns_result = conn.execute(
-                    text(columns_query), {"table_name": table_name}
-                )
+                columns_result = conn.execute(text(columns_query), {"table_name": table_name})
                 columns = []
                 for col_row in columns_result:
                     columns.append(
@@ -264,9 +257,7 @@ class DatabaseSchemaParser:
                 ORDER BY i.relname, a.attnum
                 """
 
-                index_result = conn.execute(
-                    text(index_query), {"table_name": table_name}
-                )
+                index_result = conn.execute(text(index_query), {"table_name": table_name})
                 indexes = []
                 for idx_row in index_result:
                     indexes.append(
@@ -386,9 +377,7 @@ class DatabaseSchemaParser:
         )
 
         if schema_info["tables"]:
-            table_names = [
-                table["name"] for table in schema_info["tables"][:10]
-            ]  # First 10 tables
+            table_names = [table["name"] for table in schema_info["tables"][:10]]  # First 10 tables
             overview_parts.append(f"Main tables include: {', '.join(table_names)}.")
 
         if relationship_count > 0:
@@ -398,9 +387,7 @@ class DatabaseSchemaParser:
 
         # Add key relationships
         if schema_info["relationships"]:
-            key_relationships = schema_info["relationships"][
-                :5
-            ]  # First 5 relationships
+            key_relationships = schema_info["relationships"][:5]  # First 5 relationships
             rel_descriptions = []
             for rel in key_relationships:
                 rel_descriptions.append(f"{rel['from_table']} -> {rel['to_table']}")
@@ -410,9 +397,7 @@ class DatabaseSchemaParser:
 
     def _generate_table_description(self, table: Dict[str, Any]) -> str:
         """Generate natural language description of a table."""
-        desc_parts = [
-            f"Table '{table['name']}' contains {len(table['columns'])} column(s)."
-        ]
+        desc_parts = [f"Table '{table['name']}' contains {len(table['columns'])} column(s)."]
 
         # Describe columns
         column_descriptions = []
@@ -433,9 +418,7 @@ class DatabaseSchemaParser:
                 fk_descriptions.append(
                     f"{fk['column']} -> {fk['references_table']}.{fk['references_column']}"
                 )
-            desc_parts.append(
-                f"Foreign key relationships: {', '.join(fk_descriptions)}."
-            )
+            desc_parts.append(f"Foreign key relationships: {', '.join(fk_descriptions)}.")
 
         return " ".join(desc_parts)
 

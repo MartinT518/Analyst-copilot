@@ -68,7 +68,7 @@ def create_admin_user() -> tuple[str, str]:
     Returns:
         Tuple of (username, password)
     """
-    settings = get_settings()
+    get_settings()
     auth_service = AuthService()
 
     # Check if any users already exist
@@ -76,9 +76,7 @@ def create_admin_user() -> tuple[str, str]:
     try:
         existing_users = db.query(User).count()
         if existing_users > 0:
-            logger.warning(
-                "Users already exist in the database. Skipping admin user creation."
-            )
+            logger.warning("Users already exist in the database. Skipping admin user creation.")
             return None, None
 
         # Generate strong password

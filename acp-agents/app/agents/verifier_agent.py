@@ -1,17 +1,17 @@
 """Verifier agent for validating outputs against knowledge base and constraints."""
 
-import json
-from typing import Type, List, Dict, Any, Optional
+from typing import List, Type
+
 import structlog
 
-from .base_agent import BaseAgent
-from ..schemas.common_schemas import AgentType, ValidationResult, KnowledgeReference
 from ..schemas.agent_schemas import (
+    ConsistencyCheck,
+    VerificationCheck,
     VerifierInput,
     VerifierOutput,
-    VerificationCheck,
-    ConsistencyCheck,
 )
+from ..schemas.common_schemas import AgentType, ValidationResult
+from .base_agent import BaseAgent
 
 logger = structlog.get_logger(__name__)
 
@@ -93,52 +93,48 @@ Always respond with valid JSON matching the required schema."""
 
         # Add clarifier output if present
         if input_data.clarifier_output:
-            prompt += f"CLARIFIER OUTPUT:\n"
-            prompt += (
-                f"Questions Generated: {len(input_data.clarifier_output.questions)}\n"
-            )
-            prompt += (
-                f"Analysis Summary: {input_data.clarifier_output.analysis_summary}\n"
-            )
+            prompt += "CLARIFIER OUTPUT:\n"
+            prompt += f"Questions Generated: {len(input_data.clarifier_output.questions)}\n"
+            prompt += f"Analysis Summary: {input_data.clarifier_output.analysis_summary}\n"
             prompt += f"Identified Gaps: {', '.join(input_data.clarifier_output.identified_gaps)}\n"
             prompt += f"Confidence: {input_data.clarifier_output.confidence}\n\n"
 
         # Add synthesizer output if present
         if input_data.synthesizer_output:
-            prompt += f"SYNTHESIZER OUTPUT:\n"
+            prompt += "SYNTHESIZER OUTPUT:\n"
             prompt += f"AS-IS Document: {input_data.synthesizer_output.as_is_document.title}\n"
             prompt += f"TO-BE Document: {input_data.synthesizer_output.to_be_document.title}\n"
-            prompt += f"Gap Analysis: {len(input_data.synthesizer_output.gap_analysis)} gaps identified\n"
+            prompt += (
+                f"Gap Analysis: {len(input_data.synthesizer_output.gap_analysis)} gaps identified\n"
+            )
             prompt += f"Implementation Approach: {input_data.synthesizer_output.implementation_approach[:200]}...\n"
             prompt += f"Confidence: {input_data.synthesizer_output.confidence}\n\n"
 
         # Add taskmaster output if present
         if input_data.taskmaster_output:
-            prompt += f"TASKMASTER OUTPUT:\n"
+            prompt += "TASKMASTER OUTPUT:\n"
             prompt += f"Tasks Generated: {len(input_data.taskmaster_output.tasks)}\n"
             prompt += f"Implementation Phases: {', '.join(input_data.taskmaster_output.implementation_phases)}\n"
-            prompt += (
-                f"Timeline Estimate: {input_data.taskmaster_output.timeline_estimate}\n"
-            )
+            prompt += f"Timeline Estimate: {input_data.taskmaster_output.timeline_estimate}\n"
             prompt += f"Confidence: {input_data.taskmaster_output.confidence}\n\n"
 
         # Add knowledge base context
         if input_data.knowledge_base_context:
-            prompt += f"KNOWLEDGE BASE CONTEXT:\n"
+            prompt += "KNOWLEDGE BASE CONTEXT:\n"
             for ref in input_data.knowledge_base_context[:5]:  # Limit for prompt size
                 prompt += f"- {ref.source_type} (Score: {ref.similarity_score:.2f}): {ref.excerpt[:100]}...\n"
             prompt += "\n"
 
         # Add code context if available
         if input_data.code_context:
-            prompt += f"CODE CONTEXT:\n"
+            prompt += "CODE CONTEXT:\n"
             for code_ref in input_data.code_context[:3]:  # Limit for prompt size
                 prompt += f"- {code_ref.get('file_path', 'Unknown')}: {code_ref.get('description', 'No description')}\n"
             prompt += "\n"
 
         # Add schema context if available
         if input_data.schema_context:
-            prompt += f"DATABASE SCHEMA CONTEXT:\n"
+            prompt += "DATABASE SCHEMA CONTEXT:\n"
             for schema_ref in input_data.schema_context[:3]:  # Limit for prompt size
                 prompt += f"- {schema_ref.get('table_name', 'Unknown')}: {schema_ref.get('description', 'No description')}\n"
             prompt += "\n"
@@ -186,9 +182,7 @@ Respond with a JSON object containing:
         Returns:
             Verifier output with validation results
         """
-        self.logger.info(
-            "Processing verification request", request_id=input_data.request_id
-        )
+        self.logger.info("Processing verification request", request_id=input_data.request_id)
 
         try:
             # Perform additional knowledge searches for verification
@@ -204,9 +198,7 @@ Respond with a JSON object containing:
                 request_id=input_data.request_id,
                 query=" | ".join(verification_queries),
                 results_count=len(verification_knowledge),
-                knowledge_references=[
-                    str(ref.chunk_id) for ref in verification_knowledge
-                ],
+                knowledge_references=[str(ref.chunk_id) for ref in verification_knowledge],
                 agent_type=self.agent_type,
             )
 
@@ -218,9 +210,7 @@ Respond with a JSON object containing:
             if verification_knowledge:
                 verification_context = "\n\nADDITIONAL VERIFICATION CONTEXT:\n"
                 for ref in verification_knowledge:
-                    verification_context += (
-                        f"- {ref.source_type}: {ref.excerpt[:150]}...\n"
-                    )
+                    verification_context += f"- {ref.source_type}: {ref.excerpt[:150]}...\n"
                 user_prompt += verification_context
 
             response = await self._query_llm(
@@ -243,16 +233,13 @@ Respond with a JSON object containing:
                     for ref_id in ref_ids:
                         matching_refs = [
                             ref
-                            for ref in input_data.knowledge_base_context
-                            + verification_knowledge
+                            for ref in input_data.knowledge_base_context + verification_knowledge
                             if str(ref.chunk_id) == ref_id
                         ]
                         references.extend(matching_refs)
 
                     check = VerificationCheck(
-                        check_id=check_data.get(
-                            "check_id", f"check_{len(verification_checks)+1}"
-                        ),
+                        check_id=check_data.get("check_id", f"check_{len(verification_checks)+1}"),
                         check_type=check_data.get("check_type", "general"),
                         description=check_data.get("description", ""),
                         result=check_data.get("result", False),
@@ -277,9 +264,7 @@ Respond with a JSON object containing:
                     check = ConsistencyCheck(
                         source_a=consistency_data.get("source_a", ""),
                         source_b=consistency_data.get("source_b", ""),
-                        consistency_score=consistency_data.get(
-                            "consistency_score", 0.5
-                        ),
+                        consistency_score=consistency_data.get("consistency_score", 0.5),
                         inconsistencies=consistency_data.get("inconsistencies", []),
                         recommendations=consistency_data.get("recommendations", []),
                     )
@@ -295,24 +280,16 @@ Respond with a JSON object containing:
 
             # Create overall validation result
             overall_validation = ValidationResult(
-                is_valid=response_data.get("overall_validation", {}).get(
-                    "is_valid", False
-                ),
+                is_valid=response_data.get("overall_validation", {}).get("is_valid", False),
                 errors=response_data.get("overall_validation", {}).get("errors", []),
-                warnings=response_data.get("overall_validation", {}).get(
-                    "warnings", []
-                ),
+                warnings=response_data.get("overall_validation", {}).get("warnings", []),
                 score=response_data.get("overall_validation", {}).get("score", 0.5),
             )
 
             # Calculate confidence based on verification results
             confidence_factors = {
-                "verification_pass_rate": self._calculate_pass_rate(
-                    verification_checks
-                ),
-                "consistency_score": self._calculate_avg_consistency(
-                    consistency_checks
-                ),
+                "verification_pass_rate": self._calculate_pass_rate(verification_checks),
+                "consistency_score": self._calculate_avg_consistency(consistency_checks),
                 "knowledge_coverage": min(1.0, len(verification_knowledge) / 5.0),
                 "overall_validation_score": overall_validation.score,
             }
@@ -339,12 +316,8 @@ Respond with a JSON object containing:
                 metadata={
                     "verification_checks_count": len(verification_checks),
                     "consistency_checks_count": len(consistency_checks),
-                    "verification_pass_rate": self._calculate_pass_rate(
-                        verification_checks
-                    ),
-                    "avg_consistency_score": self._calculate_avg_consistency(
-                        consistency_checks
-                    ),
+                    "verification_pass_rate": self._calculate_pass_rate(verification_checks),
+                    "avg_consistency_score": self._calculate_avg_consistency(consistency_checks),
                     "knowledge_references_verified": len(verification_knowledge),
                 },
             )
@@ -360,9 +333,7 @@ Respond with a JSON object containing:
             return output
 
         except Exception as e:
-            self.logger.error(
-                "Verification failed", request_id=input_data.request_id, error=str(e)
-            )
+            self.logger.error("Verification failed", request_id=input_data.request_id, error=str(e))
             raise
 
     def _extract_verification_queries(self, input_data: VerifierInput) -> List[str]:
@@ -393,9 +364,7 @@ Respond with a JSON object containing:
 
         return queries[:5]  # Limit to 5 queries
 
-    def _calculate_pass_rate(
-        self, verification_checks: List[VerificationCheck]
-    ) -> float:
+    def _calculate_pass_rate(self, verification_checks: List[VerificationCheck]) -> float:
         """Calculate the pass rate of verification checks.
 
         Args:
@@ -410,9 +379,7 @@ Respond with a JSON object containing:
         passed = sum(1 for check in verification_checks if check.result)
         return passed / len(verification_checks)
 
-    def _calculate_avg_consistency(
-        self, consistency_checks: List[ConsistencyCheck]
-    ) -> float:
+    def _calculate_avg_consistency(self, consistency_checks: List[ConsistencyCheck]) -> float:
         """Calculate average consistency score.
 
         Args:
@@ -447,8 +414,7 @@ Respond with a JSON object containing:
         critical_failures = [
             check
             for check in verification_checks
-            if not check.result
-            and check.check_type in ["accuracy", "feasibility", "compliance"]
+            if not check.result and check.check_type in ["accuracy", "feasibility", "compliance"]
         ]
 
         if critical_failures:

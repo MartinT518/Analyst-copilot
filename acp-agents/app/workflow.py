@@ -1,31 +1,28 @@
 """LangGraph-based agent workflow orchestration."""
 
-import asyncio
 import json
-import uuid
-from typing import Dict, Any, List, Optional, TypedDict, Annotated
 from datetime import datetime
-import structlog
+from typing import Annotated, Any, Dict, List, Optional, TypedDict
 
-from langgraph.graph import StateGraph, END
+import structlog
+from langchain_core.messages import BaseMessage
+from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
-from langgraph.prebuilt import ToolNode
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 
 from .schemas import (
-    WorkflowRequest,
-    WorkflowStatus,
+    ASISDocument,
     ClarifyingQuestions,
     ClientAnswers,
-    ASISDocument,
-    TOBEDocument,
     DeveloperTask,
+    TOBEDocument,
     VerificationFlag,
-    WorkflowStatus as WorkflowStatusEnum,
+    WorkflowRequest,
 )
-from .services.llm_service import LLMService
-from .services.knowledge_service import KnowledgeService
+from .schemas import WorkflowStatus
+from .schemas import WorkflowStatus as WorkflowStatusEnum
 from .services.audit_service import AuditService
+from .services.knowledge_service import KnowledgeService
+from .services.llm_service import LLMService
 
 logger = structlog.get_logger(__name__)
 
@@ -226,9 +223,7 @@ class AgentWorkflow:
             await self.audit_service.log_workflow_complete(
                 job_id=job_id,
                 status=final_state["status"],
-                duration_seconds=(
-                    datetime.utcnow() - final_state["created_at"]
-                ).total_seconds(),
+                duration_seconds=(datetime.utcnow() - final_state["created_at"]).total_seconds(),
             )
 
         except Exception as e:
@@ -287,9 +282,7 @@ class AgentWorkflow:
             )
 
         except Exception as e:
-            logger.error(
-                "Context retrieval failed", job_id=state["job_id"], error=str(e)
-            )
+            logger.error("Context retrieval failed", job_id=state["job_id"], error=str(e))
             state["error_message"] = f"Context retrieval failed: {str(e)}"
             state["status"] = WorkflowStatusEnum.FAILED
 
@@ -421,12 +414,8 @@ Please generate clarifying questions to better understand this request."""
                 {
                     "step": "synthesizer",
                     "timestamp": datetime.utcnow().isoformat(),
-                    "asis_sections": len(asis_document.sections)
-                    if asis_document.sections
-                    else 0,
-                    "tobe_sections": len(tobe_document.sections)
-                    if tobe_document.sections
-                    else 0,
+                    "asis_sections": len(asis_document.sections) if asis_document.sections else 0,
+                    "tobe_sections": len(tobe_document.sections) if tobe_document.sections else 0,
                 }
             )
 
@@ -581,7 +570,6 @@ Please generate clarifying questions to better understand this request."""
         """Generate AS-IS document using LLM."""
         # Implementation for AS-IS document generation
         # This would use the LLM to analyze current state
-        pass
 
     async def _generate_tobe_document(
         self, request: str, context: str, answers: str, asis: ASISDocument
@@ -589,7 +577,6 @@ Please generate clarifying questions to better understand this request."""
         """Generate TO-BE document using LLM."""
         # Implementation for TO-BE document generation
         # This would use the LLM to design future state
-        pass
 
     async def _verify_developer_task(
         self, task: DeveloperTask, context: Dict[str, Any]

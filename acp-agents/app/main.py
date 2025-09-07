@@ -1,31 +1,27 @@
 """Main FastAPI application for ACP Agents service."""
 
-import os
 import uuid
 from contextlib import asynccontextmanager
-from typing import Dict, Any, List
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+import structlog
+import uvicorn
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
-import uvicorn
-import structlog
 
 from .config import get_settings
-from .workflow import AgentWorkflow, AgentState
 from .schemas import (
+    ClientAnswers,
     WorkflowRequest,
     WorkflowResponse,
     WorkflowStatus,
-    ClarifyingQuestions,
-    ClientAnswers,
-    DeveloperTask,
 )
-from .services.llm_service import LLMService
-from .services.knowledge_service import KnowledgeService
 from .services.audit_service import AuditService
+from .services.knowledge_service import KnowledgeService
+from .services.llm_service import LLMService
+from .workflow import AgentWorkflow
 
 # Setup logging
 settings = get_settings()
@@ -133,9 +129,7 @@ async def global_exception_handler(request, exc: Exception):
             },
         )
     else:
-        return JSONResponse(
-            status_code=500, content={"detail": "Internal server error"}
-        )
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 # HTTP exception handler
@@ -228,14 +222,10 @@ async def start_workflow(request: WorkflowRequest, background_tasks: BackgroundT
         # Generate unique job ID
         job_id = str(uuid.uuid4())
 
-        logger.info(
-            "Starting new workflow", job_id=job_id, request_type=request.request_type
-        )
+        logger.info("Starting new workflow", job_id=job_id, request_type=request.request_type)
 
         # Start workflow in background
-        background_tasks.add_task(
-            workflow_manager.start_workflow, job_id=job_id, request=request
-        )
+        background_tasks.add_task(workflow_manager.start_workflow, job_id=job_id, request=request)
 
         # Return initial response
         return WorkflowResponse(
@@ -248,9 +238,7 @@ async def start_workflow(request: WorkflowRequest, background_tasks: BackgroundT
 
     except Exception as e:
         logger.error("Failed to start workflow", error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to start workflow: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to start workflow: {str(e)}")
 
 
 # Get workflow status
@@ -276,16 +264,12 @@ async def get_workflow_status(job_id: str):
         raise
     except Exception as e:
         logger.error("Failed to get workflow status", job_id=job_id, error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get workflow status: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get workflow status: {str(e)}")
 
 
 # Submit client answers
 @app.post("/api/v1/jobs/{job_id}/answers", response_model=WorkflowResponse)
-async def submit_answers(
-    job_id: str, answers: ClientAnswers, background_tasks: BackgroundTasks
-):
+async def submit_answers(job_id: str, answers: ClientAnswers, background_tasks: BackgroundTasks):
     """Submit client answers to continue workflow.
 
     Args:
@@ -319,9 +303,7 @@ async def submit_answers(
 
     except Exception as e:
         logger.error("Failed to submit answers", job_id=job_id, error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to submit answers: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to submit answers: {str(e)}")
 
 
 # Get workflow results
@@ -339,9 +321,7 @@ async def get_workflow_results(job_id: str):
         results = await workflow_manager.get_workflow_results(job_id)
 
         if not results:
-            raise HTTPException(
-                status_code=404, detail="Workflow not found or not completed"
-            )
+            raise HTTPException(status_code=404, detail="Workflow not found or not completed")
 
         return results
 
@@ -349,9 +329,7 @@ async def get_workflow_results(job_id: str):
         raise
     except Exception as e:
         logger.error("Failed to get workflow results", job_id=job_id, error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get workflow results: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get workflow results: {str(e)}")
 
 
 # List workflows
@@ -368,9 +346,7 @@ async def list_workflows(skip: int = 0, limit: int = 10, status: str = None):
         List of workflows
     """
     try:
-        workflows = await workflow_manager.list_workflows(
-            skip=skip, limit=limit, status=status
-        )
+        workflows = await workflow_manager.list_workflows(skip=skip, limit=limit, status=status)
 
         return {
             "workflows": workflows,
@@ -381,9 +357,7 @@ async def list_workflows(skip: int = 0, limit: int = 10, status: str = None):
 
     except Exception as e:
         logger.error("Failed to list workflows", error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to list workflows: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to list workflows: {str(e)}")
 
 
 if __name__ == "__main__":

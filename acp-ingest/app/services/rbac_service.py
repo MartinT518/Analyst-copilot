@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set
 
 from app.models import Permission, Role, RolePermission, User, UserRole
 from app.utils.logging_config import get_logger
@@ -139,11 +139,7 @@ class RBACService:
         try:
             # Create permissions
             for permission in SystemPermission:
-                existing = (
-                    db.query(Permission)
-                    .filter(Permission.name == permission.value)
-                    .first()
-                )
+                existing = db.query(Permission).filter(Permission.name == permission.value).first()
 
                 if not existing:
                     perm = Permission(
@@ -174,9 +170,7 @@ class RBACService:
 
                 for permission in permissions:
                     perm_obj = (
-                        db.query(Permission)
-                        .filter(Permission.name == permission.value)
-                        .first()
+                        db.query(Permission).filter(Permission.name == permission.value).first()
                     )
 
                     # Check if assignment already exists
@@ -243,9 +237,7 @@ class RBACService:
         }
         return descriptions.get(permission, "System permission")
 
-    def check_permission(
-        self, user: User, permission: SystemPermission, db: Session
-    ) -> bool:
+    def check_permission(self, user: User, permission: SystemPermission, db: Session) -> bool:
         """
         Check if a user has a specific permission.
 
@@ -353,9 +345,7 @@ class RBACService:
             return permissions
 
         except Exception as e:
-            logger.error(
-                "Error getting user permissions", user_id=user.id, error=str(e)
-            )
+            logger.error("Error getting user permissions", user_id=user.id, error=str(e))
             return set()
 
     def assign_role_to_user(
@@ -388,9 +378,7 @@ class RBACService:
             )
 
             if existing:
-                logger.warning(
-                    "User already has role", user_id=user_id, role_name=role_name
-                )
+                logger.warning("User already has role", user_id=user_id, role_name=role_name)
                 return True
 
             # Create assignment
@@ -447,9 +435,7 @@ class RBACService:
             )
 
             if not user_role:
-                logger.warning(
-                    "User does not have role", user_id=user_id, role_name=role_name
-                )
+                logger.warning("User does not have role", user_id=user_id, role_name=role_name)
                 return True
 
             # Remove assignment
@@ -511,11 +497,7 @@ class RBACService:
 
             # Assign permissions
             for permission_name in permissions:
-                permission = (
-                    db.query(Permission)
-                    .filter(Permission.name == permission_name)
-                    .first()
-                )
+                permission = db.query(Permission).filter(Permission.name == permission_name).first()
 
                 if permission:
                     role_permission = RolePermission(
@@ -525,9 +507,7 @@ class RBACService:
                     )
                     db.add(role_permission)
                 else:
-                    logger.warning(
-                        "Permission not found", permission_name=permission_name
-                    )
+                    logger.warning("Permission not found", permission_name=permission_name)
 
             db.commit()
 
@@ -584,9 +564,7 @@ class RBACService:
         target_level = 0
 
         # Get manager's highest role level
-        manager_roles = (
-            db.query(UserRole).join(Role).filter(UserRole.user_id == manager.id).all()
-        )
+        manager_roles = db.query(UserRole).join(Role).filter(UserRole.user_id == manager.id).all()
 
         for user_role in manager_roles:
             role = db.query(Role).filter(Role.id == user_role.role_id).first()
@@ -596,10 +574,7 @@ class RBACService:
 
         # Get target user's highest role level
         target_roles = (
-            db.query(UserRole)
-            .join(Role)
-            .filter(UserRole.user_id == target_user.id)
-            .all()
+            db.query(UserRole).join(Role).filter(UserRole.user_id == target_user.id).all()
         )
 
         for user_role in target_roles:

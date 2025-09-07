@@ -1,8 +1,8 @@
 """Audit service for workflow logging."""
 
-import asyncio
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
+
 import structlog
 
 logger = structlog.get_logger(__name__)
@@ -47,9 +47,7 @@ class AuditService:
                 timestamp=datetime.utcnow().isoformat(),
             )
         except Exception as e:
-            self.logger.error(
-                "Failed to log workflow start", job_id=job_id, error=str(e)
-            )
+            self.logger.error("Failed to log workflow start", job_id=job_id, error=str(e))
 
     async def log_workflow_answers(self, job_id: str, answers_count: int):
         """Log workflow answers submission.
@@ -66,13 +64,9 @@ class AuditService:
                 timestamp=datetime.utcnow().isoformat(),
             )
         except Exception as e:
-            self.logger.error(
-                "Failed to log workflow answers", job_id=job_id, error=str(e)
-            )
+            self.logger.error("Failed to log workflow answers", job_id=job_id, error=str(e))
 
-    async def log_workflow_complete(
-        self, job_id: str, status: str, duration_seconds: float
-    ):
+    async def log_workflow_complete(self, job_id: str, status: str, duration_seconds: float):
         """Log workflow completion.
 
         Args:
@@ -89,9 +83,7 @@ class AuditService:
                 timestamp=datetime.utcnow().isoformat(),
             )
         except Exception as e:
-            self.logger.error(
-                "Failed to log workflow completion", job_id=job_id, error=str(e)
-            )
+            self.logger.error("Failed to log workflow completion", job_id=job_id, error=str(e))
 
     async def log_agent_start(self, job_id: str, agent_type: str, step: str):
         """Log agent start event.
@@ -140,13 +132,9 @@ class AuditService:
                 timestamp=datetime.utcnow().isoformat(),
             )
         except Exception as e:
-            self.logger.error(
-                "Failed to log agent completion", job_id=job_id, error=str(e)
-            )
+            self.logger.error("Failed to log agent completion", job_id=job_id, error=str(e))
 
-    async def log_agent_error(
-        self, job_id: str, agent_type: str, step: str, error_message: str
-    ):
+    async def log_agent_error(self, job_id: str, agent_type: str, step: str, error_message: str):
         """Log agent error.
 
         Args:
@@ -195,9 +183,7 @@ class AuditService:
                 timestamp=datetime.utcnow().isoformat(),
             )
         except Exception as e:
-            self.logger.error(
-                "Failed to log knowledge access", job_id=job_id, error=str(e)
-            )
+            self.logger.error("Failed to log knowledge access", job_id=job_id, error=str(e))
 
     async def log_verification_result(
         self, job_id: str, verification_type: str, flags_count: int, critical_flags: int
@@ -220,9 +206,7 @@ class AuditService:
                 timestamp=datetime.utcnow().isoformat(),
             )
         except Exception as e:
-            self.logger.error(
-                "Failed to log verification result", job_id=job_id, error=str(e)
-            )
+            self.logger.error("Failed to log verification result", job_id=job_id, error=str(e))
 
     async def health_check(self) -> bool:
         """Check audit service health.

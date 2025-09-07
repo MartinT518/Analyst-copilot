@@ -1,8 +1,8 @@
 """Schemas for individual agent inputs and outputs."""
 
-from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field, validator
-from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field
 
 from .common_schemas import (
     BaseAgentInput,
@@ -21,15 +21,11 @@ class ClarificationQuestion(BaseModel):
     question_type: str = Field(
         ..., description="Type of question (requirement, constraint, scope, etc.)"
     )
-    importance: str = Field(
-        ..., description="Importance level (critical, high, medium, low)"
-    )
+    importance: str = Field(..., description="Importance level (critical, high, medium, low)")
     suggested_answers: List[str] = Field(
         default_factory=list, description="Suggested answer options"
     )
-    context: str = Field(
-        ..., description="Context explaining why this question is needed"
-    )
+    context: str = Field(..., description="Context explaining why this question is needed")
 
 
 class ClarifierInput(BaseAgentInput):
@@ -49,9 +45,7 @@ class ClarifierOutput(BaseAgentOutput):
         ..., description="List of clarification questions"
     )
     analysis_summary: str = Field(..., description="Summary of the request analysis")
-    identified_gaps: List[str] = Field(
-        ..., description="Identified gaps in the request"
-    )
+    identified_gaps: List[str] = Field(..., description="Identified gaps in the request")
     assumptions: List[str] = Field(..., description="Assumptions made during analysis")
 
 
@@ -62,9 +56,7 @@ class DocumentSection(BaseModel):
     section_id: str = Field(..., description="Unique identifier for the section")
     title: str = Field(..., description="Section title")
     content: str = Field(..., description="Section content")
-    section_type: str = Field(
-        ..., description="Type of section (overview, requirements, etc.)"
-    )
+    section_type: str = Field(..., description="Type of section (overview, requirements, etc.)")
     order: int = Field(..., description="Order of the section in the document")
     subsections: List["DocumentSection"] = Field(
         default_factory=list, description="Nested subsections"
@@ -101,9 +93,7 @@ class GapAnalysis(BaseModel):
     impact: str = Field(..., description="Impact level (high, medium, low)")
     effort: str = Field(..., description="Effort required to close the gap")
     priority: str = Field(..., description="Priority level")
-    recommendations: List[str] = Field(
-        ..., description="Recommendations to address the gap"
-    )
+    recommendations: List[str] = Field(..., description="Recommendations to address the gap")
 
 
 class SynthesizerInput(BaseAgentInput):
@@ -115,9 +105,7 @@ class SynthesizerInput(BaseAgentInput):
     knowledge_context: List[KnowledgeReference] = Field(
         ..., description="Relevant knowledge base content"
     )
-    scope_boundaries: Optional[str] = Field(
-        None, description="Defined scope boundaries"
-    )
+    scope_boundaries: Optional[str] = Field(None, description="Defined scope boundaries")
 
 
 class SynthesizerOutput(BaseAgentOutput):
@@ -125,12 +113,8 @@ class SynthesizerOutput(BaseAgentOutput):
 
     as_is_document: AsIsDocument = Field(..., description="AS-IS state documentation")
     to_be_document: ToBeDocument = Field(..., description="TO-BE state documentation")
-    gap_analysis: List[GapAnalysis] = Field(
-        ..., description="Gap analysis between states"
-    )
-    implementation_approach: str = Field(
-        ..., description="Recommended implementation approach"
-    )
+    gap_analysis: List[GapAnalysis] = Field(..., description="Gap analysis between states")
+    implementation_approach: str = Field(..., description="Recommended implementation approach")
     risks_and_mitigation: List[str] = Field(
         ..., description="Identified risks and mitigation strategies"
     )
@@ -150,14 +134,10 @@ class TechnicalNote(BaseModel):
     """Technical implementation note."""
 
     note_id: str = Field(..., description="Unique identifier for the note")
-    category: str = Field(
-        ..., description="Category (architecture, security, performance, etc.)"
-    )
+    category: str = Field(..., description="Category (architecture, security, performance, etc.)")
     description: str = Field(..., description="Technical note description")
     impact: str = Field(..., description="Impact on implementation")
-    references: List[str] = Field(
-        default_factory=list, description="References to documentation"
-    )
+    references: List[str] = Field(default_factory=list, description="References to documentation")
 
 
 class DeveloperTask(BaseModel):
@@ -167,22 +147,12 @@ class DeveloperTask(BaseModel):
     title: str = Field(..., description="Task title")
     description: str = Field(..., description="Detailed task description")
     user_story: str = Field(..., description="User story format description")
-    acceptance_criteria: List[AcceptanceCriteria] = Field(
-        ..., description="Acceptance criteria"
-    )
-    technical_notes: List[TechnicalNote] = Field(
-        ..., description="Technical implementation notes"
-    )
-    estimated_effort: str = Field(
-        ..., description="Estimated effort (story points or hours)"
-    )
+    acceptance_criteria: List[AcceptanceCriteria] = Field(..., description="Acceptance criteria")
+    technical_notes: List[TechnicalNote] = Field(..., description="Technical implementation notes")
+    estimated_effort: str = Field(..., description="Estimated effort (story points or hours)")
     priority: str = Field(..., description="Task priority")
-    dependencies: List[str] = Field(
-        default_factory=list, description="Dependencies on other tasks"
-    )
-    labels: List[str] = Field(
-        default_factory=list, description="Labels for categorization"
-    )
+    dependencies: List[str] = Field(default_factory=list, description="Dependencies on other tasks")
+    labels: List[str] = Field(default_factory=list, description="Labels for categorization")
     epic: Optional[str] = Field(None, description="Epic this task belongs to")
 
 
@@ -201,12 +171,8 @@ class TaskmasterOutput(BaseAgentOutput):
     """Output schema for the Taskmaster agent."""
 
     tasks: List[DeveloperTask] = Field(..., description="Generated developer tasks")
-    task_breakdown_summary: str = Field(
-        ..., description="Summary of task breakdown approach"
-    )
-    implementation_phases: List[str] = Field(
-        ..., description="Recommended implementation phases"
-    )
+    task_breakdown_summary: str = Field(..., description="Summary of task breakdown approach")
+    implementation_phases: List[str] = Field(..., description="Recommended implementation phases")
     resource_requirements: Dict[str, Any] = Field(..., description="Required resources")
     timeline_estimate: str = Field(..., description="Estimated timeline")
 
@@ -219,9 +185,7 @@ class VerificationCheck(BaseModel):
     check_type: str = Field(..., description="Type of verification check")
     description: str = Field(..., description="What is being verified")
     result: bool = Field(..., description="Whether the check passed")
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence in the verification"
-    )
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence in the verification")
     details: str = Field(..., description="Detailed explanation of the check")
     references: List[KnowledgeReference] = Field(
         default_factory=list, description="Supporting references"
@@ -233,12 +197,8 @@ class ConsistencyCheck(BaseModel):
 
     source_a: str = Field(..., description="First source being compared")
     source_b: str = Field(..., description="Second source being compared")
-    consistency_score: float = Field(
-        ..., ge=0.0, le=1.0, description="Consistency score"
-    )
-    inconsistencies: List[str] = Field(
-        default_factory=list, description="Found inconsistencies"
-    )
+    consistency_score: float = Field(..., ge=0.0, le=1.0, description="Consistency score")
+    inconsistencies: List[str] = Field(default_factory=list, description="Found inconsistencies")
     recommendations: List[str] = Field(
         default_factory=list, description="Recommendations to resolve"
     )
@@ -247,9 +207,7 @@ class ConsistencyCheck(BaseModel):
 class VerifierInput(BaseAgentInput):
     """Input schema for the Verifier agent."""
 
-    clarifier_output: Optional[ClarifierOutput] = Field(
-        None, description="Clarifier agent output"
-    )
+    clarifier_output: Optional[ClarifierOutput] = Field(None, description="Clarifier agent output")
     synthesizer_output: Optional[SynthesizerOutput] = Field(
         None, description="Synthesizer agent output"
     )
@@ -259,9 +217,7 @@ class VerifierInput(BaseAgentInput):
     knowledge_base_context: List[KnowledgeReference] = Field(
         ..., description="Knowledge base context"
     )
-    code_context: List[Dict[str, Any]] = Field(
-        default_factory=list, description="Code context"
-    )
+    code_context: List[Dict[str, Any]] = Field(default_factory=list, description="Code context")
     schema_context: List[Dict[str, Any]] = Field(
         default_factory=list, description="Database schema context"
     )
@@ -273,15 +229,9 @@ class VerifierOutput(BaseAgentOutput):
     verification_checks: List[VerificationCheck] = Field(
         ..., description="Individual verification checks"
     )
-    consistency_checks: List[ConsistencyCheck] = Field(
-        ..., description="Consistency checks"
-    )
-    overall_validation: ValidationResult = Field(
-        ..., description="Overall validation result"
-    )
-    recommendations: List[str] = Field(
-        ..., description="Recommendations for improvement"
-    )
+    consistency_checks: List[ConsistencyCheck] = Field(..., description="Consistency checks")
+    overall_validation: ValidationResult = Field(..., description="Overall validation result")
+    recommendations: List[str] = Field(..., description="Recommendations for improvement")
     flagged_issues: List[str] = Field(..., description="Issues that need attention")
     approval_status: str = Field(
         ..., description="Approval status (approved, needs_review, rejected)"

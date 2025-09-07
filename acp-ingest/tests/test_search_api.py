@@ -1,6 +1,5 @@
 """Tests for the search API endpoints."""
 
-import pytest
 from app.models import KnowledgeChunk
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -17,9 +16,7 @@ def test_search_knowledge(test_client: TestClient, db_session: Session):
     db_session.add(chunk)
     db_session.commit()
 
-    response = test_client.post(
-        "/api/v1/search", json={"query": "test chunk", "limit": 5}
-    )
+    response = test_client.post("/api/v1/search", json={"query": "test chunk", "limit": 5})
 
     assert response.status_code == 200
     data = response.json()

@@ -2,13 +2,12 @@
 
 import os
 import tempfile
-from unittest.mock import Mock, patch
 
 import pytest
 from app.parsers.code_parser import CodeParser
 from app.parsers.confluence_parser import ConfluenceParser
-from app.resilience.retry import RetryConfig, RetryManager
-from app.security_config import SecurityConfig, validate_security_config
+from app.resilience.retry import RetryConfig
+from app.security_config import SecurityConfig
 from app.services.export_service import ExportService
 from defusedxml.ElementTree import ParseError
 
@@ -310,9 +309,7 @@ class TestSecretsManagement:
                                 "token=",  # Configuration key
                             ]
                         ):
-                            pytest.fail(
-                                f"Potential hardcoded secret found in {file_path}: {match}"
-                            )
+                            pytest.fail(f"Potential hardcoded secret found in {file_path}: {match}")
 
 
 if __name__ == "__main__":

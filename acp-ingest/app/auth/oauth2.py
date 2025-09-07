@@ -1,7 +1,7 @@
 """OAuth2/OIDC authentication implementation."""
 
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import httpx
 import jwt
@@ -156,9 +156,7 @@ class OAuth2Service:
             "aud": "acp-services",
         }
 
-        return jwt.encode(
-            payload, self.config.jwt_secret_key, algorithm=self.config.jwt_algorithm
-        )
+        return jwt.encode(payload, self.config.jwt_secret_key, algorithm=self.config.jwt_algorithm)
 
     def verify_jwt_token(self, token: str) -> Dict[str, Any]:
         """Verify and decode JWT token.

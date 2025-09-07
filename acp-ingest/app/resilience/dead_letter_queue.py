@@ -1,7 +1,5 @@
 """Dead letter queue implementation for failed jobs."""
 
-import asyncio
-import json
 import uuid
 from datetime import datetime, timedelta
 from enum import Enum
@@ -62,9 +60,7 @@ class DeadLetterQueue:
         """
         self.database_url = database_url
         self.engine = create_engine(database_url)
-        self.SessionLocal = sessionmaker(
-            autocommit=False, autoflush=False, bind=self.engine
-        )
+        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
         self.logger = logger.bind(service="dead_letter_queue")
 
         # Create tables
@@ -154,9 +150,7 @@ class DeadLetterQueue:
 
             jobs = query.limit(limit).all()
 
-            self.logger.info(
-                "Retrieved retryable jobs", count=len(jobs), job_type=job_type
-            )
+            self.logger.info("Retrieved retryable jobs", count=len(jobs), job_type=job_type)
 
             return jobs
 
@@ -177,9 +171,7 @@ class DeadLetterQueue:
         """
         session = self._get_session()
         try:
-            job = (
-                session.query(DeadLetterJob).filter(DeadLetterJob.id == job_id).first()
-            )
+            job = session.query(DeadLetterJob).filter(DeadLetterJob.id == job_id).first()
 
             if not job:
                 return False
@@ -194,9 +186,7 @@ class DeadLetterQueue:
 
         except Exception as e:
             session.rollback()
-            self.logger.error(
-                "Failed to mark job as processing", job_id=job_id, error=str(e)
-            )
+            self.logger.error("Failed to mark job as processing", job_id=job_id, error=str(e))
             raise
         finally:
             session.close()
@@ -212,9 +202,7 @@ class DeadLetterQueue:
         """
         session = self._get_session()
         try:
-            job = (
-                session.query(DeadLetterJob).filter(DeadLetterJob.id == job_id).first()
-            )
+            job = session.query(DeadLetterJob).filter(DeadLetterJob.id == job_id).first()
 
             if not job:
                 return False
@@ -230,9 +218,7 @@ class DeadLetterQueue:
 
         except Exception as e:
             session.rollback()
-            self.logger.error(
-                "Failed to mark job as resolved", job_id=job_id, error=str(e)
-            )
+            self.logger.error("Failed to mark job as resolved", job_id=job_id, error=str(e))
             raise
         finally:
             session.close()
@@ -255,9 +241,7 @@ class DeadLetterQueue:
         """
         session = self._get_session()
         try:
-            job = (
-                session.query(DeadLetterJob).filter(DeadLetterJob.id == job_id).first()
-            )
+            job = session.query(DeadLetterJob).filter(DeadLetterJob.id == job_id).first()
 
             if not job:
                 return False
@@ -298,9 +282,7 @@ class DeadLetterQueue:
 
         except Exception as e:
             session.rollback()
-            self.logger.error(
-                "Failed to increment retry count", job_id=job_id, error=str(e)
-            )
+            self.logger.error("Failed to increment retry count", job_id=job_id, error=str(e))
             raise
         finally:
             session.close()
@@ -328,9 +310,7 @@ class DeadLetterQueue:
 
             jobs = query.order_by(DeadLetterJob.created_at.desc()).limit(limit).all()
 
-            self.logger.info(
-                "Retrieved dead letter jobs", count=len(jobs), job_type=job_type
-            )
+            self.logger.info("Retrieved dead letter jobs", count=len(jobs), job_type=job_type)
 
             return jobs
 

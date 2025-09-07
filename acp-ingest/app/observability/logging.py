@@ -1,6 +1,5 @@
 """Structured logging with correlation IDs for ACP services."""
 
-import json
 import logging
 import sys
 import uuid
@@ -178,9 +177,7 @@ def get_correlation_id() -> Optional[str]:
     return correlation_id.get()
 
 
-def log_request_start(
-    method: str, path: str, user_id: Optional[str] = None, **kwargs
-) -> str:
+def log_request_start(method: str, path: str, user_id: Optional[str] = None, **kwargs) -> str:
     """Log the start of a request.
 
     Args:
@@ -206,7 +203,7 @@ def log_request_end(
     status_code: int,
     duration_ms: float,
     user_id: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> None:
     """Log the end of a request.
 
@@ -226,13 +223,11 @@ def log_request_end(
         status_code=status_code,
         duration_ms=duration_ms,
         user_id=user_id,
-        **kwargs
+        **kwargs,
     )
 
 
-def log_error(
-    error: Exception, context: Optional[Dict[str, Any]] = None, **kwargs
-) -> None:
+def log_error(error: Exception, context: Optional[Dict[str, Any]] = None, **kwargs) -> None:
     """Log an error with context.
 
     Args:
@@ -265,11 +260,7 @@ def log_business_event(
     """
     logger = get_logger("business")
     logger.info(
-        "Business event",
-        event_type=event_type,
-        event_data=event_data,
-        user_id=user_id,
-        **kwargs
+        "Business event", event_type=event_type, event_data=event_data, user_id=user_id, **kwargs
     )
 
 
@@ -278,7 +269,7 @@ def log_security_event(
     severity: str = "medium",
     user_id: Optional[str] = None,
     ip_address: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> None:
     """Log a security event.
 
@@ -296,7 +287,7 @@ def log_security_event(
         severity=severity,
         user_id=user_id,
         ip_address=ip_address,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -305,7 +296,7 @@ def log_performance_metric(
     value: float,
     unit: str = "ms",
     tags: Optional[Dict[str, str]] = None,
-    **kwargs
+    **kwargs,
 ) -> None:
     """Log a performance metric.
 
@@ -323,5 +314,5 @@ def log_performance_metric(
         value=value,
         unit=unit,
         tags=tags or {},
-        **kwargs
+        **kwargs,
     )

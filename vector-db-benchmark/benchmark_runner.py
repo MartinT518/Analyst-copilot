@@ -1,18 +1,17 @@
 """Vector database benchmark runner for comparing Chroma vs pgvector performance."""
 
 import asyncio
-import time
 import json
 import random
-import string
-from typing import Dict, List, Any, Tuple
+import time
 from pathlib import Path
-import numpy as np
-import structlog
-import psycopg2
+from typing import Any, Dict
+
 import chromadb
+import numpy as np
+import psycopg2
+import structlog
 from chromadb.config import Settings
-import httpx
 
 logger = structlog.get_logger(__name__)
 
@@ -68,9 +67,9 @@ class VectorDBBenchmark:
                 "benchmark_config": self.config,
                 "test_data_stats": {
                     "chunk_count": len(self.test_chunks),
-                    "embedding_dimension": len(self.test_embeddings[0])
-                    if self.test_embeddings
-                    else 0,
+                    "embedding_dimension": (
+                        len(self.test_embeddings[0]) if self.test_embeddings else 0
+                    ),
                     "query_count": len(self.test_queries),
                 },
                 "chroma_results": chroma_results,
@@ -96,12 +95,8 @@ class VectorDBBenchmark:
                 "id": f"chunk_{i}",
                 "content": self._generate_random_text(200, 500),
                 "metadata": {
-                    "source_type": random.choice(
-                        ["document", "code", "wiki", "manual"]
-                    ),
-                    "category": random.choice(
-                        ["technical", "business", "process", "reference"]
-                    ),
+                    "source_type": random.choice(["document", "code", "wiki", "manual"]),
+                    "category": random.choice(["technical", "business", "process", "reference"]),
                     "priority": random.choice(["high", "medium", "low"]),
                     "created_at": f"2024-{random.randint(1,12):02d}-{random.randint(1,28):02d}",
                 },
@@ -378,17 +373,13 @@ class VectorDBBenchmark:
             await self._setup_pgvector_table(cursor, table_name)
 
             # Benchmark ingestion
-            ingestion_results = await self._benchmark_pgvector_ingestion(
-                cursor, table_name
-            )
+            ingestion_results = await self._benchmark_pgvector_ingestion(cursor, table_name)
 
             # Benchmark search
             search_results = await self._benchmark_pgvector_search(cursor, table_name)
 
             # Benchmark hybrid search
-            hybrid_results = await self._benchmark_pgvector_hybrid_search(
-                cursor, table_name
-            )
+            hybrid_results = await self._benchmark_pgvector_hybrid_search(cursor, table_name)
 
             # Cleanup
             cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
@@ -449,9 +440,7 @@ class VectorDBBenchmark:
         cursor.execute(f"CREATE INDEX ON {table_name} (category)")
         cursor.execute(f"CREATE INDEX ON {table_name} (priority)")
 
-    async def _benchmark_pgvector_ingestion(
-        self, cursor, table_name: str
-    ) -> Dict[str, Any]:
+    async def _benchmark_pgvector_ingestion(self, cursor, table_name: str) -> Dict[str, Any]:
         """Benchmark pgvector ingestion performance.
 
         Args:
@@ -509,9 +498,7 @@ class VectorDBBenchmark:
             "batch_size": batch_size,
         }
 
-    async def _benchmark_pgvector_search(
-        self, cursor, table_name: str
-    ) -> Dict[str, Any]:
+    async def _benchmark_pgvector_search(self, cursor, table_name: str) -> Dict[str, Any]:
         """Benchmark pgvector search performance.
 
         Args:
@@ -553,9 +540,7 @@ class VectorDBBenchmark:
             "total_queries": len(self.test_queries),
         }
 
-    async def _benchmark_pgvector_hybrid_search(
-        self, cursor, table_name: str
-    ) -> Dict[str, Any]:
+    async def _benchmark_pgvector_hybrid_search(self, cursor, table_name: str) -> Dict[str, Any]:
         """Benchmark pgvector hybrid search with filters.
 
         Args:
@@ -639,27 +624,18 @@ class VectorDBBenchmark:
             "error" not in chroma_results["ingestion"]
             and "error" not in pgvector_results["ingestion"]
         ):
-            chroma_throughput = chroma_results["ingestion"][
-                "throughput_docs_per_second"
-            ]
-            pgvector_throughput = pgvector_results["ingestion"][
-                "throughput_docs_per_second"
-            ]
+            chroma_throughput = chroma_results["ingestion"]["throughput_docs_per_second"]
+            pgvector_throughput = pgvector_results["ingestion"]["throughput_docs_per_second"]
 
             analysis["ingestion_comparison"] = {
                 "chroma_throughput": chroma_throughput,
                 "pgvector_throughput": pgvector_throughput,
                 "performance_ratio": pgvector_throughput / chroma_throughput,
-                "winner": "pgvector"
-                if pgvector_throughput > chroma_throughput
-                else "chroma",
+                "winner": "pgvector" if pgvector_throughput > chroma_throughput else "chroma",
             }
 
         # Compare search performance
-        if (
-            "error" not in chroma_results["search"]
-            and "error" not in pgvector_results["search"]
-        ):
+        if "error" not in chroma_results["search"] and "error" not in pgvector_results["search"]:
             chroma_latency = chroma_results["search"]["average_latency_ms"]
             pgvector_latency = pgvector_results["search"]["average_latency_ms"]
 
@@ -671,10 +647,7 @@ class VectorDBBenchmark:
             }
 
         # Compare hybrid search performance
-        if (
-            "error" not in chroma_results["hybrid"]
-            and "error" not in pgvector_results["hybrid"]
-        ):
+        if "error" not in chroma_results["hybrid"] and "error" not in pgvector_results["hybrid"]:
             chroma_hybrid_latency = chroma_results["hybrid"]["average_latency_ms"]
             pgvector_hybrid_latency = pgvector_results["hybrid"]["average_latency_ms"]
 
@@ -682,9 +655,9 @@ class VectorDBBenchmark:
                 "chroma_hybrid_latency_ms": chroma_hybrid_latency,
                 "pgvector_hybrid_latency_ms": pgvector_hybrid_latency,
                 "latency_ratio": chroma_hybrid_latency / pgvector_hybrid_latency,
-                "winner": "pgvector"
-                if pgvector_hybrid_latency < chroma_hybrid_latency
-                else "chroma",
+                "winner": (
+                    "pgvector" if pgvector_hybrid_latency < chroma_hybrid_latency else "chroma"
+                ),
             }
 
         # Calculate overall scores
@@ -710,9 +683,7 @@ class VectorDBBenchmark:
 
         return analysis
 
-    async def _generate_recommendation(
-        self, analysis: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    async def _generate_recommendation(self, analysis: Dict[str, Any]) -> Dict[str, Any]:
         """Generate recommendation based on benchmark results.
 
         Args:
@@ -730,15 +701,11 @@ class VectorDBBenchmark:
         }
 
         # Determine recommendation based on analysis
-        overall_winner = analysis.get("overall_scores", {}).get(
-            "overall_winner", "chroma"
-        )
+        overall_winner = analysis.get("overall_scores", {}).get("overall_winner", "chroma")
 
         if overall_winner == "pgvector":
             # Check if pgvector is significantly better (>15% performance difference)
-            search_ratio = analysis.get("search_comparison", {}).get(
-                "latency_ratio", 1.0
-            )
+            search_ratio = analysis.get("search_comparison", {}).get("latency_ratio", 1.0)
 
             if search_ratio > 1.15:  # pgvector is >15% faster
                 recommendation["recommended_solution"] = "pgvector"

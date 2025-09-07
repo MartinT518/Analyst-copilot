@@ -3,7 +3,7 @@
 import asyncio
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Dict, Type
 
 import structlog
 
@@ -20,8 +20,6 @@ class CircuitState(Enum):
 
 class CircuitBreakerError(Exception):
     """Exception raised when circuit breaker is open."""
-
-    pass
 
 
 class CircuitBreaker:

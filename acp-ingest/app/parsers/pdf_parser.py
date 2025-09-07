@@ -1,15 +1,12 @@
 """PDF parser with OCR support for processing PDF documents."""
 
 import logging
-import os
-import tempfile
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import PyPDF2
 import pytesseract
 from pdf2image import convert_from_path
-from PIL import Image
 
 logger = logging.getLogger(__name__)
 
@@ -28,9 +25,7 @@ class PDFParser:
             logger.warning("Tesseract not available, OCR will be disabled")
             self.ocr_enabled = False
 
-    async def parse(
-        self, content: str, metadata: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    async def parse(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Parse PDF content.
 
@@ -117,9 +112,7 @@ class PDFParser:
                             documents.append(document)
 
                     except Exception as e:
-                        logger.error(
-                            f"Failed to extract text from page {page_num + 1}: {e}"
-                        )
+                        logger.error(f"Failed to extract text from page {page_num + 1}: {e}")
                         continue
 
         except Exception as e:
@@ -233,9 +226,7 @@ class PDFParser:
                             # Extract date part (first 14 characters: YYYYMMDDHHMMSS)
                             if len(date_str) >= 14:
                                 date_part = date_str[:14]
-                                parsed_date = datetime.strptime(
-                                    date_part, "%Y%m%d%H%M%S"
-                                )
+                                parsed_date = datetime.strptime(date_part, "%Y%m%d%H%M%S")
                                 metadata["created_at"] = parsed_date.isoformat()
                         except Exception as e:
                             logger.warning(f"Failed to parse creation date: {e}")
@@ -250,9 +241,7 @@ class PDFParser:
 
                             if len(date_str) >= 14:
                                 date_part = date_str[:14]
-                                parsed_date = datetime.strptime(
-                                    date_part, "%Y%m%d%H%M%S"
-                                )
+                                parsed_date = datetime.strptime(date_part, "%Y%m%d%H%M%S")
                                 metadata["modified_at"] = parsed_date.isoformat()
                         except Exception as e:
                             logger.warning(f"Failed to parse modification date: {e}")

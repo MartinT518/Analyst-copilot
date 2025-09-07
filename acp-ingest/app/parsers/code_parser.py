@@ -2,12 +2,9 @@
 
 import logging
 import os
-import shlex
 import subprocess  # nosec B404
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from defusedxml import ElementTree as ET
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +23,7 @@ class CodeParser:
             "go",
         ]
 
-    async def parse(
-        self, content: str, metadata: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    async def parse(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Parse code content and extract structured information.
 
         Args:
@@ -91,9 +86,7 @@ class CodeParser:
             logger.error(f"Codebase parsing failed: {e}")
             return []
 
-    async def _run_intellij_inspection(
-        self, codebase_path: str
-    ) -> List[Dict[str, Any]]:
+    async def _run_intellij_inspection(self, codebase_path: str) -> List[Dict[str, Any]]:
         """Run IntelliJ inspection on codebase.
 
         Args:
@@ -192,9 +185,7 @@ class CodeParser:
         complexity = self._calculate_complexity(content)
 
         # Generate natural language summary
-        summary = self._generate_code_summary(
-            file_path, language, classes, methods, dependencies
-        )
+        summary = self._generate_code_summary(file_path, language, classes, methods, dependencies)
 
         return {
             "file_path": file_path,
@@ -213,17 +204,13 @@ class CodeParser:
         if language == "java":
             import re
 
-            class_pattern = (
-                r"class\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([^{]+))?"
-            )
+            class_pattern = r"class\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([^{]+))?"
             for match in re.finditer(class_pattern, content):
                 classes.append(
                     {
                         "name": match.group(1),
                         "extends": match.group(2),
-                        "implements": (
-                            match.group(3).split(",") if match.group(3) else []
-                        ),
+                        "implements": (match.group(3).split(",") if match.group(3) else []),
                     }
                 )
 
@@ -248,15 +235,15 @@ class CodeParser:
         if language == "java":
             import re
 
-            method_pattern = r"(?:public|private|protected)?\s*(?:static)?\s*(\w+)\s+(\w+)\s*\([^)]*\)"
+            method_pattern = (
+                r"(?:public|private|protected)?\s*(?:static)?\s*(\w+)\s+(\w+)\s*\([^)]*\)"
+            )
             for match in re.finditer(method_pattern, content):
                 methods.append(
                     {
                         "name": match.group(2),
                         "return_type": match.group(1),
-                        "visibility": (
-                            "public" if "public" in match.group(0) else "private"
-                        ),
+                        "visibility": ("public" if "public" in match.group(0) else "private"),
                     }
                 )
 
@@ -317,15 +304,11 @@ class CodeParser:
         dependencies: List,
     ) -> str:
         """Generate natural language summary of code."""
-        summary_parts = [
-            f"Code file {os.path.basename(file_path)} written in {language}."
-        ]
+        summary_parts = [f"Code file {os.path.basename(file_path)} written in {language}."]
 
         if classes:
             class_names = [cls["name"] for cls in classes]
-            summary_parts.append(
-                f"Contains {len(classes)} class(es): {', '.join(class_names)}."
-            )
+            summary_parts.append(f"Contains {len(classes)} class(es): {', '.join(class_names)}.")
 
         if methods:
             method_names = [method["name"] for method in methods[:5]]  # First 5 methods

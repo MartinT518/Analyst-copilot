@@ -3,7 +3,6 @@
 import os
 import time
 from contextlib import asynccontextmanager
-from typing import Any, Dict
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Request
@@ -99,9 +98,7 @@ async def lifespan(app: FastAPI):
 
     # Ensure required directories exist
     ensure_directory(settings.UPLOAD_DIR)
-    ensure_directory(
-        os.path.dirname(settings.LOG_FILE) if settings.LOG_FILE else "/app/logs"
-    )
+    ensure_directory(os.path.dirname(settings.LOG_FILE) if settings.LOG_FILE else "/app/logs")
     logger.info("Required directories created/verified")
 
     # Initialize observability

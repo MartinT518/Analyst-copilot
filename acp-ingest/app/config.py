@@ -1,6 +1,5 @@
 """Configuration management for ACP Ingest service."""
 
-import os
 from typing import List, Optional
 
 from pydantic import BaseSettings, validator
@@ -369,8 +368,7 @@ def validate_settings(settings_instance=None):
     # Check required settings
     if (
         not settings_instance.secret_key
-        or settings_instance.secret_key
-        == "your-secret-key-change-this-in-production"  # nosec B105
+        or settings_instance.secret_key == "your-secret-key-change-this-in-production"  # nosec B105
     ):
         errors.append("SECRET_KEY must be set to a secure value in production")
 
@@ -399,9 +397,7 @@ def validate_settings(settings_instance=None):
         try:
             os.makedirs(settings_instance.upload_dir, exist_ok=True)
         except Exception as e:
-            errors.append(
-                f"Cannot create upload directory {settings_instance.upload_dir}: {e}"
-            )
+            errors.append(f"Cannot create upload directory {settings_instance.upload_dir}: {e}")
 
     if settings_instance.log_file:
         log_dir = os.path.dirname(settings_instance.log_file)
@@ -413,8 +409,7 @@ def validate_settings(settings_instance=None):
 
     if errors:
         raise ValueError(
-            "Configuration validation failed:\n"
-            + "\n".join(f"- {error}" for error in errors)
+            "Configuration validation failed:\n" + "\n".join(f"- {error}" for error in errors)
         )
 
 

@@ -1,22 +1,23 @@
 """Schemas for workflow management and orchestration."""
 
-from typing import List, Dict, Any, Optional, Union
 from datetime import datetime
-from pydantic import BaseModel, Field, validator
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
-from .common_schemas import (
-    WorkflowStatus,
-    AgentType,
-    Priority,
-    WorkflowStep,
-    WorkflowContext,
-)
+from pydantic import BaseModel, Field, validator
+
 from .agent_schemas import (
     ClarifierOutput,
     SynthesizerOutput,
     TaskmasterOutput,
     VerifierOutput,
+)
+from .common_schemas import (
+    AgentType,
+    Priority,
+    WorkflowContext,
+    WorkflowStatus,
+    WorkflowStep,
 )
 
 
@@ -48,20 +49,14 @@ class WorkflowRequest(BaseModel):
     user_request: str = Field(..., description="Original user request")
     user_id: Optional[int] = Field(None, description="ID of the requesting user")
     priority: Priority = Field(default=Priority.MEDIUM, description="Workflow priority")
-    context: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional context"
-    )
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Request metadata"
-    )
+    context: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Request metadata")
 
     # Optional inputs for specific workflow types
     clarified_requirements: Optional[Dict[str, Any]] = Field(
         None, description="Pre-clarified requirements"
     )
-    knowledge_filter: Optional[Dict[str, str]] = Field(
-        None, description="Knowledge base filters"
-    )
+    knowledge_filter: Optional[Dict[str, str]] = Field(None, description="Knowledge base filters")
     custom_steps: Optional[List[str]] = Field(None, description="Custom workflow steps")
 
     # Configuration overrides
@@ -75,9 +70,7 @@ class WorkflowResponse(BaseModel):
 
     workflow_id: str = Field(..., description="Unique workflow identifier")
     status: WorkflowStatus = Field(..., description="Initial workflow status")
-    estimated_duration_minutes: Optional[int] = Field(
-        None, description="Estimated completion time"
-    )
+    estimated_duration_minutes: Optional[int] = Field(None, description="Estimated completion time")
     steps_planned: List[str] = Field(..., description="Planned workflow steps")
     created_at: datetime = Field(
         default_factory=datetime.utcnow, description="When workflow was created"
@@ -95,12 +88,8 @@ class WorkflowExecution(BaseModel):
     # Timing information
     created_at: datetime = Field(..., description="When workflow was created")
     started_at: Optional[datetime] = Field(None, description="When workflow started")
-    completed_at: Optional[datetime] = Field(
-        None, description="When workflow completed"
-    )
-    duration_seconds: Optional[float] = Field(
-        None, description="Total execution duration"
-    )
+    completed_at: Optional[datetime] = Field(None, description="When workflow completed")
+    duration_seconds: Optional[float] = Field(None, description="Total execution duration")
 
     # User and context
     user_id: Optional[int] = Field(None, description="User who initiated the workflow")
@@ -112,15 +101,11 @@ class WorkflowExecution(BaseModel):
     current_step: Optional[str] = Field(None, description="Currently executing step")
 
     # Results
-    results: Dict[str, Any] = Field(
-        default_factory=dict, description="Workflow results"
-    )
+    results: Dict[str, Any] = Field(default_factory=dict, description="Workflow results")
     error_message: Optional[str] = Field(None, description="Error message if failed")
 
     # Metadata
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Workflow metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Workflow metadata")
 
     @validator("duration_seconds", pre=True, always=True)
     def calculate_duration(cls, v, values):
@@ -141,45 +126,31 @@ class WorkflowResults(BaseModel):
     status: WorkflowStatus = Field(..., description="Final workflow status")
 
     # Agent outputs
-    clarifier_output: Optional[ClarifierOutput] = Field(
-        None, description="Clarifier agent results"
-    )
+    clarifier_output: Optional[ClarifierOutput] = Field(None, description="Clarifier agent results")
     synthesizer_output: Optional[SynthesizerOutput] = Field(
         None, description="Synthesizer agent results"
     )
     taskmaster_output: Optional[TaskmasterOutput] = Field(
         None, description="Taskmaster agent results"
     )
-    verifier_output: Optional[VerifierOutput] = Field(
-        None, description="Verifier agent results"
-    )
+    verifier_output: Optional[VerifierOutput] = Field(None, description="Verifier agent results")
 
     # Summary information
     summary: str = Field(..., description="Summary of workflow results")
-    recommendations: List[str] = Field(
-        default_factory=list, description="Key recommendations"
-    )
-    next_steps: List[str] = Field(
-        default_factory=list, description="Suggested next steps"
-    )
+    recommendations: List[str] = Field(default_factory=list, description="Key recommendations")
+    next_steps: List[str] = Field(default_factory=list, description="Suggested next steps")
 
     # Quality metrics
-    overall_confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Overall confidence score"
-    )
+    overall_confidence: float = Field(..., ge=0.0, le=1.0, description="Overall confidence score")
     quality_score: float = Field(..., ge=0.0, le=1.0, description="Quality score")
 
     # Execution metadata
     execution_time_seconds: float = Field(..., description="Total execution time")
     steps_completed: int = Field(..., description="Number of steps completed")
-    knowledge_references_used: int = Field(
-        ..., description="Number of knowledge references used"
-    )
+    knowledge_references_used: int = Field(..., description="Number of knowledge references used")
 
     # Export information
-    export_formats: List[str] = Field(
-        default_factory=list, description="Available export formats"
-    )
+    export_formats: List[str] = Field(default_factory=list, description="Available export formats")
 
     # Timestamps
     completed_at: datetime = Field(
@@ -197,25 +168,17 @@ class WorkflowUpdate(BaseModel):
         None, ge=0.0, le=100.0, description="Progress percentage"
     )
     message: Optional[str] = Field(None, description="Update message")
-    data: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional update data"
-    )
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Update timestamp"
-    )
+    data: Dict[str, Any] = Field(default_factory=dict, description="Additional update data")
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Update timestamp")
 
 
 class WorkflowMetrics(BaseModel):
     """Metrics for workflow performance."""
 
     total_workflows: int = Field(default=0, description="Total workflows executed")
-    successful_workflows: int = Field(
-        default=0, description="Successfully completed workflows"
-    )
+    successful_workflows: int = Field(default=0, description="Successfully completed workflows")
     failed_workflows: int = Field(default=0, description="Failed workflows")
-    average_duration_seconds: float = Field(
-        default=0.0, description="Average execution duration"
-    )
+    average_duration_seconds: float = Field(default=0.0, description="Average execution duration")
 
     # By workflow type
     metrics_by_type: Dict[WorkflowType, Dict[str, Any]] = Field(
@@ -223,23 +186,15 @@ class WorkflowMetrics(BaseModel):
     )
 
     # By time period
-    daily_metrics: Dict[str, int] = Field(
-        default_factory=dict, description="Daily workflow counts"
-    )
+    daily_metrics: Dict[str, int] = Field(default_factory=dict, description="Daily workflow counts")
     hourly_metrics: Dict[str, int] = Field(
         default_factory=dict, description="Hourly workflow counts"
     )
 
     # Performance metrics
-    p50_duration_seconds: float = Field(
-        default=0.0, description="50th percentile duration"
-    )
-    p95_duration_seconds: float = Field(
-        default=0.0, description="95th percentile duration"
-    )
-    p99_duration_seconds: float = Field(
-        default=0.0, description="99th percentile duration"
-    )
+    p50_duration_seconds: float = Field(default=0.0, description="50th percentile duration")
+    p95_duration_seconds: float = Field(default=0.0, description="95th percentile duration")
+    p99_duration_seconds: float = Field(default=0.0, description="99th percentile duration")
 
     last_updated: datetime = Field(
         default_factory=datetime.utcnow, description="Last metrics update"
@@ -257,26 +212,18 @@ class WorkflowTemplate(BaseModel):
     # Template configuration
     default_steps: List[str] = Field(..., description="Default workflow steps")
     required_inputs: List[str] = Field(..., description="Required input fields")
-    optional_inputs: List[str] = Field(
-        default_factory=list, description="Optional input fields"
-    )
+    optional_inputs: List[str] = Field(default_factory=list, description="Optional input fields")
 
     # Default settings
-    default_priority: Priority = Field(
-        default=Priority.MEDIUM, description="Default priority"
-    )
+    default_priority: Priority = Field(default=Priority.MEDIUM, description="Default priority")
     estimated_duration_minutes: int = Field(..., description="Estimated duration")
 
     # Configuration
-    config: Dict[str, Any] = Field(
-        default_factory=dict, description="Template configuration"
-    )
+    config: Dict[str, Any] = Field(default_factory=dict, description="Template configuration")
 
     # Metadata
     created_by: Optional[str] = Field(None, description="Template creator")
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Creation timestamp"
-    )
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
     version: str = Field(default="1.0", description="Template version")
     is_active: bool = Field(default=True, description="Whether template is active")
 
@@ -293,12 +240,8 @@ class WorkflowSchedule(BaseModel):
     timezone: str = Field(default="UTC", description="Timezone for schedule")
 
     # Input configuration
-    input_template: Dict[str, Any] = Field(
-        default_factory=dict, description="Input template"
-    )
-    context_template: Dict[str, Any] = Field(
-        default_factory=dict, description="Context template"
-    )
+    input_template: Dict[str, Any] = Field(default_factory=dict, description="Input template")
+    context_template: Dict[str, Any] = Field(default_factory=dict, description="Context template")
 
     # Status
     is_active: bool = Field(default=True, description="Whether schedule is active")
@@ -307,9 +250,7 @@ class WorkflowSchedule(BaseModel):
 
     # Metadata
     created_by: Optional[str] = Field(None, description="Schedule creator")
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow, description="Creation timestamp"
-    )
+    created_at: datetime = Field(default_factory=datetime.utcnow, description="Creation timestamp")
 
 
 class WorkflowAudit(BaseModel):
@@ -322,19 +263,13 @@ class WorkflowAudit(BaseModel):
 
     # Context
     user_id: Optional[int] = Field(None, description="User associated with event")
-    agent_type: Optional[AgentType] = Field(
-        None, description="Agent associated with event"
-    )
+    agent_type: Optional[AgentType] = Field(None, description="Agent associated with event")
     step_id: Optional[str] = Field(None, description="Step associated with event")
 
     # Data
-    before_state: Optional[Dict[str, Any]] = Field(
-        None, description="State before event"
-    )
+    before_state: Optional[Dict[str, Any]] = Field(None, description="State before event")
     after_state: Optional[Dict[str, Any]] = Field(None, description="State after event")
-    event_data: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional event data"
-    )
+    event_data: Dict[str, Any] = Field(default_factory=dict, description="Additional event data")
 
     # Provenance
     source_ip: Optional[str] = Field(None, description="Source IP address")
@@ -342,9 +277,7 @@ class WorkflowAudit(BaseModel):
     session_id: Optional[str] = Field(None, description="Session identifier")
 
     # Timing
-    timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Event timestamp"
-    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Event timestamp")
 
     # Integrity
     hash_chain: Optional[str] = Field(None, description="Hash chain for integrity")

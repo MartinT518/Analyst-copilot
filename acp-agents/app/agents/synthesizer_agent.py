@@ -1,19 +1,20 @@
 """Synthesizer agent for producing AS-IS and TO-BE documentation."""
 
 import json
-from typing import Type, List, Dict, Any
+from typing import Any, Dict, Type
+
 import structlog
 
-from .base_agent import BaseAgent
-from ..schemas.common_schemas import AgentType, KnowledgeReference
 from ..schemas.agent_schemas import (
-    SynthesizerInput,
-    SynthesizerOutput,
     AsIsDocument,
-    ToBeDocument,
     DocumentSection,
     GapAnalysis,
+    SynthesizerInput,
+    SynthesizerOutput,
+    ToBeDocument,
 )
+from ..schemas.common_schemas import AgentType
+from .base_agent import BaseAgent
 
 logger = structlog.get_logger(__name__)
 
@@ -163,16 +164,12 @@ Respond with a JSON object containing:
         Returns:
             Synthesizer output with AS-IS/TO-BE docs and gap analysis
         """
-        self.logger.info(
-            "Processing synthesis request", request_id=input_data.request_id
-        )
+        self.logger.info("Processing synthesis request", request_id=input_data.request_id)
 
         try:
             # Search for additional relevant knowledge
             search_query = self._extract_search_query(input_data.clarified_requirements)
-            additional_knowledge = await self._search_knowledge(
-                query=search_query, limit=8
-            )
+            additional_knowledge = await self._search_knowledge(query=search_query, limit=8)
 
             # Combine with provided knowledge context
             all_knowledge = input_data.knowledge_context + additional_knowledge
@@ -182,9 +179,7 @@ Respond with a JSON object containing:
                 request_id=input_data.request_id,
                 query=search_query,
                 results_count=len(additional_knowledge),
-                knowledge_references=[
-                    str(ref.chunk_id) for ref in additional_knowledge
-                ],
+                knowledge_references=[str(ref.chunk_id) for ref in additional_knowledge],
                 agent_type=self.agent_type,
             )
 
@@ -249,9 +244,7 @@ Respond with a JSON object containing:
                 ),
                 "knowledge_availability": min(1.0, len(all_knowledge) / 5.0),
                 "scope_clarity": 1.0 if input_data.scope_boundaries else 0.7,
-                "documentation_quality": self._assess_documentation_quality(
-                    as_is_doc, to_be_doc
-                ),
+                "documentation_quality": self._assess_documentation_quality(as_is_doc, to_be_doc),
                 "gap_analysis_depth": min(1.0, len(gap_analysis) / 5.0),
             }
 
@@ -290,9 +283,7 @@ Respond with a JSON object containing:
             return output
 
         except Exception as e:
-            self.logger.error(
-                "Synthesis failed", request_id=input_data.request_id, error=str(e)
-            )
+            self.logger.error("Synthesis failed", request_id=input_data.request_id, error=str(e))
             raise
 
     def _extract_search_query(self, requirements: Dict[str, Any]) -> str:
@@ -321,14 +312,10 @@ Respond with a JSON object containing:
                             query_parts.extend(words)
 
         # Clean and join query parts
-        clean_parts = [
-            part.strip().lower() for part in query_parts if len(part.strip()) > 2
-        ]
+        clean_parts = [part.strip().lower() for part in query_parts if len(part.strip()) > 2]
         return " ".join(clean_parts[:10])  # Limit query length
 
-    def _create_document(
-        self, doc_data: Dict[str, Any], default_title: str
-    ) -> AsIsDocument:
+    def _create_document(self, doc_data: Dict[str, Any], default_title: str) -> AsIsDocument:
         """Create a document from response data.
 
         Args:

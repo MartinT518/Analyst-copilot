@@ -1,17 +1,18 @@
 """Taskmaster agent for generating developer tasks from requirements."""
 
 import json
-from typing import Type, List, Dict, Any
+from typing import Type
+
 import structlog
 
-from .base_agent import BaseAgent
 from ..schemas import (
+    DeveloperTask,
     TaskmasterInput,
     TaskmasterOutput,
-    DeveloperTask,
-    UserStory,
     TechnicalNote,
+    UserStory,
 )
+from .base_agent import BaseAgent
 
 logger = structlog.get_logger(__name__)
 
@@ -181,9 +182,7 @@ Respond with a JSON object containing:
         Returns:
             Taskmaster output with generated tasks
         """
-        self.logger.info(
-            "Processing task generation request", request_id=input_data.request_id
-        )
+        self.logger.info("Processing task generation request", request_id=input_data.request_id)
 
         try:
             # Search for relevant technical knowledge
@@ -232,14 +231,10 @@ Respond with a JSON object containing:
                     user_stories = []
                     for story_data in task_data.get("user_stories", []):
                         story = UserStory(
-                            story_id=story_data.get(
-                                "story_id", f"story_{len(user_stories)+1}"
-                            ),
+                            story_id=story_data.get("story_id", f"story_{len(user_stories)+1}"),
                             title=story_data.get("title", ""),
                             description=story_data.get("description", ""),
-                            acceptance_criteria=story_data.get(
-                                "acceptance_criteria", []
-                            ),
+                            acceptance_criteria=story_data.get("acceptance_criteria", []),
                             priority=story_data.get("priority", "medium"),
                             story_points=story_data.get("story_points"),
                             epic=story_data.get("epic"),
@@ -251,9 +246,7 @@ Respond with a JSON object containing:
                     technical_notes = []
                     for note_data in task_data.get("technical_notes", []):
                         note = TechnicalNote(
-                            note_id=note_data.get(
-                                "note_id", f"note_{len(technical_notes)+1}"
-                            ),
+                            note_id=note_data.get("note_id", f"note_{len(technical_notes)+1}"),
                             category=note_data.get("category", "implementation"),
                             description=note_data.get("description", ""),
                             impact=note_data.get("impact", "medium"),
@@ -278,9 +271,7 @@ Respond with a JSON object containing:
                     tasks.append(task)
 
                 except Exception as e:
-                    self.logger.warning(
-                        "Failed to parse task", error=str(e), task_data=task_data
-                    )
+                    self.logger.warning("Failed to parse task", error=str(e), task_data=task_data)
                     continue
 
             # Calculate confidence based on various factors
@@ -291,9 +282,7 @@ Respond with a JSON object containing:
                 "gap_analysis_depth": min(1.0, len(input_data.gap_analysis) / 5.0),
                 "tasks_generated": min(1.0, len(tasks) / 20.0),
                 "technical_context": min(1.0, len(technical_knowledge) / 3.0),
-                "implementation_approach": 1.0
-                if input_data.implementation_approach
-                else 0.5,
+                "implementation_approach": 1.0 if input_data.implementation_approach else 0.5,
             }
 
             confidence = self._calculate_confidence(confidence_factors)
@@ -318,15 +307,11 @@ Respond with a JSON object containing:
                     ],
                 ),
                 resource_requirements=response_data.get("resource_requirements", {}),
-                timeline_estimate=response_data.get(
-                    "timeline_estimate", "8-12 weeks estimated"
-                ),
+                timeline_estimate=response_data.get("timeline_estimate", "8-12 weeks estimated"),
                 metadata={
                     "tasks_generated": len(tasks),
                     "total_user_stories": sum(len(task.user_stories) for task in tasks),
-                    "total_technical_notes": sum(
-                        len(task.technical_notes) for task in tasks
-                    ),
+                    "total_technical_notes": sum(len(task.technical_notes) for task in tasks),
                     "gaps_addressed": len(input_data.gap_analysis),
                     "technical_references": len(technical_knowledge),
                 },
@@ -384,9 +369,7 @@ Respond with a JSON object containing:
                     query_parts.append(term)
 
         # Clean and return
-        clean_parts = [
-            part.strip().lower() for part in query_parts if len(part.strip()) > 2
-        ]
+        clean_parts = [part.strip().lower() for part in query_parts if len(part.strip()) > 2]
         return " ".join(clean_parts[:8])
 
     def _assess_requirements_clarity(self, to_be_document) -> float:
@@ -401,25 +384,16 @@ Respond with a JSON object containing:
         score = 0.0
 
         # Check document completeness
-        if (
-            to_be_document.executive_summary
-            and len(to_be_document.executive_summary) > 100
-        ):
+        if to_be_document.executive_summary and len(to_be_document.executive_summary) > 100:
             score += 0.2
 
-        if (
-            to_be_document.future_state_vision
-            and len(to_be_document.future_state_vision) > 100
-        ):
+        if to_be_document.future_state_vision and len(to_be_document.future_state_vision) > 100:
             score += 0.2
 
         if to_be_document.benefits and len(to_be_document.benefits) >= 3:
             score += 0.2
 
-        if (
-            to_be_document.success_criteria
-            and len(to_be_document.success_criteria) >= 3
-        ):
+        if to_be_document.success_criteria and len(to_be_document.success_criteria) >= 3:
             score += 0.2
 
         # Check section depth
@@ -427,9 +401,7 @@ Respond with a JSON object containing:
             score += 0.1
 
             # Check content depth
-            total_content = sum(
-                len(section.content) for section in to_be_document.sections
-            )
+            total_content = sum(len(section.content) for section in to_be_document.sections)
             if total_content > 1000:
                 score += 0.1
 

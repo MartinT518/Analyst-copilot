@@ -116,9 +116,7 @@ class RolePermission(Base):
     permission = relationship("Permission", back_populates="role_permissions")
 
     # Constraints
-    __table_args__ = (
-        UniqueConstraint("role_id", "permission_id", name="unique_role_permission"),
-    )
+    __table_args__ = (UniqueConstraint("role_id", "permission_id", name="unique_role_permission"),)
 
 
 class IngestJob(Base):
@@ -309,9 +307,7 @@ class PIIDetection(Base):
     __tablename__ = "pii_detections"
 
     id = Column(Integer, primary_key=True, index=True)
-    chunk_id = Column(
-        UUID(as_uuid=True), ForeignKey("knowledge_chunks.id"), nullable=False
-    )
+    chunk_id = Column(UUID(as_uuid=True), ForeignKey("knowledge_chunks.id"), nullable=False)
     pii_type = Column(String(50), nullable=False, index=True)
     confidence_score = Column(Integer)  # 0-100
     original_text = Column(Text)  # Encrypted/hashed original text for audit

@@ -1,14 +1,11 @@
 """Database schema analysis service for extracting structured information from databases."""
 
-import asyncio
-from typing import Dict, List, Any, Optional, Tuple
-import structlog
+from typing import Any, Dict, List, Optional
+
 import sqlalchemy as sa
-from sqlalchemy import create_engine, MetaData, inspect
+import structlog
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import SQLAlchemyError
-import psycopg2
-from psycopg2.extras import RealDictCursor
 
 from ..config import get_settings
 
@@ -65,9 +62,7 @@ class SchemaAnalysisService:
             db_info = await self._get_database_info(engine)
 
             # Get schema information
-            schemas = await self._get_schemas(
-                engine, schema_names, include_system_tables
-            )
+            schemas = await self._get_schemas(engine, schema_names, include_system_tables)
 
             # Analyze each schema
             schema_analyses = []
@@ -80,9 +75,7 @@ class SchemaAnalysisService:
                     self.schemas_analyzed += 1
                 except Exception as e:
                     self.errors_encountered += 1
-                    self.logger.warning(
-                        "Schema analysis failed", schema=schema_name, error=str(e)
-                    )
+                    self.logger.warning("Schema analysis failed", schema=schema_name, error=str(e))
                     schema_analyses.append(
                         {
                             "schema_name": schema_name,
@@ -221,9 +214,7 @@ class SchemaAnalysisService:
                         "pg_toast_temp_1",
                     }
                     schemas = [
-                        s
-                        for s in schemas
-                        if s not in system_schemas and not s.startswith("pg_")
+                        s for s in schemas if s not in system_schemas and not s.startswith("pg_")
                     ]
 
             return schemas
@@ -265,49 +256,33 @@ class SchemaAnalysisService:
             table_names = inspector.get_table_names(schema=schema_name)
             for table_name in table_names[: self.settings.max_tables_per_analysis]:
                 try:
-                    table_analysis = await self._analyze_table(
-                        inspector, schema_name, table_name
-                    )
+                    table_analysis = await self._analyze_table(inspector, schema_name, table_name)
                     analysis["tables"].append(table_analysis)
                     self.tables_analyzed += 1
                 except Exception as e:
-                    self.logger.warning(
-                        "Table analysis failed", table=table_name, error=str(e)
-                    )
-                    analysis["tables"].append(
-                        {"table_name": table_name, "error": str(e)}
-                    )
+                    self.logger.warning("Table analysis failed", table=table_name, error=str(e))
+                    analysis["tables"].append({"table_name": table_name, "error": str(e)})
 
             # Analyze views
             try:
                 view_names = inspector.get_view_names(schema=schema_name)
                 for view_name in view_names:
-                    view_analysis = await self._analyze_view(
-                        inspector, schema_name, view_name
-                    )
+                    view_analysis = await self._analyze_view(inspector, schema_name, view_name)
                     analysis["views"].append(view_analysis)
             except Exception as e:
-                self.logger.warning(
-                    "View analysis failed", schema=schema_name, error=str(e)
-                )
+                self.logger.warning("View analysis failed", schema=schema_name, error=str(e))
 
             # Database-specific analysis
             if engine.dialect.name == "postgresql":
-                analysis.update(
-                    await self._analyze_postgresql_schema(engine, schema_name)
-                )
+                analysis.update(await self._analyze_postgresql_schema(engine, schema_name))
 
         except Exception as e:
-            self.logger.error(
-                "Schema analysis failed", schema=schema_name, error=str(e)
-            )
+            self.logger.error("Schema analysis failed", schema=schema_name, error=str(e))
             analysis["error"] = str(e)
 
         return analysis
 
-    async def _analyze_table(
-        self, inspector, schema_name: str, table_name: str
-    ) -> Dict[str, Any]:
+    async def _analyze_table(self, inspector, schema_name: str, table_name: str) -> Dict[str, Any]:
         """Analyze a database table.
 
         Args:
@@ -337,9 +312,9 @@ class SchemaAnalysisService:
                     "column_name": column["name"],
                     "data_type": str(column["type"]),
                     "nullable": column.get("nullable", True),
-                    "default": str(column.get("default"))
-                    if column.get("default") is not None
-                    else None,
+                    "default": (
+                        str(column.get("default")) if column.get("default") is not None else None
+                    ),
                     "comment": column.get("comment"),
                     "autoincrement": column.get("autoincrement", False),
                 }
@@ -374,9 +349,7 @@ class SchemaAnalysisService:
 
             # Get check constraints
             try:
-                check_constraints = inspector.get_check_constraints(
-                    table_name, schema=schema_name
-                )
+                check_constraints = inspector.get_check_constraints(table_name, schema=schema_name)
                 for constraint in check_constraints:
                     constraint_info = {
                         "constraint_name": constraint.get("name"),
@@ -389,12 +362,8 @@ class SchemaAnalysisService:
 
             # Get table comment
             try:
-                table_comment = inspector.get_table_comment(
-                    table_name, schema=schema_name
-                )
-                analysis["table_comment"] = (
-                    table_comment.get("text") if table_comment else None
-                )
+                table_comment = inspector.get_table_comment(table_name, schema=schema_name)
+                analysis["table_comment"] = table_comment.get("text") if table_comment else None
             except Exception:
                 pass
 
@@ -403,9 +372,7 @@ class SchemaAnalysisService:
 
         return analysis
 
-    async def _analyze_view(
-        self, inspector, schema_name: str, view_name: str
-    ) -> Dict[str, Any]:
+    async def _analyze_view(self, inspector, schema_name: str, view_name: str) -> Dict[str, Any]:
         """Analyze a database view.
 
         Args:
@@ -436,9 +403,7 @@ class SchemaAnalysisService:
 
             # Try to get view definition
             try:
-                view_definition = inspector.get_view_definition(
-                    view_name, schema=schema_name
-                )
+                view_definition = inspector.get_view_definition(view_name, schema=schema_name)
                 analysis["view_definition"] = view_definition
             except Exception:
                 # Not all databases support view definition inspection
@@ -449,9 +414,7 @@ class SchemaAnalysisService:
 
         return analysis
 
-    async def _analyze_postgresql_schema(
-        self, engine: Engine, schema_name: str
-    ) -> Dict[str, Any]:
+    async def _analyze_postgresql_schema(self, engine: Engine, schema_name: str) -> Dict[str, Any]:
         """Perform PostgreSQL-specific schema analysis.
 
         Args:
@@ -618,8 +581,7 @@ class SchemaAnalysisService:
         insights["relationship_analysis"] = {
             "total_foreign_keys": total_foreign_keys,
             "referential_integrity_coverage": (
-                insights["table_statistics"].get("tables_with_foreign_keys", 0)
-                / total_tables
+                insights["table_statistics"].get("tables_with_foreign_keys", 0) / total_tables
                 if total_tables > 0
                 else 0
             ),
@@ -645,12 +607,8 @@ class SchemaAnalysisService:
         ]
 
         if table_names:
-            snake_case_count = sum(
-                1 for name in table_names if "_" in name and name.islower()
-            )
-            camel_case_count = sum(
-                1 for name in table_names if any(c.isupper() for c in name[1:])
-            )
+            snake_case_count = sum(1 for name in table_names if "_" in name and name.islower())
+            camel_case_count = sum(1 for name in table_names if any(c.isupper() for c in name[1:]))
 
             insights["naming_conventions"] = {
                 "snake_case_tables": snake_case_count,
@@ -662,9 +620,9 @@ class SchemaAnalysisService:
         # Complexity metrics
         insights["complexity_metrics"] = {
             "schema_complexity": len(schema_analyses),
-            "average_tables_per_schema": total_tables / len(schema_analyses)
-            if schema_analyses
-            else 0,
+            "average_tables_per_schema": (
+                total_tables / len(schema_analyses) if schema_analyses else 0
+            ),
             "database_size_indicator": total_tables + total_views + total_functions,
         }
 

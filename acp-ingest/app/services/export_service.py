@@ -4,14 +4,12 @@ import csv
 import json
 import zipfile
 from datetime import datetime
-from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
-from app.models import AuditLog, IngestJob, KnowledgeChunk
-from app.schemas import ChunkResponse, SearchResult
+from app.models import AuditLog
+from app.schemas import SearchResult
 from app.utils.logging_config import get_logger
-from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
 
@@ -78,28 +76,20 @@ class ExportService:
             filename = f"search_results_{timestamp}"
 
             if format_type == ExportFormat.CSV:
-                return await self._export_search_results_csv(
-                    results, filename, title, metadata
-                )
+                return await self._export_search_results_csv(results, filename, title, metadata)
             elif format_type == ExportFormat.JSON:
-                return await self._export_search_results_json(
-                    results, filename, title, metadata
-                )
+                return await self._export_search_results_json(results, filename, title, metadata)
             elif format_type == ExportFormat.MARKDOWN:
                 return await self._export_search_results_markdown(
                     results, filename, title, metadata
                 )
             elif format_type == ExportFormat.HTML:
-                return await self._export_search_results_html(
-                    results, filename, title, metadata
-                )
+                return await self._export_search_results_html(results, filename, title, metadata)
             else:
                 raise ValueError(f"Unsupported export format: {format_type}")
 
         except Exception as e:
-            logger.error(
-                "Error exporting search results", format=format_type, error=str(e)
-            )
+            logger.error("Error exporting search results", format=format_type, error=str(e))
             raise
 
     async def _export_search_results_csv(
@@ -144,9 +134,7 @@ class ExportService:
                         ),
                         "document_title": chunk.metadata.get("document_title", ""),
                         "author": chunk.metadata.get("author", ""),
-                        "created_at": (
-                            chunk.created_at.isoformat() if chunk.created_at else ""
-                        ),
+                        "created_at": (chunk.created_at.isoformat() if chunk.created_at else ""),
                         "sensitivity": "Yes" if chunk.sensitive else "No",
                         "origin": chunk.metadata.get("origin", ""),
                     }
@@ -190,9 +178,7 @@ class ExportService:
                         "chunk_text": chunk.chunk_text,
                         "metadata": chunk.metadata,
                         "sensitive": chunk.sensitive,
-                        "created_at": (
-                            chunk.created_at.isoformat() if chunk.created_at else None
-                        ),
+                        "created_at": (chunk.created_at.isoformat() if chunk.created_at else None),
                     },
                 }
             )
@@ -222,9 +208,7 @@ class ExportService:
         with open(file_path, "w", encoding="utf-8") as mdfile:
             # Header
             mdfile.write(f"# {title}\n\n")
-            mdfile.write(
-                f"**Exported:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
-            )
+            mdfile.write(f"**Exported:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
             mdfile.write(f"**Results:** {len(results)} items\n\n")
 
             if metadata:
@@ -242,9 +226,7 @@ class ExportService:
                 mdfile.write(f"### Result {i}\n\n")
                 mdfile.write(f"**Similarity Score:** {result.similarity_score:.4f}\n")
                 mdfile.write(f"**Source:** {chunk.source_type}\n")
-                mdfile.write(
-                    f"**Document:** {chunk.metadata.get('document_title', 'Unknown')}\n"
-                )
+                mdfile.write(f"**Document:** {chunk.metadata.get('document_title', 'Unknown')}\n")
                 mdfile.write(f"**Author:** {chunk.metadata.get('author', 'Unknown')}\n")
                 mdfile.write(f"**Sensitive:** {'Yes' if chunk.sensitive else 'No'}\n\n")
 
@@ -303,9 +285,7 @@ class ExportService:
                 htmlfile.write("        <h2>Export Metadata</h2>\n")
                 htmlfile.write("        <ul>\n")
                 for key, value in metadata.items():
-                    htmlfile.write(
-                        f"            <li><strong>{key}:</strong> {value}</li>\n"
-                    )
+                    htmlfile.write(f"            <li><strong>{key}:</strong> {value}</li>\n")
                 htmlfile.write("        </ul>\n")
                 htmlfile.write("    </div>\n")
 
@@ -381,9 +361,7 @@ class ExportService:
 
                 for result in analysis_results:
                     # Extract key information
-                    summary = result.get(
-                        "title", result.get("summary", "Analysis Result")
-                    )[:255]
+                    summary = result.get("title", result.get("summary", "Analysis Result"))[:255]
                     description = result.get("description", result.get("content", ""))
                     priority = result.get("priority", "Medium")
                     labels = result.get("labels", [])
@@ -417,9 +395,7 @@ class ExportService:
             }
 
         except Exception as e:
-            logger.error(
-                "Error exporting Jira CSV", project_key=project_key, error=str(e)
-            )
+            logger.error("Error exporting Jira CSV", project_key=project_key, error=str(e))
             raise
 
     async def export_audit_report(
@@ -453,9 +429,7 @@ class ExportService:
                 raise ValueError(f"Unsupported audit export format: {format_type}")
 
         except Exception as e:
-            logger.error(
-                "Error exporting audit report", format=format_type, error=str(e)
-            )
+            logger.error("Error exporting audit report", format=format_type, error=str(e))
             raise
 
     async def _export_audit_csv(
@@ -484,9 +458,7 @@ class ExportService:
             for log in audit_logs:
                 writer.writerow(
                     {
-                        "timestamp": (
-                            log.created_at.isoformat() if log.created_at else ""
-                        ),
+                        "timestamp": (log.created_at.isoformat() if log.created_at else ""),
                         "action": log.action,
                         "user_id": log.user_id or "",
                         "resource_type": log.resource_type or "",
@@ -558,9 +530,7 @@ class ExportService:
 
         with open(file_path, "w", encoding="utf-8") as mdfile:
             mdfile.write(f"# {title}\n\n")
-            mdfile.write(
-                f"**Generated:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}\n"
-            )
+            mdfile.write(f"**Generated:** {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}\n")
             mdfile.write(f"**Total Events:** {len(audit_logs)}\n\n")
 
             # Group by severity
@@ -663,9 +633,7 @@ class ExportService:
             }
 
         except Exception as e:
-            logger.error(
-                "Error creating export package", package_name=package_name, error=str(e)
-            )
+            logger.error("Error creating export package", package_name=package_name, error=str(e))
             raise
 
     def cleanup_old_exports(self, max_age_hours: int = 24):

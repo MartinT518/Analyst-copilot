@@ -2,7 +2,6 @@
 
 import os
 from contextlib import asynccontextmanager
-from typing import Any, Dict
 
 import uvicorn
 from app.api import health, ingest, search
@@ -42,9 +41,7 @@ async def lifespan(app: FastAPI):
 
     # Ensure required directories exist
     ensure_directory(settings.UPLOAD_DIR)
-    ensure_directory(
-        os.path.dirname(settings.LOG_FILE) if settings.LOG_FILE else "/app/logs"
-    )
+    ensure_directory(os.path.dirname(settings.LOG_FILE) if settings.LOG_FILE else "/app/logs")
     logger.info("Required directories created/verified")
 
     # Initialize services
@@ -127,9 +124,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             },
         )
     else:
-        return JSONResponse(
-            status_code=500, content={"detail": "Internal server error"}
-        )
+        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 
 # HTTP exception handler
@@ -203,13 +198,9 @@ async def get_config():
         "max_file_size": settings.MAX_FILE_SIZE,
         "upload_dir": settings.UPLOAD_DIR,
         "database_url": (
-            settings.DATABASE_URL.split("@")[-1]
-            if "@" in settings.DATABASE_URL
-            else "***"
+            settings.DATABASE_URL.split("@")[-1] if "@" in settings.DATABASE_URL else "***"
         ),
-        "redis_url": (
-            settings.REDIS_URL.split("@")[-1] if "@" in settings.REDIS_URL else "***"
-        ),
+        "redis_url": (settings.REDIS_URL.split("@")[-1] if "@" in settings.REDIS_URL else "***"),
         "chroma_host": settings.CHROMA_HOST,
         "chroma_port": settings.CHROMA_PORT,
         "llm_endpoint": settings.LLM_ENDPOINT,

@@ -1,10 +1,11 @@
 """Common schemas used across agents."""
 
-from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 from enum import Enum
-from pydantic import BaseModel, Field, validator
+from typing import Any, Dict, List, Optional
 from uuid import UUID
+
+from pydantic import BaseModel, Field, validator
 
 
 class WorkflowStatus(str, Enum):
@@ -50,34 +51,22 @@ class BaseAgentInput(BaseModel):
     """Base input schema for all agents."""
 
     request_id: str = Field(..., description="Unique identifier for the request")
-    user_id: Optional[int] = Field(
-        None, description="ID of the user making the request"
-    )
+    user_id: Optional[int] = Field(None, description="ID of the user making the request")
     context: Dict[str, Any] = Field(
         default_factory=dict, description="Additional context for the agent"
     )
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Metadata about the request"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Metadata about the request")
 
 
 class BaseAgentOutput(BaseModel):
     """Base output schema for all agents."""
 
-    agent_type: AgentType = Field(
-        ..., description="Type of agent that generated this output"
-    )
+    agent_type: AgentType = Field(..., description="Type of agent that generated this output")
     request_id: str = Field(..., description="Request ID this output corresponds to")
-    confidence: float = Field(
-        ..., ge=0.0, le=1.0, description="Confidence score for the output"
-    )
-    confidence_level: ConfidenceLevel = Field(
-        ..., description="Human-readable confidence level"
-    )
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score for the output")
+    confidence_level: ConfidenceLevel = Field(..., description="Human-readable confidence level")
     reasoning: str = Field(..., description="Explanation of the agent's reasoning")
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
     generated_at: datetime = Field(
         default_factory=datetime.utcnow, description="When this output was generated"
     )
@@ -107,21 +96,15 @@ class KnowledgeReference(BaseModel):
     source_type: str = Field(..., description="Type of source document")
     similarity_score: float = Field(..., ge=0.0, le=1.0, description="Similarity score")
     excerpt: str = Field(..., description="Relevant excerpt from the knowledge")
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Additional metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 class ValidationResult(BaseModel):
     """Result of validation checks."""
 
     is_valid: bool = Field(..., description="Whether the validation passed")
-    errors: List[str] = Field(
-        default_factory=list, description="List of validation errors"
-    )
-    warnings: List[str] = Field(
-        default_factory=list, description="List of validation warnings"
-    )
+    errors: List[str] = Field(default_factory=list, description="List of validation errors")
+    warnings: List[str] = Field(default_factory=list, description="List of validation warnings")
     score: float = Field(..., ge=0.0, le=1.0, description="Validation score")
 
 
@@ -133,22 +116,12 @@ class WorkflowStep(BaseModel):
     status: WorkflowStatus = Field(
         default=WorkflowStatus.PENDING, description="Status of this step"
     )
-    input_data: Dict[str, Any] = Field(
-        default_factory=dict, description="Input data for the step"
-    )
-    output_data: Optional[Dict[str, Any]] = Field(
-        None, description="Output data from the step"
-    )
+    input_data: Dict[str, Any] = Field(default_factory=dict, description="Input data for the step")
+    output_data: Optional[Dict[str, Any]] = Field(None, description="Output data from the step")
     started_at: Optional[datetime] = Field(None, description="When the step started")
-    completed_at: Optional[datetime] = Field(
-        None, description="When the step completed"
-    )
-    error_message: Optional[str] = Field(
-        None, description="Error message if step failed"
-    )
-    duration_seconds: Optional[float] = Field(
-        None, description="Duration of step execution"
-    )
+    completed_at: Optional[datetime] = Field(None, description="When the step completed")
+    error_message: Optional[str] = Field(None, description="Error message if step failed")
+    duration_seconds: Optional[float] = Field(None, description="Duration of step execution")
 
 
 class WorkflowContext(BaseModel):
@@ -163,28 +136,20 @@ class WorkflowContext(BaseModel):
     shared_data: Dict[str, Any] = Field(
         default_factory=dict, description="Data shared between steps"
     )
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict, description="Workflow metadata"
-    )
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Workflow metadata")
 
 
 class AgentMetrics(BaseModel):
     """Metrics for agent performance."""
 
     agent_type: AgentType = Field(..., description="Type of agent")
-    total_requests: int = Field(
-        default=0, description="Total number of requests processed"
-    )
-    successful_requests: int = Field(
-        default=0, description="Number of successful requests"
-    )
+    total_requests: int = Field(default=0, description="Total number of requests processed")
+    successful_requests: int = Field(default=0, description="Number of successful requests")
     failed_requests: int = Field(default=0, description="Number of failed requests")
     average_duration: float = Field(
         default=0.0, description="Average processing duration in seconds"
     )
-    average_confidence: float = Field(
-        default=0.0, description="Average confidence score"
-    )
+    average_confidence: float = Field(default=0.0, description="Average confidence score")
     last_updated: datetime = Field(
         default_factory=datetime.utcnow, description="Last metrics update"
     )
@@ -235,9 +200,7 @@ class SortParams(BaseModel):
     """Sorting parameters for list endpoints."""
 
     sort_by: str = Field(default="created_at", description="Field to sort by")
-    sort_order: str = Field(
-        default="desc", regex="^(asc|desc)$", description="Sort order"
-    )
+    sort_order: str = Field(default="desc", regex="^(asc|desc)$", description="Sort order")
 
 
 class FilterParams(BaseModel):

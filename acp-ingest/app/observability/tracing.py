@@ -82,9 +82,7 @@ class TracingManager:
                 self._setup_otlp_exporter(tracer_provider)
 
             # Get tracer
-            self.tracer = trace.get_tracer(
-                self.config.service_name, self.config.service_version
-            )
+            self.tracer = trace.get_tracer(self.config.service_name, self.config.service_version)
 
             logger.info(
                 "OpenTelemetry tracing initialized",
@@ -110,9 +108,7 @@ class TracingManager:
             span_processor = BatchSpanProcessor(jaeger_exporter)
             tracer_provider.add_span_processor(span_processor)
 
-            logger.info(
-                "Jaeger exporter configured", endpoint=self.config.jaeger_endpoint
-            )
+            logger.info("Jaeger exporter configured", endpoint=self.config.jaeger_endpoint)
 
         except Exception as e:
             logger.error("Failed to setup Jaeger exporter", error=str(e))
@@ -132,9 +128,7 @@ class TracingManager:
     def instrument_fastapi(self, app) -> None:
         """Instrument FastAPI application."""
         try:
-            FastAPIInstrumentor.instrument_app(
-                app, tracer_provider=trace.get_tracer_provider()
-            )
+            FastAPIInstrumentor.instrument_app(app, tracer_provider=trace.get_tracer_provider())
             logger.info("FastAPI instrumentation enabled")
         except Exception as e:
             logger.error("Failed to instrument FastAPI", error=str(e))

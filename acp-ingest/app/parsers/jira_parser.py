@@ -41,9 +41,7 @@ class JiraParser:
             "Project Key": "project",
         }
 
-    async def parse(
-        self, content: str, metadata: Dict[str, Any]
-    ) -> List[Dict[str, Any]]:
+    async def parse(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Parse Jira CSV content.
 

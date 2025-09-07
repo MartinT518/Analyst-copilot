@@ -1,10 +1,8 @@
 """Security configuration and validation for ACP services."""
 
-import hashlib
 import logging
-import os
 import secrets
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseSettings, Field, validator
 
@@ -118,9 +116,7 @@ class SecurityConfig(BaseSettings):
         ]
 
         if any(pattern in v.lower() for pattern in weak_patterns):
-            raise ValueError(
-                "SECRET_KEY contains weak patterns - use a strong, random key"
-            )
+            raise ValueError("SECRET_KEY contains weak patterns - use a strong, random key")
 
         return v
 

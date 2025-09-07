@@ -3,16 +3,13 @@
 import logging
 import logging.config
 import os
-import sys
 from datetime import datetime
 from typing import Any, Dict
 
 import structlog
 
 
-def setup_logging(
-    log_level: str = "INFO", log_format: str = "json", log_file: str = None
-) -> None:
+def setup_logging(log_level: str = "INFO", log_format: str = "json", log_file: str = None) -> None:
     """
     Setup logging configuration.
 
@@ -199,7 +196,7 @@ class RequestLogger:
         user_id: str = None,
         ip_address: str = None,
         user_agent: str = None,
-        **kwargs
+        **kwargs,
     ):
         """Log HTTP request."""
         self.logger.info(
@@ -211,7 +208,7 @@ class RequestLogger:
             user_id=user_id,
             ip_address=ip_address,
             user_agent=user_agent,
-            **kwargs
+            **kwargs,
         )
 
     def log_error(
@@ -221,7 +218,7 @@ class RequestLogger:
         error: str,
         user_id: str = None,
         ip_address: str = None,
-        **kwargs
+        **kwargs,
     ):
         """Log HTTP request error."""
         self.logger.error(
@@ -231,7 +228,7 @@ class RequestLogger:
             error=error,
             user_id=user_id,
             ip_address=ip_address,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -250,7 +247,7 @@ class AuditLogger:
         details: Dict[str, Any] = None,
         ip_address: str = None,
         user_agent: str = None,
-        **kwargs
+        **kwargs,
     ):
         """Log audit event."""
         self.logger.info(
@@ -263,7 +260,7 @@ class AuditLogger:
             ip_address=ip_address,
             user_agent=user_agent,
             timestamp=datetime.utcnow().isoformat(),
-            **kwargs
+            **kwargs,
         )
 
     def log_security_event(
@@ -274,7 +271,7 @@ class AuditLogger:
         user_id: str = None,
         ip_address: str = None,
         details: Dict[str, Any] = None,
-        **kwargs
+        **kwargs,
     ):
         """Log security event."""
         self.logger.warning(
@@ -286,7 +283,7 @@ class AuditLogger:
             ip_address=ip_address,
             details=details or {},
             timestamp=datetime.utcnow().isoformat(),
-            **kwargs
+            **kwargs,
         )
 
 
@@ -302,7 +299,7 @@ class PerformanceLogger:
         duration_ms: float,
         success: bool = True,
         details: Dict[str, Any] = None,
-        **kwargs
+        **kwargs,
     ):
         """Log operation performance."""
         self.logger.info(
@@ -311,16 +308,11 @@ class PerformanceLogger:
             duration_ms=duration_ms,
             success=success,
             details=details or {},
-            **kwargs
+            **kwargs,
         )
 
     def log_database_query(
-        self,
-        query_type: str,
-        table: str,
-        duration_ms: float,
-        rows_affected: int = None,
-        **kwargs
+        self, query_type: str, table: str, duration_ms: float, rows_affected: int = None, **kwargs
     ):
         """Log database query performance."""
         self.logger.debug(
@@ -329,7 +321,7 @@ class PerformanceLogger:
             table=table,
             duration_ms=duration_ms,
             rows_affected=rows_affected,
-            **kwargs
+            **kwargs,
         )
 
     def log_external_api_call(
@@ -339,7 +331,7 @@ class PerformanceLogger:
         method: str,
         status_code: int,
         duration_ms: float,
-        **kwargs
+        **kwargs,
     ):
         """Log external API call performance."""
         self.logger.info(
@@ -349,7 +341,7 @@ class PerformanceLogger:
             method=method,
             status_code=status_code,
             duration_ms=duration_ms,
-            **kwargs
+            **kwargs,
         )
 
 

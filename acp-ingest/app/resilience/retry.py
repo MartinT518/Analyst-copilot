@@ -4,7 +4,7 @@ import asyncio
 import secrets
 import time
 from functools import wraps
-from typing import Any, Callable, List, Optional, Type, Union
+from typing import Any, Callable, List, Optional, Type
 
 import structlog
 
@@ -13,8 +13,6 @@ logger = structlog.get_logger(__name__)
 
 class RetryError(Exception):
     """Exception raised when all retry attempts are exhausted."""
-
-    pass
 
 
 class RetryConfig:
@@ -90,9 +88,7 @@ class RetryManager:
         Returns:
             True if should retry, False otherwise
         """
-        return any(
-            isinstance(exception, exc_type) for exc_type in self.config.exceptions
-        )
+        return any(isinstance(exception, exc_type) for exc_type in self.config.exceptions)
 
     def _call_with_retry(self, func: Callable, *args, **kwargs) -> Any:
         """Execute function with retry logic.
@@ -356,9 +352,7 @@ def retry_with_circuit_breaker(
 
             @wraps(func)
             async def async_wrapper(*args, **kwargs):
-                return await circuit_breaker.acall(
-                    retry_manager.acall, func, *args, **kwargs
-                )
+                return await circuit_breaker.acall(retry_manager.acall, func, *args, **kwargs)
 
             return async_wrapper
         else:

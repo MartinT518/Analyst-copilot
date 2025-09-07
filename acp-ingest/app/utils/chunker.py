@@ -3,7 +3,7 @@
 import logging
 import re
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -244,10 +244,7 @@ class TextChunker:
 
         for paragraph in paragraphs:
             # Check if adding this paragraph would exceed chunk size
-            if (
-                current_chunk
-                and len(current_chunk) + len(paragraph) > config.max_chunk_size
-            ):
+            if current_chunk and len(current_chunk) + len(paragraph) > config.max_chunk_size:
                 # Create chunk from current content
                 if current_chunk.strip():
                     chunk = self._create_chunk(
@@ -271,9 +268,7 @@ class TextChunker:
 
         # Add final chunk
         if current_chunk.strip():
-            chunk = self._create_chunk(
-                current_chunk.strip(), metadata, section_info, chunk_index
-            )
+            chunk = self._create_chunk(current_chunk.strip(), metadata, section_info, chunk_index)
             chunks.append(chunk)
 
         return chunks
@@ -339,10 +334,7 @@ class TextChunker:
 
         for sentence in sentences:
             # Check if adding this sentence would exceed chunk size
-            if (
-                current_chunk
-                and len(current_chunk) + len(sentence) > config.max_chunk_size
-            ):
+            if current_chunk and len(current_chunk) + len(sentence) > config.max_chunk_size:
                 # Create chunk from current content
                 if current_chunk.strip():
                     chunk = self._create_chunk(
@@ -501,8 +493,7 @@ class TextChunker:
                 # Try to merge with previous chunk if possible
                 if (
                     processed_chunks
-                    and len(processed_chunks[-1]["text"]) + len(text)
-                    <= config.max_chunk_size
+                    and len(processed_chunks[-1]["text"]) + len(text) <= config.max_chunk_size
                 ):
                     processed_chunks[-1]["text"] += "\n\n" + text
                     processed_chunks[-1]["metadata"]["chunk_size"] = len(
@@ -578,9 +569,7 @@ class TextChunker:
                 1 for chunk in chunks if chunk["metadata"].get("contains_list", False)
             ),
             "chunks_with_headings": sum(
-                1
-                for chunk in chunks
-                if chunk["metadata"].get("contains_headings", False)
+                1 for chunk in chunks if chunk["metadata"].get("contains_headings", False)
             ),
         }
 

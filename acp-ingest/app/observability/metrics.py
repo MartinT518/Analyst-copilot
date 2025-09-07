@@ -1,16 +1,15 @@
 """Prometheus metrics for ACP services."""
 
 import time
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 import structlog
-from fastapi import Request, Response
+from fastapi import Request
 from fastapi.responses import PlainTextResponse
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
     Counter,
-    Enum,
     Gauge,
     Histogram,
     Info,
@@ -24,9 +23,7 @@ logger = structlog.get_logger(__name__)
 class MetricsCollector:
     """Prometheus metrics collector for ACP services."""
 
-    def __init__(
-        self, service_name: str = "acp-ingest", service_version: str = "1.0.0"
-    ):
+    def __init__(self, service_name: str = "acp-ingest", service_version: str = "1.0.0"):
         """Initialize metrics collector.
 
         Args:
@@ -38,9 +35,7 @@ class MetricsCollector:
         self.registry = CollectorRegistry()
 
         # Service information
-        self.service_info = Info(
-            "acp_service_info", "Service information", registry=self.registry
-        )
+        self.service_info = Info("acp_service_info", "Service information", registry=self.registry)
         self.service_info.info({"name": service_name, "version": service_version})
 
         # HTTP metrics
@@ -206,9 +201,7 @@ class MetricsCollector:
             method=method, endpoint=endpoint, service=self.service_name
         ).observe(duration)
 
-    def record_ingestion_job(
-        self, status: str, file_type: str, duration: float
-    ) -> None:
+    def record_ingestion_job(self, status: str, file_type: str, duration: float) -> None:
         """Record ingestion job metrics.
 
         Args:
@@ -220,9 +213,9 @@ class MetricsCollector:
             status=status, file_type=file_type, service=self.service_name
         ).inc()
 
-        self.ingestion_job_duration.labels(
-            file_type=file_type, service=self.service_name
-        ).observe(duration)
+        self.ingestion_job_duration.labels(file_type=file_type, service=self.service_name).observe(
+            duration
+        )
 
     def record_vector_embedding(self, status: str) -> None:
         """Record vector embedding metrics.
@@ -230,9 +223,7 @@ class MetricsCollector:
         Args:
             status: Embedding status (success, failed)
         """
-        self.vector_embeddings_total.labels(
-            status=status, service=self.service_name
-        ).inc()
+        self.vector_embeddings_total.labels(status=status, service=self.service_name).inc()
 
     def record_vector_search(self, status: str, duration: float) -> None:
         """Record vector search metrics.
@@ -241,9 +232,7 @@ class MetricsCollector:
             status: Search status (success, failed)
             duration: Search duration in seconds
         """
-        self.vector_search_requests_total.labels(
-            status=status, service=self.service_name
-        ).inc()
+        self.vector_search_requests_total.labels(status=status, service=self.service_name).inc()
 
         self.vector_search_duration.labels(service=self.service_name).observe(duration)
 
@@ -281,9 +270,7 @@ class MetricsCollector:
             workflow_type=workflow_type, service=self.service_name
         ).observe(duration)
 
-    def record_agent_request(
-        self, agent_type: str, status: str, duration: float
-    ) -> None:
+    def record_agent_request(self, agent_type: str, status: str, duration: float) -> None:
         """Record agent request metrics.
 
         Args:
@@ -295,9 +282,9 @@ class MetricsCollector:
             agent_type=agent_type, status=status, service=self.service_name
         ).inc()
 
-        self.agent_duration.labels(
-            agent_type=agent_type, service=self.service_name
-        ).observe(duration)
+        self.agent_duration.labels(agent_type=agent_type, service=self.service_name).observe(
+            duration
+        )
 
     def record_llm_request(
         self,
@@ -316,13 +303,9 @@ class MetricsCollector:
             prompt_tokens: Number of prompt tokens
             completion_tokens: Number of completion tokens
         """
-        self.llm_requests_total.labels(
-            model=model, status=status, service=self.service_name
-        ).inc()
+        self.llm_requests_total.labels(model=model, status=status, service=self.service_name).inc()
 
-        self.llm_duration.labels(model=model, service=self.service_name).observe(
-            duration
-        )
+        self.llm_duration.labels(model=model, service=self.service_name).observe(duration)
 
         if prompt_tokens > 0:
             self.llm_tokens_total.labels(  # nosec B106
@@ -356,9 +339,7 @@ class MetricsCollector:
             state: Connection state (active, idle, total)
             count: Number of connections
         """
-        self.database_connections.labels(state=state, service=self.service_name).set(
-            count
-        )
+        self.database_connections.labels(state=state, service=self.service_name).set(count)
 
     def set_redis_connections(self, state: str, count: int) -> None:
         """Set Redis connections count.

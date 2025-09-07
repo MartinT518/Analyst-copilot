@@ -3,7 +3,7 @@
 import logging
 import re
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -46,15 +46,11 @@ class PIIDetector:
             "credit_card": re.compile(r"\b(?:\d{4}[-\s]?){3}\d{4}\b"),
             "ip_address": re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"),
             "api_key": re.compile(r"\b[A-Za-z0-9]{32,}\b"),
-            "uuid": re.compile(
-                r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b"
-            ),
+            "uuid": re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b"),
             "url": re.compile(
                 r"https?://(?:[-\w.])+(?:[:\d]+)?(?:/(?:[\w/_.])*(?:\?(?:[\w&=%.])*)?(?:#(?:\w*))?)?"
             ),
-            "file_path": re.compile(
-                r'[A-Za-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*'
-            ),
+            "file_path": re.compile(r'[A-Za-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n]*'),
             "aws_access_key": re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
             "private_key": re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----"),
         }
@@ -132,9 +128,7 @@ class PIIDetector:
                 anonymized_result = self.anonymizer.anonymize(
                     text=text,
                     analyzer_results=results,
-                    operators={
-                        "DEFAULT": {"type": "replace", "new_value": "[REDACTED]"}
-                    },
+                    operators={"DEFAULT": {"type": "replace", "new_value": "[REDACTED]"}},
                 )
             elif mode == RedactionMode.PSEUDONYMIZE:
                 anonymized_result = self.anonymizer.anonymize(
@@ -184,26 +178,18 @@ class PIIDetector:
         # Apply PII patterns
         for pii_type, pattern in self.pii_patterns.items():
             if mode == RedactionMode.REDACT:
-                processed_text = pattern.sub(
-                    f"[{pii_type.upper()}_REDACTED]", processed_text
-                )
+                processed_text = pattern.sub(f"[{pii_type.upper()}_REDACTED]", processed_text)
             elif mode == RedactionMode.PSEUDONYMIZE:
-                processed_text = self._pseudonymize_matches(
-                    processed_text, pattern, pii_type
-                )
+                processed_text = self._pseudonymize_matches(processed_text, pattern, pii_type)
             elif mode == RedactionMode.MASK:
                 processed_text = self._mask_matches(processed_text, pattern)
 
         # Apply enterprise patterns
         for entity_type, pattern in self.enterprise_patterns.items():
             if mode == RedactionMode.REDACT:
-                processed_text = pattern.sub(
-                    f"[{entity_type.upper()}_REDACTED]", processed_text
-                )
+                processed_text = pattern.sub(f"[{entity_type.upper()}_REDACTED]", processed_text)
             elif mode == RedactionMode.PSEUDONYMIZE:
-                processed_text = self._pseudonymize_matches(
-                    processed_text, pattern, entity_type
-                )
+                processed_text = self._pseudonymize_matches(processed_text, pattern, entity_type)
             elif mode == RedactionMode.MASK:
                 processed_text = self._mask_matches(processed_text, pattern)
 
@@ -227,21 +213,15 @@ class PIIDetector:
 
         for pii_type, pattern in custom_patterns.items():
             if mode == RedactionMode.REDACT:
-                processed_text = pattern.sub(
-                    f"[{pii_type.upper()}_REDACTED]", processed_text
-                )
+                processed_text = pattern.sub(f"[{pii_type.upper()}_REDACTED]", processed_text)
             elif mode == RedactionMode.PSEUDONYMIZE:
-                processed_text = self._pseudonymize_matches(
-                    processed_text, pattern, pii_type
-                )
+                processed_text = self._pseudonymize_matches(processed_text, pattern, pii_type)
             elif mode == RedactionMode.MASK:
                 processed_text = self._mask_matches(processed_text, pattern)
 
         return processed_text
 
-    def _pseudonymize_matches(
-        self, text: str, pattern: re.Pattern, entity_type: str
-    ) -> str:
+    def _pseudonymize_matches(self, text: str, pattern: re.Pattern, entity_type: str) -> str:
         """
         Pseudonymize matches with consistent replacements.
 
@@ -266,9 +246,7 @@ class PIIDetector:
                 self.pseudonym_counters[entity_type] = 0
 
             self.pseudonym_counters[entity_type] += 1
-            pseudonym = (
-                f"{entity_type.upper()}_{self.pseudonym_counters[entity_type]:04d}"
-            )
+            pseudonym = f"{entity_type.upper()}_{self.pseudonym_counters[entity_type]:04d}"
 
             # Store mapping
             self.pseudonym_mappings[original] = pseudonym

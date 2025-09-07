@@ -1,7 +1,7 @@
 """Configuration management for ACP Agents service."""
 
-import os
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseSettings, validator
 
 
@@ -133,9 +133,7 @@ class Settings(BaseSettings):
             "database_url": {"env": ["AGENTS_DATABASE_URL", "DATABASE_URL"]},
             "redis_url": {"env": ["AGENTS_REDIS_URL", "REDIS_URL"]},
             "secret_key": {"env": ["AGENTS_SECRET_KEY", "SECRET_KEY"]},
-            "api_key": {
-                "env": ["AGENTS_API_KEY", "API_KEY", "OPENAI_API_KEY", "LLM_API_KEY"]
-            },
+            "api_key": {"env": ["AGENTS_API_KEY", "API_KEY", "OPENAI_API_KEY", "LLM_API_KEY"]},
         }
 
 
@@ -180,8 +178,7 @@ def validate_settings():
     # Check required settings
     if (
         not settings.secret_key
-        or settings.secret_key
-        == "your-secret-key-change-this-in-production"  # nosec B105
+        or settings.secret_key == "your-secret-key-change-this-in-production"  # nosec B105
     ):
         errors.append("SECRET_KEY must be set to a secure value in production")
 
@@ -205,14 +202,11 @@ def validate_settings():
         try:
             os.makedirs(settings.prompt_templates_dir, exist_ok=True)
         except Exception as e:
-            errors.append(
-                f"Cannot create templates directory {settings.prompt_templates_dir}: {e}"
-            )
+            errors.append(f"Cannot create templates directory {settings.prompt_templates_dir}: {e}")
 
     if errors:
         raise ValueError(
-            "Configuration validation failed:\n"
-            + "\n".join(f"- {error}" for error in errors)
+            "Configuration validation failed:\n" + "\n".join(f"- {error}" for error in errors)
         )
 
 

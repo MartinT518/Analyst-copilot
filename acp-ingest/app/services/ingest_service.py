@@ -1,10 +1,8 @@
 """Ingest service for processing and indexing documents."""
 
-import asyncio
 import json
 import logging
 import os
-import shutil
 import tempfile
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
@@ -263,9 +261,7 @@ class IngestService:
             # Parse content based on source type
             parser = self.parsers.get(job.source_type)
             if not parser:
-                raise ValueError(
-                    f"No parser available for source type: {job.source_type}"
-                )
+                raise ValueError(f"No parser available for source type: {job.source_type}")
 
             parsed_content = await parser.parse(content, job.metadata)
 
@@ -280,9 +276,7 @@ class IngestService:
             job.chunks_created = chunks_created
             db.commit()
 
-            logger.info(
-                f"Job {job_id} completed successfully. Created {chunks_created} chunks."
-            )
+            logger.info(f"Job {job_id} completed successfully. Created {chunks_created} chunks.")
 
         except Exception as e:
             logger.error(f"Job {job_id} failed: {e}")
@@ -304,9 +298,7 @@ class IngestService:
             db.add(audit_log)
             db.commit()
 
-    async def _process_document(
-        self, document: Dict[str, Any], job: IngestJob, db: Session
-    ) -> int:
+    async def _process_document(self, document: Dict[str, Any], job: IngestJob, db: Session) -> int:
         """
         Process a single document and create chunks.
 
@@ -487,14 +479,10 @@ class IngestService:
         """
         # Get job counts by status
         total_jobs = db.query(IngestJob).count()
-        completed_jobs = (
-            db.query(IngestJob).filter(IngestJob.status == "completed").count()
-        )
+        completed_jobs = db.query(IngestJob).filter(IngestJob.status == "completed").count()
         failed_jobs = db.query(IngestJob).filter(IngestJob.status == "failed").count()
         pending_jobs = (
-            db.query(IngestJob)
-            .filter(IngestJob.status.in_(["pending", "processing"]))
-            .count()
+            db.query(IngestJob).filter(IngestJob.status.in_(["pending", "processing"])).count()
         )
 
         # Get total chunks
@@ -502,9 +490,7 @@ class IngestService:
 
         # Get jobs from last 24 hours
         yesterday = datetime.utcnow() - timedelta(days=1)
-        last_24h_jobs = (
-            db.query(IngestJob).filter(IngestJob.created_at >= yesterday).count()
-        )
+        last_24h_jobs = db.query(IngestJob).filter(IngestJob.created_at >= yesterday).count()
 
         # Calculate average processing time
         completed_jobs_with_time = (

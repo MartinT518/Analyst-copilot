@@ -4,7 +4,7 @@ import time
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from functools import wraps
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 try:
     from prometheus_client import (
@@ -33,9 +33,7 @@ class MetricsService:
     """Service for collecting and exposing application metrics."""
 
     def __init__(self):
-        self.enabled = (
-            getattr(settings, "PROMETHEUS_ENABLED", False) and PROMETHEUS_AVAILABLE
-        )
+        self.enabled = getattr(settings, "PROMETHEUS_ENABLED", False) and PROMETHEUS_AVAILABLE
         self.registry = CollectorRegistry() if self.enabled else None
         self._initialize_metrics()
 
@@ -139,9 +137,7 @@ class MetricsService:
         )
 
         # Info
-        self.build_info = Info(
-            "acp_build_info", "Build information", registry=self.registry
-        )
+        self.build_info = Info("acp_build_info", "Build information", registry=self.registry)
 
         # Set build info
         self.build_info.info(
@@ -179,9 +175,7 @@ class MetricsService:
     def record_security_event(self, event_type: str, severity: str):
         """Record a security event."""
         if self.enabled:
-            self.security_events_total.labels(
-                event_type=event_type, severity=severity
-            ).inc()
+            self.security_events_total.labels(event_type=event_type, severity=severity).inc()
 
     @contextmanager
     def time_ingest_job(self, source_type: str):
@@ -214,9 +208,7 @@ class MetricsService:
     def time_api_request(self, method: str, endpoint: str):
         """Context manager to time API requests."""
         if self.enabled:
-            with self.api_request_duration_seconds.labels(
-                method=method, endpoint=endpoint
-            ).time():
+            with self.api_request_duration_seconds.labels(method=method, endpoint=endpoint).time():
                 yield
         else:
             yield
@@ -254,9 +246,7 @@ class MetricsService:
         try:
             # Count active jobs
             active_jobs_count = (
-                db.query(IngestJob)
-                .filter(IngestJob.status.in_(["pending", "processing"]))
-                .count()
+                db.query(IngestJob).filter(IngestJob.status.in_(["pending", "processing"])).count()
             )
             self.update_active_jobs(active_jobs_count)
 
@@ -297,23 +287,13 @@ class MetricsService:
 
             # Ingestion metrics
             total_jobs = db.query(IngestJob).count()
-            jobs_24h = (
-                db.query(IngestJob).filter(IngestJob.created_at >= last_24h).count()
-            )
-            jobs_7d = (
-                db.query(IngestJob).filter(IngestJob.created_at >= last_7d).count()
-            )
+            jobs_24h = db.query(IngestJob).filter(IngestJob.created_at >= last_24h).count()
+            jobs_7d = db.query(IngestJob).filter(IngestJob.created_at >= last_7d).count()
 
-            completed_jobs = (
-                db.query(IngestJob).filter(IngestJob.status == "completed").count()
-            )
-            failed_jobs = (
-                db.query(IngestJob).filter(IngestJob.status == "failed").count()
-            )
+            completed_jobs = db.query(IngestJob).filter(IngestJob.status == "completed").count()
+            failed_jobs = db.query(IngestJob).filter(IngestJob.status == "failed").count()
             active_jobs = (
-                db.query(IngestJob)
-                .filter(IngestJob.status.in_(["pending", "processing"]))
-                .count()
+                db.query(IngestJob).filter(IngestJob.status.in_(["pending", "processing"])).count()
             )
 
             # Success rate
@@ -322,16 +302,12 @@ class MetricsService:
             # Knowledge base metrics
             total_chunks = db.query(KnowledgeChunk).count()
             sensitive_chunks = (
-                db.query(KnowledgeChunk)
-                .filter(KnowledgeChunk.sensitive == True)
-                .count()
+                db.query(KnowledgeChunk).filter(KnowledgeChunk.sensitive == True).count()
             )
 
             # Audit metrics
             total_audit_events = db.query(AuditLog).count()
-            audit_events_24h = (
-                db.query(AuditLog).filter(AuditLog.created_at >= last_24h).count()
-            )
+            audit_events_24h = db.query(AuditLog).filter(AuditLog.created_at >= last_24h).count()
 
             security_events_24h = (
                 db.query(AuditLog)
@@ -379,11 +355,7 @@ class MetricsService:
                     "total_chunks": total_chunks,
                     "sensitive_chunks": sensitive_chunks,
                     "sensitivity_percentage": round(
-                        (
-                            (sensitive_chunks / total_chunks * 100)
-                            if total_chunks > 0
-                            else 0
-                        ),
+                        ((sensitive_chunks / total_chunks * 100) if total_chunks > 0 else 0),
                         2,
                     ),
                 },
@@ -467,7 +439,7 @@ def timed_operation(metric_name: str, labels: Optional[Dict[str, str]] = None):
                         histogram.observe(duration)
 
                 return result
-            except Exception as e:
+            except Exception:
                 duration = time.time() - start_time
 
                 # Record failure metric
@@ -496,7 +468,7 @@ def timed_operation(metric_name: str, labels: Optional[Dict[str, str]] = None):
                         histogram.observe(duration)
 
                 return result
-            except Exception as e:
+            except Exception:
                 duration = time.time() - start_time
 
                 # Record failure metric

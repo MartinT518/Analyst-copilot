@@ -1,23 +1,21 @@
 """LangGraph-based workflow orchestration for multi-agent execution."""
 
-import asyncio
-from typing import Dict, Any, List, Optional, TypedDict
-from datetime import datetime
+from typing import Any, Dict, List, Optional, TypedDict
+
 import structlog
-from langgraph import StateGraph, END
+from langgraph import END, StateGraph
 from langgraph.graph import Graph
 
+from ..agents import ClarifierAgent, SynthesizerAgent, TaskmasterAgent, VerifierAgent
 from ..config import get_settings
-from ..schemas.common_schemas import WorkflowStatus, AgentType
-from ..schemas.workflow_schemas import WorkflowType, WorkflowExecution, WorkflowStep
 from ..schemas.agent_schemas import (
     ClarifierOutput,
     SynthesizerOutput,
     TaskmasterOutput,
     VerifierOutput,
 )
-from ..agents import ClarifierAgent, SynthesizerAgent, TaskmasterAgent, VerifierAgent
-from ..services import LLMService, KnowledgeService, AuditService
+from ..schemas.workflow_schemas import WorkflowType
+from ..services import AuditService, KnowledgeService, LLMService
 
 logger = structlog.get_logger(__name__)
 
@@ -67,9 +65,7 @@ class LangGraphWorkflow:
 
         # Initialize agents
         self.clarifier = ClarifierAgent(llm_service, knowledge_service, audit_service)
-        self.synthesizer = SynthesizerAgent(
-            llm_service, knowledge_service, audit_service
-        )
+        self.synthesizer = SynthesizerAgent(llm_service, knowledge_service, audit_service)
         self.taskmaster = TaskmasterAgent(llm_service, knowledge_service, audit_service)
         self.verifier = VerifierAgent(llm_service, knowledge_service, audit_service)
 
@@ -242,9 +238,7 @@ class LangGraphWorkflow:
 
         except Exception as e:
             error_msg = f"Workflow execution failed: {str(e)}"
-            self.logger.error(
-                "Workflow execution failed", workflow_id=workflow_id, error=error_msg
-            )
+            self.logger.error("Workflow execution failed", workflow_id=workflow_id, error=error_msg)
 
             # Log workflow error
             await self.audit_service.log_workflow_step(
@@ -286,9 +280,7 @@ class LangGraphWorkflow:
                 "user_id": state["user_id"],
                 "user_request": state["user_request"],
                 "domain_context": state["metadata"].get("domain_context"),
-                "existing_requirements": state["metadata"].get(
-                    "existing_requirements", []
-                ),
+                "existing_requirements": state["metadata"].get("existing_requirements", []),
             }
 
             # Execute clarifier
@@ -460,12 +452,8 @@ class LangGraphWorkflow:
                 "request_id": f"{state['workflow_id']}_taskmaster",
                 "user_id": state["user_id"],
                 "to_be_document": state["synthesizer_output"].to_be_document.dict(),
-                "gap_analysis": [
-                    gap.dict() for gap in state["synthesizer_output"].gap_analysis
-                ],
-                "implementation_approach": state[
-                    "synthesizer_output"
-                ].implementation_approach,
+                "gap_analysis": [gap.dict() for gap in state["synthesizer_output"].gap_analysis],
+                "implementation_approach": state["synthesizer_output"].implementation_approach,
                 "project_constraints": state["metadata"].get("project_constraints", {}),
             }
 
@@ -545,15 +533,15 @@ class LangGraphWorkflow:
             verifier_input = {
                 "request_id": f"{state['workflow_id']}_verifier",
                 "user_id": state["user_id"],
-                "clarifier_output": state["clarifier_output"].dict()
-                if state["clarifier_output"]
-                else None,
-                "synthesizer_output": state["synthesizer_output"].dict()
-                if state["synthesizer_output"]
-                else None,
-                "taskmaster_output": state["taskmaster_output"].dict()
-                if state["taskmaster_output"]
-                else None,
+                "clarifier_output": (
+                    state["clarifier_output"].dict() if state["clarifier_output"] else None
+                ),
+                "synthesizer_output": (
+                    state["synthesizer_output"].dict() if state["synthesizer_output"] else None
+                ),
+                "taskmaster_output": (
+                    state["taskmaster_output"].dict() if state["taskmaster_output"] else None
+                ),
                 "knowledge_base_context": [],  # Will be populated by agent
                 "code_context": state["metadata"].get("code_context", []),
                 "schema_context": state["metadata"].get("schema_context", []),

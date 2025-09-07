@@ -1,8 +1,7 @@
 """LLM service for agent interactions."""
 
-import asyncio
-import json
-from typing import Optional, Dict, Any, List
+from typing import List, Optional
+
 import httpx
 import structlog
 

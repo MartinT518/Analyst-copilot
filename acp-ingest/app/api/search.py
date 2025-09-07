@@ -22,9 +22,7 @@ class SearchRequest(BaseModel):
 
     query: str = Field(..., description="Search query")
     limit: int = Field(10, ge=1, le=100, description="Maximum number of results")
-    similarity_threshold: float = Field(
-        0.7, ge=0.0, le=1.0, description="Minimum similarity score"
-    )
+    similarity_threshold: float = Field(0.7, ge=0.0, le=1.0, description="Minimum similarity score")
     filters: Dict[str, Any] = Field(default_factory=dict, description="Search filters")
 
 
@@ -274,9 +272,7 @@ async def find_similar_chunks(
         )
 
         logger.error("Similar chunks search failed", chunk_id=chunk_id, error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Similar chunks search failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Similar chunks search failed: {str(e)}")
 
 
 @router.get("/filters")
@@ -372,9 +368,7 @@ async def export_search_results(
             return Response(
                 content=exported_data,
                 media_type="text/csv",
-                headers={
-                    "Content-Disposition": "attachment; filename=search_results.csv"
-                },
+                headers={"Content-Disposition": "attachment; filename=search_results.csv"},
             )
         elif format == "txt":
             from fastapi.responses import Response
@@ -382,9 +376,7 @@ async def export_search_results(
             return Response(
                 content=exported_data,
                 media_type="text/plain",
-                headers={
-                    "Content-Disposition": "attachment; filename=search_results.txt"
-                },
+                headers={"Content-Disposition": "attachment; filename=search_results.txt"},
             )
 
     except HTTPException:
@@ -425,6 +417,4 @@ async def get_search_stats(
 
     except Exception as e:
         logger.error("Failed to get search stats", error=str(e))
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get search stats: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to get search stats: {str(e)}")

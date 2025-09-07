@@ -1,18 +1,19 @@
 """Command Line Interface for ACP Ingest service."""
 
+import asyncio
+import json
 import os
 import sys
-import json
-import asyncio
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 import click
 import httpx
 from rich.console import Console
-from rich.table import Table
-from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.panel import Panel
 from rich.json import JSON
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 console = Console()
 
@@ -20,9 +21,7 @@ console = Console()
 class ACPClient:
     """Client for interacting with ACP Ingest API."""
 
-    def __init__(
-        self, base_url: str = "http://localhost:8000", api_key: Optional[str] = None
-    ):
+    def __init__(self, base_url: str = "http://localhost:8000", api_key: Optional[str] = None):
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.headers = {}
@@ -132,9 +131,7 @@ class ACPClient:
                 "filters": filters or {},
             }
 
-            response = await client.post(
-                f"{self.base_url}/search", json=data, headers=self.headers
-            )
+            response = await client.post(f"{self.base_url}/search", json=data, headers=self.headers)
             response.raise_for_status()
             return response.json()
 
@@ -158,13 +155,10 @@ def get_client() -> ACPClient:
 @click.version_option(version="1.0.0")
 def cli():
     """ACP Ingest CLI - On-premises AI-powered analysis system."""
-    pass
 
 
 @cli.command()
-@click.option(
-    "--source", "-s", required=True, help="Path to file or directory to ingest"
-)
+@click.option("--source", "-s", required=True, help="Path to file or directory to ingest")
 @click.option("--origin", "-o", required=True, help="Customer or source identifier")
 @click.option(
     "--sensitivity",
@@ -258,9 +252,7 @@ def ingest(
                 console=console,
             ) as progress:
                 for file_path in files:
-                    task = progress.add_task(
-                        f"Uploading {file_path.name}...", total=None
-                    )
+                    task = progress.add_task(f"Uploading {file_path.name}...", total=None)
 
                     try:
                         result = await client.upload_file(
@@ -271,14 +263,10 @@ def ingest(
                             metadata=metadata_dict,
                         )
                         jobs.append(result)
-                        progress.update(
-                            task, description=f"✓ Uploaded {file_path.name}"
-                        )
+                        progress.update(task, description=f"✓ Uploaded {file_path.name}")
 
                     except Exception as e:
-                        console.print(
-                            f"[red]Failed to upload {file_path.name}: {e}[/red]"
-                        )
+                        console.print(f"[red]Failed to upload {file_path.name}: {e}[/red]")
                         continue
 
         # Display results
@@ -389,9 +377,7 @@ def paste(
 @click.option("--status", "-s", help="Filter by status")
 @click.option("--origin", "-o", help="Filter by origin")
 @click.option("--limit", "-l", default=10, help="Maximum number of jobs to show")
-def status(
-    job_id: Optional[str], status: Optional[str], origin: Optional[str], limit: int
-):
+def status(job_id: Optional[str], status: Optional[str], origin: Optional[str], limit: int):
     """Check job status or list jobs."""
 
     async def _status():
@@ -402,9 +388,7 @@ def status(
             try:
                 result = await client.get_job_status(job_id)
 
-                console.print(
-                    Panel(JSON.from_data(result), title=f"Job Status: {job_id}")
-                )
+                console.print(Panel(JSON.from_data(result), title=f"Job Status: {job_id}"))
 
             except Exception as e:
                 console.print(f"[red]Failed to get job status: {e}[/red]")
@@ -413,9 +397,7 @@ def status(
         else:
             # List jobs
             try:
-                result = await client.list_jobs(
-                    limit=limit, status=status, origin=origin
-                )
+                result = await client.list_jobs(limit=limit, status=status, origin=origin)
 
                 if not result:
                     console.print("[yellow]No jobs found[/yellow]")
@@ -515,9 +497,7 @@ def health():
             result = await client.health_check()
 
             status_color = "green" if result["status"] == "healthy" else "red"
-            console.print(
-                f"[{status_color}]Service Status: {result['status']}[/{status_color}]"
-            )
+            console.print(f"[{status_color}]Service Status: {result['status']}[/{status_color}]")
             console.print(f"Version: {result['version']}")
             console.print(f"Timestamp: {result['timestamp']}")
 
@@ -570,17 +550,13 @@ async def _wait_for_jobs(client: ACPClient, job_ids: list):
                             )
 
                 except Exception as e:
-                    console.print(
-                        f"[red]Failed to check job {job_id[:8]}...: {e}[/red]"
-                    )
+                    console.print(f"[red]Failed to check job {job_id[:8]}...: {e}[/red]")
                     completed_jobs.add(job_id)
 
             pending_jobs -= completed_jobs
 
             if pending_jobs:
-                progress.update(
-                    task, description=f"Waiting for {len(pending_jobs)} jobs..."
-                )
+                progress.update(task, description=f"Waiting for {len(pending_jobs)} jobs...")
                 await asyncio.sleep(2)
 
         progress.update(task, description="✓ All jobs completed")

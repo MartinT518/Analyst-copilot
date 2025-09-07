@@ -1,7 +1,6 @@
 """Search service for semantic search and knowledge retrieval."""
 
 import logging
-import time
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
@@ -96,9 +95,7 @@ class SearchService:
                     )
                     search_results.append(search_result)
 
-            logger.info(
-                f"Search query '{query}' returned {len(search_results)} results"
-            )
+            logger.info(f"Search query '{query}' returned {len(search_results)} results")
             return search_results
 
         except Exception as e:
@@ -132,9 +129,7 @@ class SearchService:
                     query = query.filter(KnowledgeChunk.redacted == value)
                 else:
                     # JSON metadata filter
-                    query = query.filter(
-                        KnowledgeChunk.metadata[key].astext == str(value)
-                    )
+                    query = query.filter(KnowledgeChunk.metadata[key].astext == str(value))
 
             chunks = query.limit(limit).all()
             return [ChunkResponse.from_orm(chunk) for chunk in chunks]
@@ -180,17 +175,13 @@ class SearchService:
         """
         try:
             # Get the reference chunk
-            reference_chunk = (
-                db.query(KnowledgeChunk).filter(KnowledgeChunk.id == chunk_id).first()
-            )
+            reference_chunk = db.query(KnowledgeChunk).filter(KnowledgeChunk.id == chunk_id).first()
 
             if not reference_chunk:
                 return []
 
             # Generate embedding for the reference chunk text
-            reference_embedding = await self._generate_embedding(
-                reference_chunk.chunk_text
-            )
+            reference_embedding = await self._generate_embedding(reference_chunk.chunk_text)
 
             # Search for similar chunks
             vector_results = await self.vector_service.search_similar(
@@ -246,9 +237,7 @@ class SearchService:
         Returns:
             List[ChunkResponse]: Matching chunks
         """
-        query = db.query(KnowledgeChunk).filter(
-            KnowledgeChunk.source_type == source_type
-        )
+        query = db.query(KnowledgeChunk).filter(KnowledgeChunk.source_type == source_type)
 
         if origin:
             query = query.filter(KnowledgeChunk.metadata["origin"].astext == origin)
@@ -256,9 +245,7 @@ class SearchService:
         chunks = query.limit(limit).all()
         return [ChunkResponse.from_orm(chunk) for chunk in chunks]
 
-    async def delete_chunks_by_source(
-        self, source_type: str, origin: str, db: Session
-    ) -> int:
+    async def delete_chunks_by_source(self, source_type: str, origin: str, db: Session) -> int:
         """
         Delete chunks by source type and origin.
 
@@ -282,9 +269,7 @@ class SearchService:
             )
 
             # Delete from vector database
-            vector_ids = [
-                chunk.vector_id for chunk in chunks_to_delete if chunk.vector_id
-            ]
+            vector_ids = [chunk.vector_id for chunk in chunks_to_delete if chunk.vector_id]
             for vector_id in vector_ids:
                 await self.vector_service.delete_vector(vector_id)
 
@@ -333,9 +318,7 @@ class SearchService:
             chunks = (
                 db.query(KnowledgeChunk)
                 .filter(
-                    KnowledgeChunk.metadata["document_title"].astext.ilike(
-                        f"%{partial_query}%"
-                    )
+                    KnowledgeChunk.metadata["document_title"].astext.ilike(f"%{partial_query}%")
                 )
                 .limit(limit)
                 .all()
@@ -380,9 +363,7 @@ class SearchService:
 
             # Get sensitive chunks count
             sensitive_chunks = (
-                db.query(KnowledgeChunk)
-                .filter(KnowledgeChunk.sensitive == True)
-                .count()
+                db.query(KnowledgeChunk).filter(KnowledgeChunk.sensitive == True).count()
             )
 
             # Get vector database stats
