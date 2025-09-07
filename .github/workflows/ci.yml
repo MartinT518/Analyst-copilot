@@ -56,6 +56,43 @@ jobs:
             semgrep-report.json
 
   # =============================================================================
+  # LINTING
+  # =============================================================================
+  lint:
+    name: Code Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install linting tools
+        run: |
+          pip install black flake8 isort mypy autoflake
+
+      - name: Run Black formatting check
+        run: |
+          black --check --line-length 100 acp-ingest/ acp-agents/ acp-code-analyzer/ vector-db-benchmark/
+
+      - name: Run isort import sorting check
+        run: |
+          isort --check-only --profile black --line-length 100 acp-ingest/ acp-agents/ acp-code-analyzer/ vector-db-benchmark/
+
+      - name: Run flake8 linting
+        run: |
+          flake8 --config=setup.cfg acp-ingest/ acp-agents/ acp-code-analyzer/ vector-db-benchmark/
+
+      - name: Run mypy type checking
+        run: |
+          mypy acp-ingest/ --ignore-missing-imports || true
+          mypy acp-agents/ --ignore-missing-imports || true
+          mypy acp-code-analyzer/ --ignore-missing-imports || true
+
+  # =============================================================================
   # BACKEND TESTING
   # =============================================================================
   backend-test:
@@ -111,10 +148,10 @@ jobs:
       - name: Run linting
         run: |
           cd acp-ingest
-          pip install black flake8 isort mypy
-          black --check .
-          flake8 .
-          isort --check-only .
+          pip install black flake8 isort mypy autoflake
+          black --check --line-length 100 .
+          flake8 --config=../setup.cfg .
+          isort --check-only --profile black --line-length 100 .
           mypy . --ignore-missing-imports
 
       - name: Run tests
@@ -193,7 +230,7 @@ jobs:
   integration-test:
     name: Integration Tests
     runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test]
+    needs: [lint, backend-test, frontend-test]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -226,7 +263,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    needs: [security-scan, backend-test, frontend-test, integration-test]
+    needs: [security-scan, lint, backend-test, frontend-test, integration-test]
     if: github.ref == 'refs/heads/develop'
     environment: staging
     steps:
@@ -241,7 +278,7 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [security-scan, backend-test, frontend-test, integration-test]
+    needs: [security-scan, lint, backend-test, frontend-test, integration-test]
     if: github.ref == 'refs/heads/master'
     environment: production
     steps:

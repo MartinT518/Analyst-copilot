@@ -5,13 +5,7 @@ from typing import Type
 
 import structlog
 
-from ..schemas import (
-    DeveloperTask,
-    TaskmasterInput,
-    TaskmasterOutput,
-    TechnicalNote,
-    UserStory,
-)
+from ..schemas import DeveloperTask, TaskmasterInput, TaskmasterOutput, TechnicalNote, UserStory
 from .base_agent import BaseAgent
 
 logger = structlog.get_logger(__name__)
@@ -231,7 +225,7 @@ Respond with a JSON object containing:
                     user_stories = []
                     for story_data in task_data.get("user_stories", []):
                         story = UserStory(
-                            story_id=story_data.get("story_id", f"story_{len(user_stories)+1}"),
+                            story_id=story_data.get("story_id", f"story_{len(user_stories) + 1}"),
                             title=story_data.get("title", ""),
                             description=story_data.get("description", ""),
                             acceptance_criteria=story_data.get("acceptance_criteria", []),
@@ -246,7 +240,7 @@ Respond with a JSON object containing:
                     technical_notes = []
                     for note_data in task_data.get("technical_notes", []):
                         note = TechnicalNote(
-                            note_id=note_data.get("note_id", f"note_{len(technical_notes)+1}"),
+                            note_id=note_data.get("note_id", f"note_{len(technical_notes) + 1}"),
                             category=note_data.get("category", "implementation"),
                             description=note_data.get("description", ""),
                             impact=note_data.get("impact", "medium"),
@@ -256,7 +250,7 @@ Respond with a JSON object containing:
 
                     # Create task
                     task = DeveloperTask(
-                        task_id=task_data.get("task_id", f"task_{len(tasks)+1}"),
+                        task_id=task_data.get("task_id", f"task_{len(tasks) + 1}"),
                         title=task_data.get("title", ""),
                         description=task_data.get("description", ""),
                         user_stories=user_stories,

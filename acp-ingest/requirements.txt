@@ -110,6 +110,7 @@ black==23.11.0
 isort==5.12.0
 flake8==6.1.0
 mypy==1.7.1
+autoflake==2.3.1
 factory-boy==3.3.0
 
 # Error tracking and APM

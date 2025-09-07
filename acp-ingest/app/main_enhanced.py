@@ -14,17 +14,8 @@ from .api import health, ingest, search
 from .auth.oauth2 import get_auth_manager
 from .config import get_settings
 from .database import Base, engine
-from .observability.logging import (
-    get_logger,
-    log_request_end,
-    log_request_start,
-    setup_logging,
-)
-from .observability.metrics import (
-    get_metrics_endpoint,
-    metrics_middleware,
-    setup_metrics,
-)
+from .observability.logging import get_logger, log_request_end, log_request_start, setup_logging
+from .observability.metrics import get_metrics_endpoint, metrics_middleware, setup_metrics
 from .observability.tracing import setup_tracing
 from .security_config import get_security_config
 from .utils.file_utils import ensure_directory

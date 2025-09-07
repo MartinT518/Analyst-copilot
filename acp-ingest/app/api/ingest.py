@@ -9,29 +9,12 @@ from typing import Any, Dict, List, Optional
 from app.config import get_settings
 from app.database import get_db
 from app.models import IngestJob, KnowledgeChunk
-from app.schemas import (
-    IngestJobCreate,
-    IngestJobResponse,
-    JobStatusResponse,
-    PasteRequest,
-)
+from app.schemas import IngestJobCreate, IngestJobResponse, JobStatusResponse, PasteRequest
 from app.services.auth_service import get_current_user
 from app.services.ingest_service import IngestService
 from app.utils.file_utils import detect_file_type, get_file_info, save_upload_file
-from app.utils.logging_config import (
-    get_audit_logger,
-    get_logger,
-    get_performance_logger,
-)
-from fastapi import (
-    APIRouter,
-    BackgroundTasks,
-    Depends,
-    File,
-    Form,
-    HTTPException,
-    UploadFile,
-)
+from app.utils.logging_config import get_audit_logger, get_logger, get_performance_logger
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session

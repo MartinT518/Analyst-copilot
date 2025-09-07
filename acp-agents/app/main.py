@@ -12,12 +12,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
 from .config import get_settings
-from .schemas import (
-    ClientAnswers,
-    WorkflowRequest,
-    WorkflowResponse,
-    WorkflowStatus,
-)
+from .schemas import ClientAnswers, WorkflowRequest, WorkflowResponse, WorkflowStatus
 from .services.audit_service import AuditService
 from .services.knowledge_service import KnowledgeService
 from .services.llm_service import LLMService

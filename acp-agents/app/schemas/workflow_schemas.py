@@ -6,19 +6,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from .agent_schemas import (
-    ClarifierOutput,
-    SynthesizerOutput,
-    TaskmasterOutput,
-    VerifierOutput,
-)
-from .common_schemas import (
-    AgentType,
-    Priority,
-    WorkflowContext,
-    WorkflowStatus,
-    WorkflowStep,
-)
+from .agent_schemas import ClarifierOutput, SynthesizerOutput, TaskmasterOutput, VerifierOutput
+from .common_schemas import AgentType, Priority, WorkflowContext, WorkflowStatus, WorkflowStep
 
 
 class WorkflowType(str, Enum):

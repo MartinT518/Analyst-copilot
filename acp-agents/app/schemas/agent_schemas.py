@@ -4,12 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from .common_schemas import (
-    BaseAgentInput,
-    BaseAgentOutput,
-    KnowledgeReference,
-    ValidationResult,
-)
+from .common_schemas import BaseAgentInput, BaseAgentOutput, KnowledgeReference, ValidationResult
 
 
 # Clarifier Agent Schemas
