@@ -88,9 +88,9 @@ jobs:
 
       - name: Run mypy type checking
         run: |
-          mypy acp-ingest/ --ignore-missing-imports || true
-          mypy acp-agents/ --ignore-missing-imports || true
-          mypy acp-code-analyzer/ --ignore-missing-imports || true
+          cd acp-ingest && mypy app/ --ignore-missing-imports || true
+          cd ../acp-agents && mypy app/ --ignore-missing-imports || true
+          cd ../acp-code-analyzer && mypy app/ --ignore-missing-imports || true
 
   # =============================================================================
   # BACKEND TESTING
@@ -152,7 +152,7 @@ jobs:
           black --check --line-length 100 .
           flake8 --config=../setup.cfg .
           isort --check-only --profile black --line-length 100 .
-          mypy . --ignore-missing-imports
+          mypy app/ --ignore-missing-imports
 
       - name: Run tests
         env:
