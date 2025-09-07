@@ -49,9 +49,8 @@ spacy==3.7.2
 transformers==4.36.2
 
 # HTTP client and utilities
-httpx==0.25.2
 requests==2.31.0
-aiofiles==23.2.0
+aiofiles==24.1.0
 
 # CLI interface
 click==8.1.7
@@ -72,15 +71,14 @@ opentelemetry-api==1.21.0
 opentelemetry-sdk==1.21.0
 opentelemetry-exporter-jaeger-thrift==1.21.0
 opentelemetry-exporter-otlp-proto-grpc==1.21.0
-opentelemetry-instrumentation-fastapi==0.42b0
-opentelemetry-instrumentation-httpx==0.42b0
-opentelemetry-instrumentation-sqlalchemy==0.42b0
-opentelemetry-instrumentation-redis==0.42b0
-opentelemetry-instrumentation-psycopg2==0.42b0
-opentelemetry-instrumentation-celery==0.42b0
+opentelemetry-instrumentation-fastapi==0.41b0
+opentelemetry-instrumentation-httpx==0.41b0
+opentelemetry-instrumentation-sqlalchemy==0.41b0
+opentelemetry-instrumentation-redis==0.41b0
+opentelemetry-instrumentation-psycopg2==0.41b0
+opentelemetry-instrumentation-celery==0.41b0
 
-# Vault integration
-hvac==2.0.0
+# Additional utilities
 python-json-logger==2.0.7
 psutil==5.9.6
 
@@ -100,7 +98,7 @@ python-slugify==8.0.1
 
 # Environment and configuration
 python-dotenv==1.0.0
-pyyaml==6.0.1
+pyyaml==6.0.2
 
 # Development and testing
 pytest==7.4.3
@@ -114,8 +112,8 @@ autoflake==2.3.1
 factory-boy==3.3.0
 
 # Type stubs for MyPy
-types-Markdown==3.9.0.20250906
-types-PyYAML==6.0.12.12
+types-Markdown==3.7.0.20240822
+types-PyYAML==6.0.12.20240917
 types-aiofiles==23.2.0.20240125
 
 # Error tracking and APM
