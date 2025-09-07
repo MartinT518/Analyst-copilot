@@ -16,7 +16,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -136,7 +136,7 @@ class IngestJob(Base):
     __tablename__ = "ingest_jobs"
 
     id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
+        PostgresUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
     )
     source_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     origin: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -154,6 +154,10 @@ class IngestJob(Base):
     )
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now()
+    )
+    retry_count: Mapped[int] = mapped_column(Integer, default=0)
 
     # Relationships
     uploader_user = relationship("User", back_populates="ingest_jobs")
@@ -172,10 +176,10 @@ class KnowledgeChunk(Base):
     __tablename__ = "knowledge_chunks"
 
     id: Mapped[UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
+        PostgresUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
     )
     ingest_job_id: Mapped[UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("ingest_jobs.id")
+        PostgresUUID(as_uuid=True), ForeignKey("ingest_jobs.id")
     )
     source_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     source_location: Mapped[str | None] = mapped_column(String(500))

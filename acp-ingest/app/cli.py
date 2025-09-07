@@ -103,7 +103,7 @@ class ACPClient:
     ) -> Dict[str, Any]:
         """List jobs."""
         async with httpx.AsyncClient() as client:
-            params = {"skip": skip, "limit": limit}
+            params: Dict[str, Any] = {"skip": skip, "limit": limit}
             if status:
                 params["status"] = status
             if origin:

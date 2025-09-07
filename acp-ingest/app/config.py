@@ -79,6 +79,7 @@ class Settings(BaseSettings):
     # File upload settings
     max_file_size: int = 104857600  # 100MB
     upload_dir: str = "/app/uploads"
+    UPLOAD_DIR: str = "/app/uploads"  # Alias for compatibility
     allowed_extensions: List[str] = [
         "csv",
         "html",
@@ -117,6 +118,7 @@ class Settings(BaseSettings):
 
     # Logging settings
     log_level: str = "INFO"
+    LOG_LEVEL: str = "INFO"  # Alias for compatibility
     log_format: str = "json"  # json, text
     log_file: Optional[str] = "/app/logs/acp-ingest.log"
     log_rotation: str = "1 day"

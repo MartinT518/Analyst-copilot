@@ -4,6 +4,7 @@ import asyncio
 import os
 from datetime import datetime
 from typing import Any, Dict
+from uuid import UUID
 
 from app.config import get_settings
 from app.models import IngestJob
@@ -113,7 +114,7 @@ def process_ingest_job(self, job_id: str) -> Dict[str, Any]:
         asyncio.set_event_loop(loop)
 
         try:
-            result = loop.run_until_complete(ingest_service.process_job_async(job_id, db))
+            result = loop.run_until_complete(ingest_service.process_job_async(UUID(job_id), db))
             logger.info("Job processing completed", job_id=job_id, result=result)
             return result
         finally:
@@ -175,7 +176,7 @@ def cleanup_old_jobs() -> Dict[str, Any]:
                 # Delete associated chunks
                 from app.models import KnowledgeChunk
 
-                db.query(KnowledgeChunk).filter(KnowledgeChunk.job_id == job.id).delete()
+                db.query(KnowledgeChunk).filter(KnowledgeChunk.ingest_job_id == job.id).delete()
 
                 # Delete job file if it exists
                 if job.file_path and os.path.exists(job.file_path):
