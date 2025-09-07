@@ -3,7 +3,7 @@
 import asyncio
 import time
 from enum import Enum
-from typing import Any, Callable, Dict, Type
+from typing import Any, Callable, Dict, Optional, Type
 
 import structlog
 
@@ -46,7 +46,7 @@ class CircuitBreaker:
         self.name = name
 
         self.failure_count = 0
-        self.last_failure_time = None
+        self.last_failure_time: Optional[float] = None
         self.state = CircuitState.CLOSED
 
         self.logger = logger.bind(circuit_breaker=name)

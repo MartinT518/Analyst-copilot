@@ -404,3 +404,50 @@ class SearchService:
         except Exception as e:
             logger.error(f"Failed to generate embedding: {e}")
             raise
+
+    def find_similar(
+        self, query: str, limit: int = 10, threshold: float = 0.7
+    ) -> List[SearchResult]:
+        """Find similar chunks using semantic search.
+
+        Args:
+            query: Search query
+            limit: Maximum number of results
+            threshold: Similarity threshold
+
+        Returns:
+            List of similar search results
+        """
+        # TODO: Implement semantic similarity search
+        raise NotImplementedError("find_similar method not yet implemented")
+
+    def get_available_filters(self) -> Dict[str, Any]:
+        """Get available filter options for search.
+
+        Returns:
+            Dictionary of available filters
+        """
+        # TODO: Implement filter options
+        raise NotImplementedError("get_available_filters method not yet implemented")
+
+    def export_results(self, results: List[SearchResult], format: str = "json") -> str:
+        """Export search results in specified format.
+
+        Args:
+            results: Search results to export
+            format: Export format (json, csv, etc.)
+
+        Returns:
+            Exported data as string
+        """
+        # TODO: Implement result export
+        raise NotImplementedError("export_results method not yet implemented")
+
+    def get_stats(self) -> Dict[str, Any]:
+        """Get search service statistics.
+
+        Returns:
+            Dictionary of service statistics
+        """
+        # TODO: Implement service statistics
+        raise NotImplementedError("get_stats method not yet implemented")

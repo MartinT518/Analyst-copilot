@@ -4,7 +4,8 @@ import logging
 import secrets
 from typing import Dict, List, Optional
 
-from pydantic import BaseSettings, Field, validator
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings
 
 logger = logging.getLogger(__name__)
 
@@ -88,11 +89,10 @@ class SecurityConfig(BaseSettings):
     environment: str = "production"
     debug: bool = False
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = {"env_file": ".env", "case_sensitive": False}
 
-    @validator("secret_key")
+    @field_validator("secret_key")
+    @classmethod
     def validate_secret_key(cls, v):
         """Validate secret key strength."""
         if not v or v == "your-secret-key-change-this-in-production":
@@ -120,7 +120,8 @@ class SecurityConfig(BaseSettings):
 
         return v
 
-    @validator("jwt_secret_key")
+    @field_validator("jwt_secret_key")
+    @classmethod
     def validate_jwt_secret_key(cls, v):
         """Validate JWT secret key."""
         if not v or v == "your-jwt-secret-key-change-this-in-production":
@@ -131,7 +132,8 @@ class SecurityConfig(BaseSettings):
 
         return v
 
-    @validator("encryption_key")
+    @field_validator("encryption_key")
+    @classmethod
     def validate_encryption_key(cls, v):
         """Validate encryption key."""
         if not v or v == "your-encryption-key-change-this-in-production":
@@ -142,7 +144,8 @@ class SecurityConfig(BaseSettings):
 
         return v
 
-    @validator("oauth2_client_secret")
+    @field_validator("oauth2_client_secret")
+    @classmethod
     def validate_oauth2_client_secret(cls, v):
         """Validate OAuth2 client secret."""
         if not v or v == "your-oauth2-client-secret":
@@ -150,28 +153,32 @@ class SecurityConfig(BaseSettings):
 
         return v
 
-    @validator("cors_origins", pre=True)
+    @field_validator("cors_origins", mode="before")
+    @classmethod
     def parse_cors_origins(cls, v):
         """Parse CORS origins from string or list."""
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
-    @validator("cors_methods", pre=True)
+    @field_validator("cors_methods", mode="before")
+    @classmethod
     def parse_cors_methods(cls, v):
         """Parse CORS methods from string or list."""
         if isinstance(v, str):
             return [method.strip().upper() for method in v.split(",") if method.strip()]
         return v
 
-    @validator("cors_headers", pre=True)
+    @field_validator("cors_headers", mode="before")
+    @classmethod
     def parse_cors_headers(cls, v):
         """Parse CORS headers from string or list."""
         if isinstance(v, str):
             return [header.strip() for header in v.split(",") if header.strip()]
         return v
 
-    @validator("environment")
+    @field_validator("environment")
+    @classmethod
     def validate_environment(cls, v):
         """Validate environment setting."""
         valid_environments = ["development", "staging", "production", "testing"]

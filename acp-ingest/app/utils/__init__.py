@@ -1,13 +1,27 @@
 """Utilities module for common helper functions and tools."""
 
-from .chunker import Chunker
-from .file_utils import FileUtils
-from .logging_config import setup_logging
-from .pii_detector import PIIDetector
+from .chunker import ChunkConfig, TextChunker
+from .file_utils import FileManager
+from .logging_config import (
+    AuditLogger,
+    ContextualLogger,
+    LoggingMiddleware,
+    PerformanceLogger,
+    RequestLogger,
+    setup_logging,
+)
+from .pii_detector import PIIDetector, RedactionMode
 
 __all__ = [
-    "Chunker",
-    "FileUtils",
+    "ChunkConfig",
+    "TextChunker",
+    "FileManager",
+    "AuditLogger",
+    "ContextualLogger",
+    "LoggingMiddleware",
+    "PerformanceLogger",
+    "RequestLogger",
     "setup_logging",
     "PIIDetector",
+    "RedactionMode",
 ]

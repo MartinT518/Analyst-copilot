@@ -4,12 +4,14 @@ import logging
 import logging.config
 import os
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import structlog
 
 
-def setup_logging(log_level: str = "INFO", log_format: str = "json", log_file: str = None) -> None:
+def setup_logging(
+    log_level: str = "INFO", log_format: str = "json", log_file: Optional[str] = None
+) -> None:
     """
     Setup logging configuration.
 
@@ -53,7 +55,7 @@ def setup_logging(log_level: str = "INFO", log_format: str = "json", log_file: s
 
 
 def create_logging_config(
-    log_level: str = "INFO", log_format: str = "json", log_file: str = None
+    log_level: str = "INFO", log_format: str = "json", log_file: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Create logging configuration dictionary.
@@ -193,9 +195,9 @@ class RequestLogger:
         path: str,
         status_code: int,
         duration_ms: float,
-        user_id: str = None,
-        ip_address: str = None,
-        user_agent: str = None,
+        user_id: Optional[str] = None,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
         **kwargs,
     ):
         """Log HTTP request."""
@@ -216,8 +218,8 @@ class RequestLogger:
         method: str,
         path: str,
         error: str,
-        user_id: str = None,
-        ip_address: str = None,
+        user_id: Optional[str] = None,
+        ip_address: Optional[str] = None,
         **kwargs,
     ):
         """Log HTTP request error."""
@@ -243,10 +245,10 @@ class AuditLogger:
         action: str,
         user_id: str,
         resource_type: str,
-        resource_id: str = None,
+        resource_id: Optional[str] = None,
         details: Dict[str, Any] = None,
-        ip_address: str = None,
-        user_agent: str = None,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
         **kwargs,
     ):
         """Log audit event."""
@@ -268,8 +270,8 @@ class AuditLogger:
         event_type: str,
         severity: str,
         description: str,
-        user_id: str = None,
-        ip_address: str = None,
+        user_id: Optional[str] = None,
+        ip_address: Optional[str] = None,
         details: Dict[str, Any] = None,
         **kwargs,
     ):

@@ -574,3 +574,16 @@ class IngestService:
             disk_usage_percent=disk_usage,
             memory_usage_percent=memory_usage,
         )
+
+    async def process_job_async(self, job_id: UUID, db: Optional[Session] = None) -> Dict[str, Any]:
+        """Process an ingest job asynchronously.
+
+        Args:
+            job_id: ID of the job to process
+            db: Database session
+
+        Returns:
+            Dictionary with processing results
+        """
+        # TODO: Implement async job processing
+        raise NotImplementedError("process_job_async method not yet implemented")

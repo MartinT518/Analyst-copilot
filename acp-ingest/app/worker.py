@@ -10,7 +10,7 @@ from app.models import IngestJob
 from app.services.ingest_service import IngestService
 from app.utils.logging_config import get_logger, setup_logging
 from celery import Celery
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 # Setup logging
@@ -228,7 +228,7 @@ def health_check_task() -> Dict[str, Any]:
         # Check database connectivity
         db = get_db_session()
         try:
-            db.execute("SELECT 1")
+            db.execute(text("SELECT 1"))
             db_status = "healthy"
         except Exception as e:
             db_status = f"unhealthy: {str(e)}"

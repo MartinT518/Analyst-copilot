@@ -2,7 +2,8 @@
 
 from typing import List, Optional
 
-from pydantic import BaseSettings, validator
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -192,64 +193,68 @@ class Settings(BaseSettings):
     git_commit: Optional[str] = None
     build_number: Optional[str] = None
 
-    @validator("admin_users", pre=True)
+    @field_validator("admin_users", mode="before")
+    @classmethod
     def parse_admin_users(cls, v):
         if isinstance(v, str):
             return [user.strip() for user in v.split(",") if user.strip()]
         return v
 
-    @validator("allowed_extensions", pre=True)
+    @field_validator("allowed_extensions", mode="before")
+    @classmethod
     def parse_allowed_extensions(cls, v):
         if isinstance(v, str):
             return [ext.strip().lower() for ext in v.split(",") if ext.strip()]
         return v
 
-    @validator("cors_origins", pre=True)
+    @field_validator("cors_origins", mode="before")
+    @classmethod
     def parse_cors_origins(cls, v):
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
-    @validator("cors_methods", pre=True)
+    @field_validator("cors_methods", mode="before")
+    @classmethod
     def parse_cors_methods(cls, v):
         if isinstance(v, str):
             return [method.strip().upper() for method in v.split(",") if method.strip()]
         return v
 
-    @validator("cors_headers", pre=True)
+    @field_validator("cors_headers", mode="before")
+    @classmethod
     def parse_cors_headers(cls, v):
         if isinstance(v, str):
             return [header.strip() for header in v.split(",") if header.strip()]
         return v
 
-    @validator("custom_pii_patterns", pre=True)
+    @field_validator("custom_pii_patterns", mode="before")
+    @classmethod
     def parse_custom_pii_patterns(cls, v):
         if isinstance(v, str):
             return [pattern.strip() for pattern in v.split("|") if pattern.strip()]
         return v
 
-    @validator("export_formats", pre=True)
+    @field_validator("export_formats", mode="before")
+    @classmethod
     def parse_export_formats(cls, v):
         if isinstance(v, str):
             return [fmt.strip().lower() for fmt in v.split(",") if fmt.strip()]
         return v
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-
-        # Environment variable prefixes
-        env_prefix = ""
-
-        # Field aliases for environment variables
-        fields = {
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False,
+        "env_prefix": "",
+        "fields": {
             "database_url": {"env": ["DATABASE_URL", "DB_URL"]},
             "redis_url": {"env": ["REDIS_URL", "CACHE_URL"]},
             "secret_key": {"env": ["SECRET_KEY", "JWT_SECRET"]},
             "api_key": {"env": ["API_KEY", "OPENAI_API_KEY", "LLM_API_KEY"]},
             "vault_token": {"env": ["VAULT_TOKEN", "VAULT_AUTH_TOKEN"]},
-        }
+        },
+    }
 
 
 # Global settings instance

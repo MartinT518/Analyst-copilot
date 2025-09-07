@@ -483,7 +483,7 @@ class TextChunker:
         Returns:
             List[Dict[str, Any]]: Processed chunks
         """
-        processed_chunks = []
+        processed_chunks: List[Dict[str, Any]] = []
 
         for chunk in chunks:
             text = chunk["text"].strip()

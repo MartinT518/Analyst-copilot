@@ -60,6 +60,18 @@ class IngestUploadRequest(BaseModel):
     )
 
 
+class IngestJobCreate(BaseModel):
+    """Schema for creating ingest jobs."""
+
+    source_type: SourceType = Field(..., description="Type of source to ingest")
+    origin: str = Field(..., description="Customer or source identifier")
+    ticket_id: Optional[str] = Field(None, description="Ticket or document ID")
+    sensitivity: SensitivityLevel = Field(..., description="Data sensitivity level")
+    metadata: Optional[Dict[str, Any]] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
+
+
 class IngestPasteRequest(BaseModel):
     """Schema for paste text requests."""
 
@@ -70,6 +82,10 @@ class IngestPasteRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = Field(
         default_factory=dict, description="Additional metadata"
     )
+
+
+# Alias for backward compatibility
+PasteRequest = IngestPasteRequest
 
 
 class ChunkSearchRequest(BaseModel):
@@ -113,6 +129,42 @@ class JobResponse(BaseModel):
     chunks_created: int
     error_message: Optional[str]
     metadata: Dict[str, Any]
+    created_at: datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class IngestJobResponse(BaseModel):
+    """Schema for ingest job responses."""
+
+    id: UUID
+    status: JobStatus
+    source_type: str
+    origin: str
+    sensitivity: str
+    uploader: str
+    chunks_created: int
+    error_message: Optional[str]
+    metadata: Dict[str, Any]
+    created_at: datetime
+    started_at: Optional[datetime]
+    completed_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class JobStatusResponse(BaseModel):
+    """Schema for job status responses."""
+
+    id: UUID
+    status: JobStatus
+    progress: Optional[float] = Field(None, ge=0.0, le=1.0, description="Job progress (0.0 to 1.0)")
+    message: Optional[str] = Field(None, description="Status message")
+    error_message: Optional[str] = Field(None, description="Error message if failed")
     created_at: datetime
     started_at: Optional[datetime]
     completed_at: Optional[datetime]
@@ -172,7 +224,7 @@ class UserCreate(BaseModel):
     """Schema for user creation."""
 
     username: str = Field(..., min_length=3, max_length=100)
-    email: str = Field(..., regex=r"^[^@]+@[^@]+\.[^@]+$")
+    email: str = Field(..., pattern=r"^[^@]+@[^@]+\.[^@]+$")
     password: str = Field(..., min_length=8)
     role: UserRole = Field(default=UserRole.ANALYST)
 

@@ -4,7 +4,7 @@ import logging
 from contextlib import contextmanager
 from typing import Generator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -89,7 +89,7 @@ def check_db_connection() -> bool:
     """
     try:
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))
         return True
     except Exception as e:
         logger.error(f"Database connection check failed: {e}")
@@ -123,7 +123,7 @@ class DatabaseManager:
         """Perform database health check."""
         try:
             with self.engine.connect() as conn:
-                result = conn.execute("SELECT version()")
+                result = conn.execute(text("SELECT version()"))
                 version = result.fetchone()[0]
                 return {
                     "status": "healthy",

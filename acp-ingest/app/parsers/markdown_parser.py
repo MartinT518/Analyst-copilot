@@ -181,7 +181,7 @@ class MarkdownParser:
         Returns:
             Dict[str, Any]: Frontmatter data
         """
-        frontmatter = {}
+        frontmatter: Dict[str, Any] = {}
 
         match = self.frontmatter_pattern.search(content)
         if match:
@@ -426,7 +426,7 @@ class MarkdownParser:
         headings = self.heading_pattern.findall(content)
         stats["heading_count"] = len(headings)
 
-        heading_levels = {}
+        heading_levels: Dict[str, int] = {}
         for level, text in headings:
             level_num = len(level)
             heading_levels[f"h{level_num}"] = heading_levels.get(f"h{level_num}", 0) + 1
