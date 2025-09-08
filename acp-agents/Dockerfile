@@ -1,4 +1,4 @@
-# Multi-stage build for acp-ingest service
+# Multi-stage build for acp-agents service
 FROM python:3.11-slim as builder
 
 # Set build arguments
@@ -7,8 +7,8 @@ ARG VCS_REF
 ARG VERSION
 
 # Add metadata
-LABEL org.opencontainers.image.title="ACP Ingest Service"
-LABEL org.opencontainers.image.description="Analyst Copilot Document Ingestion Service"
+LABEL org.opencontainers.image.title="ACP Agents Service"
+LABEL org.opencontainers.image.description="Analyst Copilot AI Agents Orchestration Service"
 LABEL org.opencontainers.image.created=$BUILD_DATE
 LABEL org.opencontainers.image.revision=$VCS_REF
 LABEL org.opencontainers.image.version=$VERSION
@@ -41,9 +41,6 @@ FROM python:3.11-slim as production
 RUN apt-get update && apt-get install -y \
     libpq5 \
     curl \
-    tesseract-ocr \
-    tesseract-ocr-eng \
-    poppler-utils \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
@@ -61,7 +58,7 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p /app/logs /app/uploads /app/data && \
+RUN mkdir -p /app/logs /app/data && \
     chown -R acp:acp /app
 
 # Set environment variables
@@ -75,14 +72,14 @@ RUN find /app -name "*.pyc" -delete && \
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:8001/health || exit 1
 
 # Switch to non-root user
 USER acp
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8001
 
 # Default command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001", "--workers", "2"]
 
