@@ -13,7 +13,9 @@ class Settings(BaseSettings):
     app_name: str = "ACP Ingest Service"
     version: str = "1.0.0"
     debug: bool = False
+    DEBUG: bool = False  # Alias for compatibility
     environment: str = "production"
+    ENVIRONMENT: str = "production"  # Alias for compatibility
 
     # Server settings
     host: str = "127.0.0.1"  # Default to localhost for security
@@ -23,23 +25,29 @@ class Settings(BaseSettings):
 
     # Database settings
     database_url: str = "postgresql://acp:password@localhost/acp_ingest"
+    DATABASE_URL: str = "postgresql://acp:password@localhost/acp_ingest"  # Alias for compatibility
     database_pool_size: int = 10
     database_max_overflow: int = 20
     database_pool_timeout: int = 30
 
     # Redis settings
     redis_url: str = "redis://localhost:6379/0"
+    REDIS_URL: str = "redis://localhost:6379/0"  # Alias for compatibility
     redis_max_connections: int = 10
 
     # Chroma settings
     chroma_host: str = "localhost"
+    CHROMA_HOST: str = "localhost"  # Alias for compatibility
     chroma_port: int = 8001
+    CHROMA_PORT: int = 8001  # Alias for compatibility
     chroma_collection_name: str = "acp_knowledge"
     chroma_auth_token: Optional[str] = None
 
     # LLM settings
     llm_endpoint: str = "http://localhost:11434/v1"
+    LLM_ENDPOINT: str = "http://localhost:11434/v1"  # Alias for compatibility
     api_key: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None  # Alias for compatibility
     llm_model: str = "llama2"
     llm_temperature: float = 0.1
     llm_max_tokens: int = 2048
@@ -47,6 +55,7 @@ class Settings(BaseSettings):
 
     # Embedding settings
     embedding_endpoint: str = "http://localhost:11434/v1"
+    EMBEDDING_ENDPOINT: str = "http://localhost:11434/v1"  # Alias for compatibility
     embedding_model: str = "nomic-embed-text"
     embedding_dimensions: int = 768
     embedding_batch_size: int = 10
@@ -56,6 +65,7 @@ class Settings(BaseSettings):
     secret_key: str = "your-secret-key-change-this-in-production"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440  # 24 hours
+    access_token_expire_minutes: int = 1440  # 24 hours
     password_min_length: int = 8
     password_require_special: bool = True
     max_login_attempts: int = 5
@@ -78,6 +88,7 @@ class Settings(BaseSettings):
 
     # File upload settings
     max_file_size: int = 104857600  # 100MB
+    MAX_FILE_SIZE: int = 104857600  # Alias for compatibility
     upload_dir: str = "/app/uploads"
     UPLOAD_DIR: str = "/app/uploads"  # Alias for compatibility
     allowed_extensions: List[str] = [
@@ -101,6 +112,7 @@ class Settings(BaseSettings):
     job_timeout_minutes: int = 60
     retry_attempts: int = 3
     retry_delay_seconds: int = 30
+    MAX_TEXT_LENGTH: int = 1000000  # 1MB text limit
 
     # PII detection settings
     pii_detection_enabled: bool = True
@@ -120,6 +132,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     LOG_LEVEL: str = "INFO"  # Alias for compatibility
     log_format: str = "json"  # json, text
+    LOG_FORMAT: str = "json"  # Alias for compatibility
+    LOG_FILE: str = "/app/logs/acp-ingest.log"  # Alias for compatibility
     log_file: Optional[str] = "/app/logs/acp-ingest.log"
     log_rotation: str = "1 day"
     log_retention: str = "30 days"
@@ -249,13 +263,6 @@ class Settings(BaseSettings):
         "env_file_encoding": "utf-8",
         "case_sensitive": False,
         "env_prefix": "",
-        "fields": {
-            "database_url": {"env": ["DATABASE_URL", "DB_URL"]},
-            "redis_url": {"env": ["REDIS_URL", "CACHE_URL"]},
-            "secret_key": {"env": ["SECRET_KEY", "JWT_SECRET"]},
-            "api_key": {"env": ["API_KEY", "OPENAI_API_KEY", "LLM_API_KEY"]},
-            "vault_token": {"env": ["VAULT_TOKEN", "VAULT_AUTH_TOKEN"]},
-        },
     }
 
 

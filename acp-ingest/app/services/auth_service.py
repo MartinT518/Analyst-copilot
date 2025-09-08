@@ -390,3 +390,20 @@ class AuthService:
         # No users exist - admin should be created via bootstrap script
         logger.info("No users found. Use bootstrap script to create initial admin user.")
         return None
+
+
+# Global auth service instance
+auth_service = AuthService()
+
+
+# Standalone function for FastAPI dependency injection
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Get current authenticated user from token or API key.
+
+    This is a standalone function for FastAPI dependency injection.
+    """
+    return await auth_service.get_current_user(credentials, db)

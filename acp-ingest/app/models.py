@@ -148,7 +148,7 @@ class IngestJob(Base):
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
     error_message: Mapped[str | None] = mapped_column(Text)
     chunks_created: Mapped[int] = mapped_column(Integer, default=0)
-    metadata: Mapped[dict | None] = mapped_column(JSON)
+    job_metadata: Mapped[dict | None] = mapped_column(JSON)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), index=True
     )
@@ -185,7 +185,7 @@ class KnowledgeChunk(Base):
     source_location: Mapped[str | None] = mapped_column(String(500))
     chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
     chunk_index: Mapped[int | None] = mapped_column(Integer)
-    metadata: Mapped[dict | None] = mapped_column(JSON)
+    chunk_metadata: Mapped[dict | None] = mapped_column(JSON)
     embedding_model: Mapped[str | None] = mapped_column(String(100))
     embedding_version: Mapped[str | None] = mapped_column(String(20))
     vector_id: Mapped[str | None] = mapped_column(String(100), unique=True, index=True)
@@ -333,20 +333,26 @@ class PIIDetection(Base):
 
     __tablename__ = "pii_detections"
 
-    id = Column(Integer, primary_key=True, index=True)
-    chunk_id = Column(UUID(as_uuid=True), ForeignKey("knowledge_chunks.id"), nullable=False)
-    pii_type = Column(String(50), nullable=False, index=True)
-    confidence_score = Column(Integer)  # 0-100
-    original_text = Column(Text)  # Encrypted/hashed original text for audit
-    redacted_text = Column(Text)
-    start_position = Column(Integer)
-    end_position = Column(Integer)
-    detection_method = Column(String(50))  # regex, ml_model, etc.
-    reviewed = Column(Boolean, default=False)
-    reviewed_by = Column(Integer, ForeignKey("users.id"))
-    reviewed_at = Column(DateTime(timezone=True))
-    false_positive = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    chunk_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True), ForeignKey("knowledge_chunks.id"), nullable=False
+    )
+    pii_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    confidence_score: Mapped[int | None] = mapped_column(Integer)  # 0-100
+    original_text: Mapped[str | None] = mapped_column(
+        Text
+    )  # Encrypted/hashed original text for audit
+    redacted_text: Mapped[str | None] = mapped_column(Text)
+    start_position: Mapped[int | None] = mapped_column(Integer)
+    end_position: Mapped[int | None] = mapped_column(Integer)
+    detection_method: Mapped[str | None] = mapped_column(String(50))  # regex, ml_model, etc.
+    reviewed: Mapped[bool] = mapped_column(Boolean, default=False)
+    reviewed_by: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id"))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    false_positive: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
 
     # Relationships
     chunk = relationship("KnowledgeChunk")
@@ -364,21 +370,25 @@ class ExportJob(Base):
 
     __tablename__ = "export_jobs"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    export_type = Column(
+    id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True
+    )
+    export_type: Mapped[str] = mapped_column(
         String(50), nullable=False, index=True
     )  # search_results, audit_report, etc.
-    format = Column(String(20), nullable=False)  # csv, json, markdown, html
-    status = Column(String(20), default="pending", index=True)
-    requested_by = Column(Integer, ForeignKey("users.id"), nullable=False)
-    parameters = Column(JSON)  # Export parameters
-    file_path = Column(String(500))
-    file_size = Column(Integer)
-    record_count = Column(Integer)
-    error_message = Column(Text)
-    expires_at = Column(DateTime(timezone=True))
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    completed_at = Column(DateTime(timezone=True))
+    format: Mapped[str] = mapped_column(String(20), nullable=False)  # csv, json, markdown, html
+    status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
+    requested_by: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    parameters: Mapped[dict | None] = mapped_column(JSON)  # Export parameters
+    file_path: Mapped[str | None] = mapped_column(String(500))
+    file_size: Mapped[int | None] = mapped_column(Integer)
+    record_count: Mapped[int | None] = mapped_column(Integer)
+    error_message: Mapped[str | None] = mapped_column(Text)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Relationships
     requester = relationship("User")

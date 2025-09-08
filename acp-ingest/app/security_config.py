@@ -18,21 +18,39 @@ class SecurityConfig(BaseSettings):
     # =============================================================================
 
     # Secret keys - system will fail to start if these are not properly set
-    secret_key: str = Field(..., description="Application secret key for signing")
-    jwt_secret_key: str = Field(..., description="JWT signing secret key")
-    encryption_key: str = Field(..., description="Encryption key for sensitive data")
+    secret_key: str = Field(
+        default="dev-secret-key-change-in-production",
+        description="Application secret key for signing",
+    )
+    jwt_secret_key: str = Field(
+        default="dev-jwt-secret-change-in-production", description="JWT signing secret key"
+    )
+    encryption_key: str = Field(
+        default="dev-encryption-key-change-in-production",
+        description="Encryption key for sensitive data",
+    )
 
     # =============================================================================
     # OAUTH2/OIDC CONFIGURATION
     # =============================================================================
 
     # OAuth2 Client Configuration
-    oauth2_client_id: str = Field(..., description="OAuth2 client ID")
-    oauth2_client_secret: str = Field(..., description="OAuth2 client secret")
-    oauth2_authorization_url: str = Field(..., description="OAuth2 authorization URL")
-    oauth2_token_url: str = Field(..., description="OAuth2 token URL")
-    oauth2_userinfo_url: str = Field(..., description="OAuth2 userinfo URL")
-    oauth2_redirect_uri: str = Field(..., description="OAuth2 redirect URI")
+    oauth2_client_id: str = Field(default="dev-client-id", description="OAuth2 client ID")
+    oauth2_client_secret: str = Field(
+        default="dev-client-secret", description="OAuth2 client secret"
+    )
+    oauth2_authorization_url: str = Field(
+        default="http://localhost:8080/auth", description="OAuth2 authorization URL"
+    )
+    oauth2_token_url: str = Field(
+        default="http://localhost:8080/token", description="OAuth2 token URL"
+    )
+    oauth2_userinfo_url: str = Field(
+        default="http://localhost:8080/userinfo", description="OAuth2 userinfo URL"
+    )
+    oauth2_redirect_uri: str = Field(
+        default="http://localhost:3000/callback", description="OAuth2 redirect URI"
+    )
 
     # JWT Configuration
     jwt_algorithm: str = "HS256"
@@ -43,9 +61,9 @@ class SecurityConfig(BaseSettings):
     # VAULT CONFIGURATION
     # =============================================================================
 
-    vault_url: Optional[str] = Field(None, description="HashiCorp Vault URL")
-    vault_token: Optional[str] = Field(None, description="Vault authentication token")
-    vault_namespace: Optional[str] = Field(None, description="Vault namespace")
+    vault_url: Optional[str] = Field(default=None, description="HashiCorp Vault URL")
+    vault_token: Optional[str] = Field(default=None, description="Vault authentication token")
+    vault_namespace: Optional[str] = Field(default=None, description="Vault namespace")
     vault_mount_point: str = "secret"
     vault_auth_method: str = "token"
 
