@@ -1,0 +1,2 @@
+[console_scripts]
+acp = acp_cli.main:app
