@@ -3,7 +3,7 @@
 import typer
 from typing import Optional
 
-from .commands import ingest, agents, config as config_cmd
+from .commands import ingest, agents, config as config_cmd, test, deploy, monitor, scan
 from .utils import print_info, print_error
 from .config import config_manager
 
@@ -17,6 +17,10 @@ app = typer.Typer(
 app.add_typer(ingest.app, name="ingest", help="Interact with the ingest service")
 app.add_typer(agents.app, name="agents", help="Interact with the agents service")
 app.add_typer(config_cmd.app, name="config", help="Manage CLI configuration")
+app.add_typer(test.app, name="test", help="Run tests for ACP services")
+app.add_typer(deploy.app, name="deploy", help="Deploy ACP services")
+app.add_typer(monitor.app, name="monitor", help="Monitor ACP services")
+app.add_typer(scan.app, name="scan", help="Security scanning for ACP services")
 
 
 @app.command()
