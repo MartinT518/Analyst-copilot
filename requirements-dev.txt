@@ -1,0 +1,47 @@
+# Development Dependencies - Linting, Testing, and Type Checking Tools
+
+# Code Formatting and Linting
+black==23.12.1
+isort==5.13.2
+flake8==7.0.0
+flake8-docstrings==1.7.0
+flake8-import-order==0.18.2
+flake8-bugbear==23.12.15
+
+# Type Checking
+mypy==1.8.0
+types-requests==2.31.0.20240125
+types-redis==4.6.0.20240106
+types-PyYAML==6.0.12.12
+
+# Testing Framework and Tools
+pytest==7.4.4
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-asyncio==0.23.2
+pytest-xdist==3.5.0
+pytest-html==4.1.1
+pytest-json-report==1.5.0
+
+# Security Scanning
+bandit==1.7.5
+pip-audit==2.6.2
+safety==2.3.5
+
+# Performance Testing
+locust==2.20.0
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.5.3
+
+# Database Testing
+alembic==1.13.1
+psycopg2-binary==2.9.9
+
+# Utilities for Development
+pre-commit==3.6.0
+coverage==7.4.0
+factory-boy==3.3.0
+faker==22.2.0
+

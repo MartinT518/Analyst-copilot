@@ -1,0 +1,363 @@
+# Docker Compose for Local Development Only
+# This file is for local development and testing
+# CI/CD uses GitHub Actions services instead
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: acp-postgres
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-acp_db}
+      POSTGRES_USER: ${DATABASE_USER:-acp_user}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-acp_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    volumes:
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./config/init.sql
+        target: /docker-entrypoint-initdb.d/init.sql
+        read_only: true
+    ports:
+      - "${DATABASE_PORT:-5432}:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-acp_user} -d ${DATABASE_NAME:-acp_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - acp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis Cache and Job Queue
+  redis:
+    image: redis:7-alpine
+    container_name: acp-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-acp_redis_password}
+    volumes:
+      - type: volume
+        source: redis_data
+        target: /data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+    networks:
+      - acp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Chroma Vector Database
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: acp-chroma
+    environment:
+      CHROMA_SERVER_HOST: 0.0.0.0
+      CHROMA_SERVER_HTTP_PORT: 8000
+      CHROMA_SERVER_CORS_ALLOW_ORIGINS: '["*"]'
+    volumes:
+      - type: volume
+        source: chroma_data
+        target: /chroma/chroma
+    ports:
+      - "${CHROMA_PORT:-8000}:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - acp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ACP Ingest Service
+  acp-ingest:
+    build:
+      context: ./acp-ingest
+      dockerfile: Dockerfile
+      target: production
+    container_name: acp-ingest
+    environment:
+      DATABASE_URL: postgresql://${DATABASE_USER:-acp_user}:${DATABASE_PASSWORD:-acp_password}@postgres:5432/${DATABASE_NAME:-acp_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-acp_redis_password}@redis:6379/0
+      CHROMA_URL: http://chroma:8000
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      API_KEY: ${INGEST_API_KEY:-dev_ingest_key}
+    volumes:
+      - type: volume
+        source: ingest_uploads
+        target: /app/uploads
+      - type: volume
+        source: ingest_logs
+        target: /app/logs
+    ports:
+      - "${INGEST_PORT:-8001}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - acp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ACP Agents Service
+  acp-agents:
+    build:
+      context: ./acp-agents
+      dockerfile: Dockerfile
+      target: production
+    container_name: acp-agents
+    environment:
+      DATABASE_URL: postgresql://${DATABASE_USER:-acp_user}:${DATABASE_PASSWORD:-acp_password}@postgres:5432/${DATABASE_NAME:-acp_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-acp_redis_password}@redis:6379/0
+      INGEST_SERVICE_URL: http://acp-ingest:8000
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      API_KEY: ${AGENTS_API_KEY:-dev_agents_key}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_API_BASE: ${LLM_API_BASE:-http://localhost:11434}
+    volumes:
+      - type: volume
+        source: agents_logs
+        target: /app/logs
+    ports:
+      - "${AGENTS_PORT:-8002}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      acp-ingest:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - acp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Celery Worker for Background Jobs
+  celery-worker:
+    build:
+      context: ./acp-ingest
+      dockerfile: Dockerfile
+      target: production
+    container_name: acp-celery-worker
+    command: celery -A app.worker worker --loglevel=info --concurrency=4
+    environment:
+      DATABASE_URL: postgresql://${DATABASE_USER:-acp_user}:${DATABASE_PASSWORD:-acp_password}@postgres:5432/${DATABASE_NAME:-acp_db}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-acp_redis_password}@redis:6379/0
+      CHROMA_URL: http://chroma:8000
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - type: volume
+        source: ingest_uploads
+        target: /app/uploads
+      - type: volume
+        source: celery_logs
+        target: /app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      chroma:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - acp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: acp-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - type: bind
+        source: ./infra/monitoring/prometheus/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+      - type: bind
+        source: ./infra/monitoring/prometheus/alert_rules.yml
+        target: /etc/prometheus/alert_rules.yml
+        read_only: true
+      - type: volume
+        source: prometheus_data
+        target: /prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    restart: unless-stopped
+    networks:
+      - acp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Grafana Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: acp-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: false
+    volumes:
+      - type: volume
+        source: grafana_data
+        target: /var/lib/grafana
+      - type: bind
+        source: ./infra/monitoring/grafana/datasources
+        target: /etc/grafana/provisioning/datasources
+        read_only: true
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - acp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Jaeger Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: acp-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
+    ports:
+      - "${JAEGER_PORT:-16686}:16686"
+      - "14268:14268"
+      - "4317:4317"
+      - "4318:4318"
+    restart: unless-stopped
+    networks:
+      - acp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: acp-nginx
+    volumes:
+      - type: bind
+        source: ./infra/nginx/nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+      - type: bind
+        source: ./infra/nginx/ssl
+        target: /etc/nginx/ssl
+        read_only: true
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    depends_on:
+      - acp-ingest
+      - acp-agents
+      - grafana
+    restart: unless-stopped
+    networks:
+      - acp-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Named Volumes
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  chroma_data:
+    driver: local
+  ingest_uploads:
+    driver: local
+  ingest_logs:
+    driver: local
+  agents_logs:
+    driver: local
+  celery_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# Networks
+networks:
+  acp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
