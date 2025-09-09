@@ -14,7 +14,7 @@ tensorflow==2.15.0
 keras-tuner==1.4.6
 scikit-learn==1.3.2
 numpy==1.26.2
-pandas==2.1.3
+pandas==2.1.4
 
 # Data validation
 great-expectations==0.18.5

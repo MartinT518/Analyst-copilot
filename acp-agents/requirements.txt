@@ -63,7 +63,6 @@ shortuuid==1.0.11
 aiofiles==23.2.1
 
 # State management
-fsm==0.3.1
 transitions==0.9.0
 
 # Template engines for document generation
