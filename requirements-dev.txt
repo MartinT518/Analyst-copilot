@@ -42,7 +42,7 @@ setuptools>=68.0.0
 wheel>=0.41.0
 
 # Type stubs for mypy
-types-PyYAML>=6.0.12
+types-PyYAML
 types-Markdown>=3.4.0
 types-aiofiles>=23.1.0
 types-requests>=2.31.0
