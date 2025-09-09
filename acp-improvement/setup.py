@@ -1,4 +1,4 @@
-"""Setup script for ACP Ingest CLI."""
+"""Setup script for ACP Improvement service."""
 
 from setuptools import find_packages, setup
 
@@ -6,14 +6,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="acp-ingest",
+    name="acp-improvement",
     version="1.0.0",
     author="Analyst Copilot Team",
     author_email="team@analystcopilot.com",
-    description="On-premises AI-powered analysis system for processing exported data",
+    description="AI-powered improvement and optimization service",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/analystcopilot/acp-ingest",
+    url="https://github.com/analystcopilot/acp-improvement",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -27,14 +27,15 @@ setup(
     install_requires=[
         "fastapi==0.104.1",
         "uvicorn[standard]==0.24.0",
-        "click==8.1.7",
-        "rich==13.7.0",
-        "httpx==0.25.2",
         "pydantic==2.9.2",
+        "pydantic-settings==2.1.0",
+        "tensorflow==2.15.0",
+        "keras-tuner==1.4.6",
+        "scikit-learn==1.3.2",
     ],
     entry_points={
         "console_scripts": [
-            "acp=app.cli:cli",
+            "acp-improvement=app.main:main",
         ],
     },
     include_package_data=True,

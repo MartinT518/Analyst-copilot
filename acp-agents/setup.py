@@ -1,4 +1,4 @@
-"""Setup script for ACP Ingest CLI."""
+"""Setup script for ACP Agents service."""
 
 from setuptools import find_packages, setup
 
@@ -6,14 +6,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="acp-ingest",
+    name="acp-agents",
     version="1.0.0",
     author="Analyst Copilot Team",
     author_email="team@analystcopilot.com",
-    description="On-premises AI-powered analysis system for processing exported data",
+    description="Multi-agent orchestration system for AI-powered analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/analystcopilot/acp-ingest",
+    url="https://github.com/analystcopilot/acp-agents",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -27,14 +27,16 @@ setup(
     install_requires=[
         "fastapi==0.104.1",
         "uvicorn[standard]==0.24.0",
-        "click==8.1.7",
-        "rich==13.7.0",
-        "httpx==0.25.2",
         "pydantic==2.9.2",
+        "pydantic-settings==2.1.0",
+        "langgraph==0.2.16",
+        "langchain==0.2.11",
+        "langchain-core==0.2.38",
+        "langchain-community==0.2.10",
     ],
     entry_points={
         "console_scripts": [
-            "acp=app.cli:cli",
+            "acp-agents=app.main:main",
         ],
     },
     include_package_data=True,
