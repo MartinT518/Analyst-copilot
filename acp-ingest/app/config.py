@@ -361,6 +361,12 @@ class Settings(BaseSettings):
 # Global settings instance
 settings = Settings()
 
+
+def get_settings() -> Settings:
+    """Get the global settings instance."""
+    return settings
+
+
 # Validate settings on import (skip in testing)
 if not is_testing():
     try:

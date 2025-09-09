@@ -7,7 +7,7 @@ pydantic-settings==2.1.0
 # Database and ORM
 sqlalchemy==2.0.23
 alembic==1.13.1
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.10
 
 # Machine Learning and Tuning
 tensorflow==2.15.0
