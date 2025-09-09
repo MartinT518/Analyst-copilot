@@ -1,18 +1,29 @@
 """Configuration management for ACP Ingest service."""
 
+<<<<<<< HEAD
 from typing import List, Optional
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
+=======
+import os
+from typing import Optional, List
+from pydantic import BaseSettings, validator
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
 
 
 class Settings(BaseSettings):
     """Application settings with validation."""
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Application settings
     app_name: str = "ACP Ingest Service"
     version: str = "1.0.0"
     debug: bool = False
+<<<<<<< HEAD
     DEBUG: bool = False  # Alias for compatibility
     environment: str = "production"
     ENVIRONMENT: str = "production"  # Alias for compatibility
@@ -48,29 +59,75 @@ class Settings(BaseSettings):
     LLM_ENDPOINT: str = "http://localhost:11434/v1"  # Alias for compatibility
     api_key: Optional[str] = None
     OPENAI_API_KEY: Optional[str] = None  # Alias for compatibility
+=======
+    environment: str = "production"
+    
+    # Server settings
+    host: str = "0.0.0.0"
+    port: int = 8000
+    workers: int = 1
+    reload: bool = False
+    
+    # Database settings
+    database_url: str = "postgresql://acp:password@localhost/acp_ingest"
+    database_pool_size: int = 10
+    database_max_overflow: int = 20
+    database_pool_timeout: int = 30
+    
+    # Redis settings
+    redis_url: str = "redis://localhost:6379/0"
+    redis_max_connections: int = 10
+    
+    # Chroma settings
+    chroma_host: str = "localhost"
+    chroma_port: int = 8001
+    chroma_collection_name: str = "acp_knowledge"
+    chroma_auth_token: Optional[str] = None
+    
+    # LLM settings
+    llm_endpoint: str = "http://localhost:11434/v1"
+    api_key: Optional[str] = None
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     llm_model: str = "llama2"
     llm_temperature: float = 0.1
     llm_max_tokens: int = 2048
     llm_timeout: int = 60
+<<<<<<< HEAD
 
     # Embedding settings
     embedding_endpoint: str = "http://localhost:11434/v1"
     EMBEDDING_ENDPOINT: str = "http://localhost:11434/v1"  # Alias for compatibility
+=======
+    
+    # Embedding settings
+    embedding_endpoint: str = "http://localhost:11434/v1"
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     embedding_model: str = "nomic-embed-text"
     embedding_dimensions: int = 768
     embedding_batch_size: int = 10
     embedding_timeout: int = 30
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Security settings
     secret_key: str = "your-secret-key-change-this-in-production"
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440  # 24 hours
+<<<<<<< HEAD
     access_token_expire_minutes: int = 1440  # 24 hours
+=======
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     password_min_length: int = 8
     password_require_special: bool = True
     max_login_attempts: int = 5
     lockout_duration_minutes: int = 30
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Vault settings
     vault_url: Optional[str] = None
     vault_token: Optional[str] = None
@@ -80,11 +137,16 @@ class Settings(BaseSettings):
     vault_role_id: Optional[str] = None
     vault_secret_id: Optional[str] = None
     vault_k8s_role: str = "acp-ingest"
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # RBAC settings
     rbac_enabled: bool = True
     default_user_role: str = "analyst"
     admin_users: List[str] = []
+<<<<<<< HEAD
 
     # File upload settings
     max_file_size: int = 104857600  # 100MB
@@ -104,6 +166,15 @@ class Settings(BaseSettings):
     ]
     temp_file_retention_hours: int = 24
 
+=======
+    
+    # File upload settings
+    max_file_size: int = 104857600  # 100MB
+    upload_dir: str = "/app/uploads"
+    allowed_extensions: List[str] = ["csv", "html", "htm", "xml", "pdf", "md", "txt", "zip", "json"]
+    temp_file_retention_hours: int = 24
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Processing settings
     max_chunk_size: int = 1000
     chunk_overlap: int = 200
@@ -112,8 +183,12 @@ class Settings(BaseSettings):
     job_timeout_minutes: int = 60
     retry_attempts: int = 3
     retry_delay_seconds: int = 30
+<<<<<<< HEAD
     MAX_TEXT_LENGTH: int = 1000000  # 1MB text limit
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # PII detection settings
     pii_detection_enabled: bool = True
     pii_redaction_mode: str = "redact"  # redact, replace, mask
@@ -121,12 +196,17 @@ class Settings(BaseSettings):
     presidio_enabled: bool = False
     presidio_endpoint: Optional[str] = None
     custom_pii_patterns: List[str] = []
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Audit settings
     audit_enabled: bool = True
     audit_retention_days: int = 2555  # 7 years
     audit_hash_algorithm: str = "sha256"
     audit_immutable: bool = True
+<<<<<<< HEAD
 
     # Logging settings
     log_level: str = "INFO"
@@ -134,32 +214,55 @@ class Settings(BaseSettings):
     log_format: str = "json"  # json, text
     LOG_FORMAT: str = "json"  # Alias for compatibility
     LOG_FILE: str = "/app/logs/acp-ingest.log"  # Alias for compatibility
+=======
+    
+    # Logging settings
+    log_level: str = "INFO"
+    log_format: str = "json"  # json, text
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     log_file: Optional[str] = "/app/logs/acp-ingest.log"
     log_rotation: str = "1 day"
     log_retention: str = "30 days"
     structured_logging: bool = True
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Monitoring settings
     prometheus_enabled: bool = False
     prometheus_port: int = 9090
     metrics_endpoint: str = "/metrics"
     health_check_interval: int = 30
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Grafana settings
     grafana_enabled: bool = False
     grafana_port: int = 3000
     grafana_admin_password: str = "admin"
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Export settings
     export_dir: str = "/app/exports"
     export_retention_hours: int = 48
     max_export_size: int = 1073741824  # 1GB
     export_formats: List[str] = ["csv", "json", "markdown", "html"]
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Rate limiting settings
     rate_limit_enabled: bool = True
     rate_limit_requests_per_minute: int = 60
     rate_limit_burst: int = 10
+<<<<<<< HEAD
 
     # CORS settings
     cors_enabled: bool = True
@@ -167,47 +270,81 @@ class Settings(BaseSettings):
     cors_methods: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     cors_headers: List[str] = ["*"]
 
+=======
+    
+    # CORS settings
+    cors_enabled: bool = True
+    cors_origins: List[str] = ["*"]
+    cors_methods: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    cors_headers: List[str] = ["*"]
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # SSL/TLS settings
     ssl_enabled: bool = False
     ssl_cert_file: Optional[str] = None
     ssl_key_file: Optional[str] = None
     ssl_ca_file: Optional[str] = None
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Data retention settings
     data_retention_enabled: bool = True
     default_retention_days: int = 365
     sensitive_data_retention_days: int = 90
     audit_data_retention_days: int = 2555  # 7 years
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Backup settings
     backup_enabled: bool = False
     backup_schedule: str = "0 2 * * *"  # Daily at 2 AM
     backup_retention_days: int = 30
     backup_location: str = "/app/backups"
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Performance settings
     async_workers: int = 4
     connection_pool_size: int = 20
     query_timeout: int = 30
     bulk_insert_batch_size: int = 1000
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Feature flags
     feature_advanced_search: bool = True
     feature_export_api: bool = True
     feature_audit_api: bool = True
     feature_metrics_api: bool = True
     feature_admin_api: bool = True
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Development settings
     dev_mode: bool = False
     dev_auto_reload: bool = False
     dev_debug_sql: bool = False
     dev_mock_external_services: bool = False
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
     # Build information
     build_date: Optional[str] = None
     git_commit: Optional[str] = None
     build_number: Optional[str] = None
+<<<<<<< HEAD
 
     @field_validator("admin_users", mode="before")
     @classmethod
@@ -264,6 +401,67 @@ class Settings(BaseSettings):
         "case_sensitive": False,
         "env_prefix": "",
     }
+=======
+    
+    @validator('admin_users', pre=True)
+    def parse_admin_users(cls, v):
+        if isinstance(v, str):
+            return [user.strip() for user in v.split(',') if user.strip()]
+        return v
+    
+    @validator('allowed_extensions', pre=True)
+    def parse_allowed_extensions(cls, v):
+        if isinstance(v, str):
+            return [ext.strip().lower() for ext in v.split(',') if ext.strip()]
+        return v
+    
+    @validator('cors_origins', pre=True)
+    def parse_cors_origins(cls, v):
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(',') if origin.strip()]
+        return v
+    
+    @validator('cors_methods', pre=True)
+    def parse_cors_methods(cls, v):
+        if isinstance(v, str):
+            return [method.strip().upper() for method in v.split(',') if method.strip()]
+        return v
+    
+    @validator('cors_headers', pre=True)
+    def parse_cors_headers(cls, v):
+        if isinstance(v, str):
+            return [header.strip() for header in v.split(',') if header.strip()]
+        return v
+    
+    @validator('custom_pii_patterns', pre=True)
+    def parse_custom_pii_patterns(cls, v):
+        if isinstance(v, str):
+            return [pattern.strip() for pattern in v.split('|') if pattern.strip()]
+        return v
+    
+    @validator('export_formats', pre=True)
+    def parse_export_formats(cls, v):
+        if isinstance(v, str):
+            return [fmt.strip().lower() for fmt in v.split(',') if fmt.strip()]
+        return v
+    
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        case_sensitive = False
+        
+        # Environment variable prefixes
+        env_prefix = ""
+        
+        # Field aliases for environment variables
+        fields = {
+            'database_url': {'env': ['DATABASE_URL', 'DB_URL']},
+            'redis_url': {'env': ['REDIS_URL', 'CACHE_URL']},
+            'secret_key': {'env': ['SECRET_KEY', 'JWT_SECRET']},
+            'api_key': {'env': ['API_KEY', 'OPENAI_API_KEY', 'LLM_API_KEY']},
+            'vault_token': {'env': ['VAULT_TOKEN', 'VAULT_AUTH_TOKEN']},
+        }
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
 
 
 # Global settings instance
@@ -275,6 +473,7 @@ def get_settings() -> Settings:
     return settings
 
 
+<<<<<<< HEAD
 async def get_settings_with_vault() -> Settings:
     """Get application settings with Vault integration."""
     from .services.vault_service import vault_service
@@ -308,6 +507,8 @@ async def get_settings_with_vault() -> Settings:
     return settings
 
 
+=======
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
 def is_development() -> bool:
     """Check if running in development mode."""
     return settings.environment.lower() in ["development", "dev", "local"]
@@ -344,8 +545,13 @@ def get_log_config() -> dict:
             },
             "json": {
                 "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+<<<<<<< HEAD
                 "format": "%(asctime)s %(name)s %(levelname)s %(message)s",
             },
+=======
+                "format": "%(asctime)s %(name)s %(levelname)s %(message)s"
+            }
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
         },
         "handlers": {
             "default": {
@@ -353,6 +559,7 @@ def get_log_config() -> dict:
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stdout",
             },
+<<<<<<< HEAD
             "file": (
                 {
                     "formatter": "json" if settings.log_format == "json" else "default",
@@ -364,6 +571,15 @@ def get_log_config() -> dict:
                 if settings.log_file
                 else None
             ),
+=======
+            "file": {
+                "formatter": "json" if settings.log_format == "json" else "default",
+                "class": "logging.handlers.RotatingFileHandler",
+                "filename": settings.log_file,
+                "maxBytes": 10485760,  # 10MB
+                "backupCount": 5,
+            } if settings.log_file else None,
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
         },
         "root": {
             "level": settings.log_level,
@@ -372,6 +588,7 @@ def get_log_config() -> dict:
     }
 
 
+<<<<<<< HEAD
 def validate_settings(settings_instance=None):
     """Validate critical settings."""
     if settings_instance is None:
@@ -415,16 +632,56 @@ def validate_settings(settings_instance=None):
 
     if settings_instance.log_file:
         log_dir = os.path.dirname(settings_instance.log_file)
+=======
+def validate_settings():
+    """Validate critical settings."""
+    errors = []
+    
+    # Check required settings
+    if not settings.secret_key or settings.secret_key == "your-secret-key-change-this-in-production":
+        errors.append("SECRET_KEY must be set to a secure value in production")
+    
+    if is_production():
+        if settings.debug:
+            errors.append("DEBUG should be False in production")
+        
+        if not settings.ssl_enabled:
+            errors.append("SSL should be enabled in production")
+        
+        if settings.cors_origins == ["*"]:
+            errors.append("CORS origins should be restricted in production")
+    
+    # Check Vault configuration
+    if settings.vault_url and not settings.vault_token and settings.vault_auth_method == "token":
+        errors.append("VAULT_TOKEN is required when using token authentication")
+    
+    # Check file paths
+    import os
+    if not os.path.exists(settings.upload_dir):
+        try:
+            os.makedirs(settings.upload_dir, exist_ok=True)
+        except Exception as e:
+            errors.append(f"Cannot create upload directory {settings.upload_dir}: {e}")
+    
+    if settings.log_file:
+        log_dir = os.path.dirname(settings.log_file)
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
         if not os.path.exists(log_dir):
             try:
                 os.makedirs(log_dir, exist_ok=True)
             except Exception as e:
                 errors.append(f"Cannot create log directory {log_dir}: {e}")
+<<<<<<< HEAD
 
     if errors:
         raise ValueError(
             "Configuration validation failed:\n" + "\n".join(f"- {error}" for error in errors)
         )
+=======
+    
+    if errors:
+        raise ValueError("Configuration validation failed:\n" + "\n".join(f"- {error}" for error in errors))
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
 
 
 # Validate settings on import
@@ -437,3 +694,7 @@ if not is_testing():
             print(f"Warning: {e}")
         else:
             raise
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3d3e703 (Initial commit with existing codebase)
