@@ -152,7 +152,7 @@ Ensure all questions are specific, actionable, and focused on gathering the info
             for q_data in response_data.get("questions", []):
                 try:
                     question = ClarificationQuestion(
-                        question_id=q_data.get("question_id", f"q_{len(questions)+1}"),
+                        question_id=q_data.get("question_id", f"q_{len(questions) + 1}"),
                         question=q_data["question"],
                         question_type=q_data.get("question_type", "requirement"),
                         importance=q_data.get("importance", "medium"),
@@ -281,7 +281,7 @@ Generate up to 3 follow-up questions that dive deeper into areas that need more 
             for q_data in response_data.get("questions", []):
                 try:
                     question = ClarificationQuestion(
-                        question_id=f"followup_{len(follow_ups)+1}",
+                        question_id=f"followup_{len(follow_ups) + 1}",
                         question=q_data["question"],
                         question_type=q_data.get("question_type", "follow_up"),
                         importance=q_data.get("importance", "medium"),

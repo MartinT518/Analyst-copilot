@@ -239,7 +239,7 @@ Respond with a JSON object containing:
                         references.extend(matching_refs)
 
                     check = VerificationCheck(
-                        check_id=check_data.get("check_id", f"check_{len(verification_checks)+1}"),
+                        check_id=check_data.get("check_id", f"check_{len(verification_checks) + 1}"),
                         check_type=check_data.get("check_type", "general"),
                         description=check_data.get("description", ""),
                         result=check_data.get("result", False),

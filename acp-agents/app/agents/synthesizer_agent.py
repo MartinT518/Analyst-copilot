@@ -223,7 +223,7 @@ Respond with a JSON object containing:
             for gap_data in response_data.get("gap_analysis", []):
                 try:
                     gap = GapAnalysis(
-                        gap_id=gap_data.get("gap_id", f"gap_{len(gap_analysis)+1}"),
+                        gap_id=gap_data.get("gap_id", f"gap_{len(gap_analysis) + 1}"),
                         gap_description=gap_data.get("gap_description", ""),
                         impact=gap_data.get("impact", "medium"),
                         effort=gap_data.get("effort", "medium"),
@@ -329,8 +329,8 @@ Respond with a JSON object containing:
         for i, section_data in enumerate(doc_data.get("sections", [])):
             try:
                 section = DocumentSection(
-                    section_id=section_data.get("section_id", f"section_{i+1}"),
-                    title=section_data.get("title", f"Section {i+1}"),
+                    section_id=section_data.get("section_id", f"section_{i + 1}"),
+                    title=section_data.get("title", f"Section {i + 1}"),
                     content=section_data.get("content", ""),
                     section_type=section_data.get("section_type", "general"),
                     order=section_data.get("order", i + 1),

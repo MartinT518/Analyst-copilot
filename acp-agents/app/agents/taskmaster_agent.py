@@ -233,7 +233,7 @@ Respond with a JSON object containing:
                     for ac_data in task_data.get("acceptance_criteria", []):
                         criteria = AcceptanceCriteria(
                             criteria_id=ac_data.get(
-                                "criteria_id", f"ac_{len(acceptance_criteria)+1}"
+                                "criteria_id", f"ac_{len(acceptance_criteria) + 1}"
                             ),
                             description=ac_data.get("description", ""),
                             test_scenario=ac_data.get("test_scenario", ""),
@@ -245,7 +245,7 @@ Respond with a JSON object containing:
                     technical_notes = []
                     for tn_data in task_data.get("technical_notes", []):
                         note = TechnicalNote(
-                            note_id=tn_data.get("note_id", f"tn_{len(technical_notes)+1}"),
+                            note_id=tn_data.get("note_id", f"tn_{len(technical_notes) + 1}"),
                             category=tn_data.get("category", "implementation"),
                             description=tn_data.get("description", ""),
                             impact=tn_data.get("impact", "medium"),
@@ -255,7 +255,7 @@ Respond with a JSON object containing:
 
                     # Create task
                     task = DeveloperTask(
-                        task_id=task_data.get("task_id", f"task_{len(tasks)+1}"),
+                        task_id=task_data.get("task_id", f"task_{len(tasks) + 1}"),
                         title=task_data.get("title", ""),
                         description=task_data.get("description", ""),
                         user_story=task_data.get("user_story", ""),

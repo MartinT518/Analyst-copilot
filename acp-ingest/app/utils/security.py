@@ -440,7 +440,7 @@ class SecureFileUpload:
 
         # Check file size
         if len(content) > cls.MAX_FILE_SIZE:
-            errors.append(f"File size exceeds maximum of {cls.MAX_FILE_SIZE // (1024*1024)}MB")
+            errors.append(f"File size exceeds maximum of {cls.MAX_FILE_SIZE // (1024 * 1024)}MB")
 
         # Basic content validation
         if len(content) == 0:
