@@ -7,7 +7,6 @@ on:
     branches: [ master, develop ]
 
 env:
-  PYTHON_VERSION_MATRIX: '["3.10", "3.11", "3.12"]'
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -26,7 +25,7 @@ jobs:
           python-version: '3.11'
 
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-lint-${{ hashFiles('**/requirements*.txt') }}
@@ -72,7 +71,7 @@ jobs:
           python-version: '3.11'
 
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-security-${{ hashFiles('**/requirements*.txt') }}
@@ -99,7 +98,7 @@ jobs:
           find . -name "requirements.txt" -exec safety check -r {} \;
 
       - name: Upload Bandit results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: bandit-results
@@ -148,7 +147,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
@@ -202,7 +201,7 @@ jobs:
           coverage xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           flags: unittests
@@ -210,7 +209,7 @@ jobs:
           fail_ci_if_error: true
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-${{ matrix.python-version }}
@@ -328,7 +327,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Cache Docker layers
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -388,7 +387,9 @@ jobs:
           for service in acp-ingest acp-agents acp-cli; do
             if [ -f "$service/requirements.txt" ]; then
               echo "Checking $service dependencies..."
-              pip-compile --dry-run "$service/requirements.txt" || exit 1
+              # Install dependencies and check for conflicts
+              pip install -r "$service/requirements.txt"
+              pip check
             fi
           done
 
@@ -433,8 +434,11 @@ jobs:
           # Simple check for broken internal links
           find . -name "*.md" -exec grep -l "](\./" {} \; | while read file; do
             echo "Checking links in $file"
+            # Get the directory of the current file
+            file_dir=$(dirname "$file")
             grep -o "](\.\/[^)]*)" "$file" | sed 's/](\.\///' | sed 's/)//' | while read link; do
-              if [ ! -f "$link" ] && [ ! -d "$link" ]; then
+              # Check if the link exists relative to the file's directory
+              if [ ! -f "$file_dir/$link" ] && [ ! -d "$file_dir/$link" ]; then
                 echo "Broken link in $file: $link"
                 exit 1
               fi
