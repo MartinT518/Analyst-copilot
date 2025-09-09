@@ -1,16 +1,17 @@
 """Service for retraining and tuning agent prompts and models based on feedback."""
 
 import json
-from typing import Dict, List, Any
-import structlog
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Embedding, GlobalAveragePooling1D
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
+from typing import Any, Dict, List
+
 import keras_tuner as kt
+import pandas as pd
+import structlog
+from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.layers import Dense, Dropout, Embedding, GlobalAveragePooling1D
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.text import Tokenizer
 
 from ..models import Feedback
 from ..schemas import RetrainingJobCreate

@@ -2,10 +2,11 @@
 
 import hashlib
 import json
-from typing import Dict, Any, Optional, List
 from datetime import datetime
-import structlog
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
+
+import structlog
 
 from ..config import get_settings
 from ..schemas.common_schemas import AgentType

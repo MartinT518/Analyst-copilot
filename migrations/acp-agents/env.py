@@ -3,16 +3,17 @@
 import os
 import sys
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
+
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # Add the project root to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 # Import the models (when they exist)
 try:
-    from acp_agents.app.models import Base
     from acp_agents.app.config import get_settings
+    from acp_agents.app.models import Base
 except ImportError:
     # Create a dummy Base for now
     from sqlalchemy.ext.declarative import declarative_base

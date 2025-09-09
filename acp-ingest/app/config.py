@@ -5,10 +5,13 @@ from typing import List, Optional
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
+
 =======
 import os
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseSettings, validator
+
 >>>>>>> 3d3e703 (Initial commit with existing codebase)
 
 

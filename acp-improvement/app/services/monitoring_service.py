@@ -1,9 +1,10 @@
 """Service for monitoring system performance and generating dashboards."""
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 import structlog
-from prometheus_client import Gauge, Counter, Histogram
 from grafana_client import GrafanaApi
+from prometheus_client import Counter, Gauge, Histogram
 
 from ..config import get_settings
 
