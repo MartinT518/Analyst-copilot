@@ -271,7 +271,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         # Get client identifier
         client_ip = request.client.host
         user_agent = request.headers.get('user-agent', '')
-        identifier = hashlib.md5(f"{client_ip}:{user_agent}".encode()).hexdigest()
+        identifier = hashlib.sha256(f"{client_ip}:{user_agent}".encode()).hexdigest()
         
         # Rate limiting
         if self.enable_rate_limiting and self.rate_limiter:
@@ -388,7 +388,7 @@ def rate_limit(
             else:
                 client_ip = request.client.host
                 user_agent = request.headers.get('user-agent', '')
-                identifier = hashlib.md5(f"{client_ip}:{user_agent}".encode()).hexdigest()
+                identifier = hashlib.sha256(f"{client_ip}:{user_agent}".encode()).hexdigest()
             
             # Check rate limit
             is_allowed, rate_info = rate_limiter.is_allowed(key, limit, window, identifier)
