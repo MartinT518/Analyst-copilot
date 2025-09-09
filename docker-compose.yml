@@ -6,50 +6,80 @@ services:
     image: postgres:15-alpine
     container_name: acp-postgres
     environment:
-      POSTGRES_DB: acp_db
-      POSTGRES_USER: acp_user
-      POSTGRES_PASSWORD: acp_password
+      POSTGRES_DB: ${DATABASE_NAME:-acp_db}
+      POSTGRES_USER: ${DATABASE_USER:-acp_user}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-acp_password}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - type: volume
+        source: postgres_data
+        target: /var/lib/postgresql/data
+      - type: bind
+        source: ./config/init.sql
+        target: /docker-entrypoint-initdb.d/init.sql
+        read_only: true
     ports:
-      - "5432:5432"
+      - "${DATABASE_PORT:-5432}:5432"
     networks:
       - acp-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U acp_user -d acp_db"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-acp_user} -d ${DATABASE_NAME:-acp_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: false
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
 
-  # Redis for background jobs
+  # Redis for background jobs and caching
   redis:
     image: redis:7-alpine
     container_name: acp-redis
-    ports:
-      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     volumes:
-      - redis_data:/data
+      - type: volume
+        source: redis_data
+        target: /data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
     networks:
       - acp-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: ["CMD", "redis-cli", "--no-auth-warning", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
 
   # Chroma Vector Database
   chroma:
     image: chromadb/chroma:latest
     container_name: acp-chroma
     environment:
-      - CHROMA_SERVER_HOST=0.0.0.0
-      - CHROMA_SERVER_HTTP_PORT=8000
-      - PERSIST_DIRECTORY=/chroma/chroma
+      CHROMA_SERVER_HOST: 0.0.0.0
+      CHROMA_SERVER_HTTP_PORT: 8000
+      PERSIST_DIRECTORY: /chroma/chroma
+      CHROMA_SERVER_AUTH_CREDENTIALS_PROVIDER: ${CHROMA_AUTH_PROVIDER:-}
+      CHROMA_SERVER_AUTH_CREDENTIALS: ${CHROMA_AUTH_CREDENTIALS:-}
     volumes:
-      - chroma_data:/chroma/chroma
+      - type: volume
+        source: chroma_data
+        target: /chroma/chroma
     ports:
-      - "8001:8000"
+      - "${CHROMA_PORT:-8001}:8000"
     networks:
       - acp-network
     healthcheck:
@@ -57,30 +87,71 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
 
   # ACP Ingest Service
   acp-ingest:
     build:
       context: ./acp-ingest
       dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        VCS_REF: ${VCS_REF:-}
+        VERSION: ${VERSION:-latest}
+    image: ${INGEST_IMAGE:-acp-ingest:latest}
     container_name: acp-ingest
     environment:
-      - DATABASE_URL=postgresql://acp_user:acp_password@postgres:5432/acp_db
-      - REDIS_URL=redis://redis:6379/0
-      - CHROMA_HOST=chroma
-      - CHROMA_PORT=8000
-      - LLM_ENDPOINT=${LLM_ENDPOINT:-https://ai.int.cyber.ee/openai}
-      - EMBEDDING_ENDPOINT=${EMBEDDING_ENDPOINT:-http://ai.int.cyber.ee:8083/v1}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=${DEBUG:-false}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - LOG_FORMAT=${LOG_FORMAT:-json}
+      # Database
+      DATABASE_URL: postgresql://${DATABASE_USER:-acp_user}:${DATABASE_PASSWORD:-acp_password}@postgres:5432/${DATABASE_NAME:-acp_db}
+      DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
+      DATABASE_MAX_OVERFLOW: ${DATABASE_MAX_OVERFLOW:-20}
+      
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      
+      # Vector Database
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
+      
+      # LLM Services
+      LLM_ENDPOINT: ${LLM_ENDPOINT:-https://ai.int.cyber.ee/openai}
+      EMBEDDING_ENDPOINT: ${EMBEDDING_ENDPOINT:-http://ai.int.cyber.ee:8083/v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-1440}
+      
+      # Application
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      
+      # File Processing
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-100MB}
+      ALLOWED_EXTENSIONS: ${ALLOWED_EXTENSIONS:-csv,html,htm,xml,pdf,md,txt,zip,json}
+      
+      # PII Detection
+      PII_DETECTION_ENABLED: ${PII_DETECTION_ENABLED:-true}
+      PII_REDACTION_ENABLED: ${PII_REDACTION_ENABLED:-true}
+      
+      # Monitoring
+      METRICS_ENABLED: ${METRICS_ENABLED:-true}
+      PROMETHEUS_ENABLED: ${PROMETHEUS_ENABLED:-false}
     volumes:
-      - ./uploads:/app/uploads
-      - ./logs:/app/logs
+      - type: bind
+        source: ./uploads
+        target: /app/uploads
+      - type: bind
+        source: ./logs
+        target: /app/logs
     ports:
-      - "8000:8000"
+      - "${INGEST_SERVICE_PORT:-8000}:8000"
     networks:
       - acp-network
     depends_on:
@@ -95,29 +166,60 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
 
   # ACP Agents Service
   acp-agents:
     build:
       context: ./acp-agents
       dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        VCS_REF: ${VCS_REF:-}
+        VERSION: ${VERSION:-latest}
+    image: ${AGENTS_IMAGE:-acp-agents:latest}
     container_name: acp-agents
     environment:
-      - DATABASE_URL=postgresql://acp_user:acp_password@postgres:5432/acp_db
-      - REDIS_URL=redis://redis:6379/1
-      - LLM_ENDPOINT=${LLM_ENDPOINT:-https://ai.int.cyber.ee/openai}
-      - EMBEDDING_ENDPOINT=${EMBEDDING_ENDPOINT:-http://ai.int.cyber.ee:8083/v1}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SECRET_KEY=${SECRET_KEY}
-      - INGEST_SERVICE_URL=http://acp-ingest:8000
-      - DEBUG=${DEBUG:-false}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - LOG_FORMAT=${LOG_FORMAT:-json}
+      # Database
+      DATABASE_URL: postgresql://${DATABASE_USER:-acp_user}:${DATABASE_PASSWORD:-acp_password}@postgres:5432/${DATABASE_NAME:-acp_db}
+      
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/1
+      
+      # LLM Services
+      LLM_ENDPOINT: ${LLM_ENDPOINT:-https://ai.int.cyber.ee/openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      LOCAL_LLM_URL: ${LOCAL_LLM_URL:-}
+      LOCAL_LLM_API_KEY: ${LOCAL_LLM_API_KEY:-}
+      
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      
+      # Application
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      
+      # Monitoring
+      METRICS_ENABLED: ${METRICS_ENABLED:-true}
     volumes:
-      - ./logs:/app/logs
+      - type: bind
+        source: ./logs
+        target: /app/logs
     ports:
-      - "8001:8001"
+      - "${AGENTS_SERVICE_PORT:-8001}:8001"
     networks:
       - acp-network
     depends_on:
@@ -125,35 +227,72 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      acp-ingest:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.5'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
 
   # Background Worker (Celery)
   acp-worker:
     build:
       context: ./acp-ingest
       dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        VCS_REF: ${VCS_REF:-}
+        VERSION: ${VERSION:-latest}
+    image: ${INGEST_IMAGE:-acp-ingest:latest}
     container_name: acp-worker
-    command: celery -A app.worker worker --loglevel=info
+    command: ["celery", "-A", "app.worker", "worker", "--loglevel=info", "--concurrency=4"]
     environment:
-      - DATABASE_URL=postgresql://acp_user:acp_password@postgres:5432/acp_db
-      - REDIS_URL=redis://redis:6379/0
-      - CHROMA_HOST=chroma
-      - CHROMA_PORT=8000
-      - LLM_ENDPOINT=${LLM_ENDPOINT:-https://ai.int.cyber.ee/openai}
-      - EMBEDDING_ENDPOINT=${EMBEDDING_ENDPOINT:-http://ai.int.cyber.ee:8083/v1}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - SECRET_KEY=${SECRET_KEY}
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Database
+      DATABASE_URL: postgresql://${DATABASE_USER:-acp_user}:${DATABASE_PASSWORD:-acp_password}@postgres:5432/${DATABASE_NAME:-acp_db}
+      
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/2
+      
+      # Vector Database
+      CHROMA_HOST: chroma
+      CHROMA_PORT: 8000
+      
+      # LLM Services
+      LLM_ENDPOINT: ${LLM_ENDPOINT:-https://ai.int.cyber.ee/openai}
+      EMBEDDING_ENDPOINT: ${EMBEDDING_ENDPOINT:-http://ai.int.cyber.ee:8083/v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      
+      # Security
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      
+      # Application
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      
+      # Worker Settings
+      MAX_CONCURRENT_JOBS: ${MAX_CONCURRENT_JOBS:-5}
+      INGESTION_JOB_TIMEOUT: ${INGESTION_JOB_TIMEOUT:-3600}
     volumes:
-      - ./uploads:/app/uploads
-      - ./logs:/app/logs
+      - type: bind
+        source: ./uploads
+        target: /app/uploads
+      - type: bind
+        source: ./logs
+        target: /app/logs
     networks:
       - acp-network
     depends_on:
@@ -164,39 +303,69 @@ services:
       chroma:
         condition: service_healthy
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '1.0'
 
   # Celery Flower (Task Monitor)
   flower:
     build:
       context: ./acp-ingest
       dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        VCS_REF: ${VCS_REF:-}
+        VERSION: ${VERSION:-latest}
+    image: ${INGEST_IMAGE:-acp-ingest:latest}
     container_name: acp-flower
-    command: celery -A app.worker flower --port=5555
+    command: ["celery", "-A", "app.worker", "flower", "--port=5555", "--broker=redis://:${REDIS_PASSWORD:-}@redis:6379/1"]
     environment:
-      - REDIS_URL=redis://redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/1
+      FLOWER_BASIC_AUTH: ${FLOWER_BASIC_AUTH:-admin:admin}
     ports:
-      - "5555:5555"
+      - "${FLOWER_PORT:-5555}:5555"
     networks:
       - acp-network
     depends_on:
       - redis
       - acp-worker
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    profiles:
+      - monitoring
 
-  # Nginx Reverse Proxy (Optional)
+  # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
     container_name: acp-nginx
     volumes:
-      - ./config/nginx.conf:/etc/nginx/nginx.conf:ro
+      - type: bind
+        source: ./config/nginx.conf
+        target: /etc/nginx/nginx.conf
+        read_only: true
+      - type: bind
+        source: ./config/ssl
+        target: /etc/nginx/ssl
+        read_only: true
     ports:
-      - "80:80"
-      - "443:443"
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     networks:
       - acp-network
     depends_on:
       - acp-ingest
+      - acp-agents
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     profiles:
       - production
 
@@ -204,11 +373,17 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: acp-prometheus
+    user: "65534:65534"
     volumes:
-      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
+      - type: bind
+        source: ./config/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+      - type: volume
+        source: prometheus_data
+        target: /prometheus
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT:-9090}:9090"
     networks:
       - acp-network
     command:
@@ -218,7 +393,10 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     profiles:
       - monitoring
 
@@ -226,34 +404,71 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: acp-grafana
+    user: "472:472"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_INSTALL_PLUGINS: ${GRAFANA_PLUGINS:-}
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - type: volume
+        source: grafana_data
+        target: /var/lib/grafana
+      - type: bind
+        source: ./config/grafana/dashboards
+        target: /etc/grafana/provisioning/dashboards
+        read_only: true
+      - type: bind
+        source: ./config/grafana/datasources
+        target: /etc/grafana/provisioning/datasources
+        read_only: true
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT:-3000}:3000"
     networks:
       - acp-network
     depends_on:
       - prometheus
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     profiles:
       - monitoring
 
 volumes:
   postgres_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-./data}/postgres
   redis_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-./data}/redis
   chroma_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-./data}/chroma
   prometheus_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-./data}/prometheus
   grafana_data:
     driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_DIR:-./data}/grafana
 
 networks:
   acp-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
