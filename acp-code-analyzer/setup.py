@@ -1,4 +1,4 @@
-"""Setup script for ACP Ingest CLI."""
+"""Setup script for ACP Code Analyzer service."""
 
 from setuptools import find_packages, setup
 
@@ -6,14 +6,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="acp-ingest",
+    name="acp-code-analyzer",
     version="1.0.0",
     author="Analyst Copilot Team",
     author_email="team@analystcopilot.com",
-    description="On-premises AI-powered analysis system for processing exported data",
+    description="AI-powered code analysis and understanding service",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/analystcopilot/acp-ingest",
+    url="https://github.com/analystcopilot/acp-code-analyzer",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -27,14 +27,15 @@ setup(
     install_requires=[
         "fastapi==0.104.1",
         "uvicorn[standard]==0.24.0",
-        "click==8.1.7",
-        "rich==13.7.0",
-        "httpx==0.25.2",
         "pydantic==2.9.2",
+        "pydantic-settings==2.1.0",
+        "ast-tools==0.1.8",
+        "tree-sitter==0.20.4",
+        "tree-sitter-python==0.21.0",
     ],
     entry_points={
         "console_scripts": [
-            "acp=app.cli:cli",
+            "acp-code-analyzer=app.main:main",
         ],
     },
     include_package_data=True,
@@ -42,3 +43,4 @@ setup(
         "app": ["*.py"],
     },
 )
+

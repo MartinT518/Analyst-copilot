@@ -1,0 +1,2 @@
+[console_scripts]
+acp-agents = app.main:main

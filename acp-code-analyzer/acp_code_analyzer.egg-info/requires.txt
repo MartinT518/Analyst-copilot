@@ -1,0 +1,7 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.9.2
+pydantic-settings==2.1.0
+ast-tools==0.1.8
+tree-sitter==0.20.4
+tree-sitter-python==0.21.0
