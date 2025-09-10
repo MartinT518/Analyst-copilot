@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from .agent_schemas import ClarifierOutput, SynthesizerOutput, TaskmasterOutput, VerifierOutput
 from .common_schemas import AgentType, Priority, WorkflowContext, WorkflowStatus, WorkflowStep
@@ -176,12 +176,13 @@ class WorkflowExecution(BaseModel):
     # Metadata
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Workflow metadata")
 
-    @validator("duration_seconds", pre=True, always=True)
-    def calculate_duration(cls, v, values):
+    @field_validator("duration_seconds", mode="before")
+    @classmethod
+    def calculate_duration(cls, v, info):
         """Calculate duration if not provided."""
-        if v is None and "started_at" in values and "completed_at" in values:
-            started = values["started_at"]
-            completed = values["completed_at"]
+        if v is None and info.data and "started_at" in info.data and "completed_at" in info.data:
+            started = info.data["started_at"]
+            completed = info.data["completed_at"]
             if started and completed:
                 return (completed - started).total_seconds()
         return v

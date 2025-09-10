@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class WorkflowStatus(str, Enum):
@@ -71,11 +71,12 @@ class BaseAgentOutput(BaseModel):
         default_factory=datetime.utcnow, description="When this output was generated"
     )
 
-    @validator("confidence_level", pre=True, always=True)
-    def set_confidence_level(cls, v, values):
+    @field_validator("confidence_level", mode="before")
+    @classmethod
+    def set_confidence_level(cls, v, info):
         """Automatically set confidence level based on confidence score."""
-        if "confidence" in values:
-            confidence = values["confidence"]
+        if info.data and "confidence" in info.data:
+            confidence = info.data["confidence"]
             if confidence >= 0.9:
                 return ConfidenceLevel.VERY_HIGH
             elif confidence >= 0.75:
@@ -222,11 +223,12 @@ class ListResponse(BaseModel):
     size: int = Field(..., description="Page size")
     pages: int = Field(..., description="Total number of pages")
 
-    @validator("pages", pre=True, always=True)
-    def calculate_pages(cls, v, values):
+    @field_validator("pages", mode="before")
+    @classmethod
+    def calculate_pages(cls, v, info):
         """Calculate total pages based on total and size."""
-        if "total" in values and "size" in values:
-            total = values["total"]
-            size = values["size"]
+        if info.data and "total" in info.data and "size" in info.data:
+            total = info.data["total"]
+            size = info.data["size"]
             return (total + size - 1) // size if total > 0 else 0
         return v
