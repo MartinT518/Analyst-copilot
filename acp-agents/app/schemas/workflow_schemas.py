@@ -4,10 +4,90 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from .agent_schemas import ClarifierOutput, SynthesizerOutput, TaskmasterOutput, VerifierOutput
 from .common_schemas import AgentType, Priority, WorkflowContext, WorkflowStatus, WorkflowStep
+
+
+class ClientAnswer(BaseModel):
+    """A single client answer."""
+
+    question_id: str = Field(..., description="Question identifier")
+    answer: str = Field(..., description="Client's answer")
+    confidence: Optional[float] = Field(None, description="Client's confidence in the answer (0-1)")
+
+
+class ClientAnswers(BaseModel):
+    """Collection of client answers."""
+
+    answers: List[ClientAnswer] = Field(..., description="List of client answers")
+    additional_context: Optional[str] = Field(
+        None, description="Additional context provided by client"
+    )
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="When answers were submitted"
+    )
+
+
+class ClarifyingQuestion(BaseModel):
+    """A single clarifying question."""
+
+    question_id: str = Field(..., description="Unique question identifier")
+    question: str = Field(..., description="The clarifying question text")
+    question_type: str = Field(
+        "open", description="Type of question (open, multiple_choice, yes_no)"
+    )
+    options: Optional[List[str]] = Field(None, description="Options for multiple choice questions")
+    required: bool = Field(True, description="Whether this question is required")
+    context: Optional[str] = Field(None, description="Additional context for the question")
+
+
+class ClarifyingQuestions(BaseModel):
+    """Collection of clarifying questions."""
+
+    questions: List[ClarifyingQuestion] = Field(..., description="List of clarifying questions")
+    instructions: str = Field(..., description="Instructions for answering questions")
+    estimated_time: Optional[int] = Field(None, description="Estimated time to answer in minutes")
+
+
+class ASISDocument(BaseModel):
+    """AS-IS (current state) document."""
+
+    title: str = Field(..., description="Document title")
+    content: str = Field(..., description="Document content")
+    sections: List[str] = Field(default_factory=list, description="Document sections")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Document metadata")
+
+
+class TOBEDocument(BaseModel):
+    """TO-BE (target state) document."""
+
+    title: str = Field(..., description="Document title")
+    content: str = Field(..., description="Document content")
+    sections: List[str] = Field(default_factory=list, description="Document sections")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Document metadata")
+
+
+class DeveloperTask(BaseModel):
+    """A developer task."""
+
+    task_id: str = Field(..., description="Unique task identifier")
+    title: str = Field(..., description="Task title")
+    description: str = Field(..., description="Task description")
+    priority: Priority = Field(default=Priority.MEDIUM, description="Task priority")
+    estimated_hours: Optional[float] = Field(None, description="Estimated hours to complete")
+    dependencies: List[str] = Field(default_factory=list, description="Task dependencies")
+
+
+class VerificationFlag(BaseModel):
+    """A verification flag."""
+
+    flag_id: str = Field(..., description="Unique flag identifier")
+    flag_type: str = Field(..., description="Type of verification flag")
+    message: str = Field(..., description="Flag message")
+    severity: str = Field(default="warning", description="Flag severity")
+    resolved: bool = Field(default=False, description="Whether the flag is resolved")
 
 
 class WorkflowType(str, Enum):
@@ -96,12 +176,13 @@ class WorkflowExecution(BaseModel):
     # Metadata
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Workflow metadata")
 
-    @validator("duration_seconds", pre=True, always=True)
-    def calculate_duration(cls, v, values):
+    @field_validator("duration_seconds", mode="before")
+    @classmethod
+    def calculate_duration(cls, v, info):
         """Calculate duration if not provided."""
-        if v is None and "started_at" in values and "completed_at" in values:
-            started = values["started_at"]
-            completed = values["completed_at"]
+        if v is None and info.data and "started_at" in info.data and "completed_at" in info.data:
+            started = info.data["started_at"]
+            completed = info.data["completed_at"]
             if started and completed:
                 return (completed - started).total_seconds()
         return v

@@ -308,7 +308,7 @@ class SecurityEvent(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     ip_address = Column(String(45))
     user_agent = Column(Text)
-    metadata = Column(JSON)
+    event_metadata = Column(JSON)
     status = Column(
         String(20), default="open", index=True
     )  # open, investigating, resolved, false_positive

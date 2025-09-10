@@ -1,0 +1,16 @@
+README.md
+setup.py
+acp_code_analyzer.egg-info/PKG-INFO
+acp_code_analyzer.egg-info/SOURCES.txt
+acp_code_analyzer.egg-info/dependency_links.txt
+acp_code_analyzer.egg-info/entry_points.txt
+acp_code_analyzer.egg-info/requires.txt
+acp_code_analyzer.egg-info/top_level.txt
+app/__init__.py
+app/config.py
+app/main.py
+app/parsers/__init__.py
+app/services/__init__.py
+app/services/code_analysis_service.py
+app/services/schema_analysis_service.py
+app/utils/__init__.py

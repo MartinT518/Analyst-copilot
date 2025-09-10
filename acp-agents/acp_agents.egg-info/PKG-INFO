@@ -1,0 +1,59 @@
+Metadata-Version: 2.4
+Name: acp-agents
+Version: 1.0.0
+Summary: Multi-agent orchestration system for AI-powered analysis
+Home-page: https://github.com/analystcopilot/acp-agents
+Author: Analyst Copilot Team
+Author-email: team@analystcopilot.com
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi==0.104.1
+Requires-Dist: uvicorn[standard]==0.24.0
+Requires-Dist: pydantic==2.9.2
+Requires-Dist: pydantic-settings==2.1.0
+Requires-Dist: langgraph==0.2.16
+Requires-Dist: langchain==0.2.11
+Requires-Dist: langchain-core==0.2.38
+Requires-Dist: langchain-community==0.2.10
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# ACP Agents Service
+
+Multi-agent orchestration system for AI-powered analysis in the Analyst Copilot platform.
+
+## Features
+
+- Multi-agent workflow orchestration
+- LangGraph-based agent coordination
+- FastAPI REST API
+- Agent communication and state management
+
+## Installation
+
+```bash
+pip install -e .
+```
+
+## Usage
+
+```bash
+acp-agents
+```
+
+## Development
+
+This service is part of the Analyst Copilot platform.

@@ -1,0 +1,58 @@
+Metadata-Version: 2.4
+Name: acp-ingest
+Version: 1.0.0
+Summary: On-premises AI-powered analysis system for processing exported data
+Home-page: https://github.com/analystcopilot/acp-ingest
+Author: Analyst Copilot Team
+Author-email: team@analystcopilot.com
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi==0.104.1
+Requires-Dist: uvicorn[standard]==0.24.0
+Requires-Dist: click==8.1.7
+Requires-Dist: rich==13.7.0
+Requires-Dist: httpx==0.25.2
+Requires-Dist: pydantic==2.9.2
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# ACP Ingest Service
+
+AI-powered data ingestion and processing service for the Analyst Copilot platform.
+
+## Features
+
+- FastAPI-based REST API
+- Data ingestion from multiple sources
+- Vector database integration
+- Authentication and authorization
+- Audit logging
+
+## Installation
+
+```bash
+pip install -e .
+```
+
+## Usage
+
+```bash
+acp-ingest
+```
+
+## Development
+
+This service is part of the Analyst Copilot platform.

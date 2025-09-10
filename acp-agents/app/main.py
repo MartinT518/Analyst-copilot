@@ -355,8 +355,8 @@ async def list_workflows(skip: int = 0, limit: int = 10, status: str = None):
         raise HTTPException(status_code=500, detail=f"Failed to list workflows: {str(e)}")
 
 
-if __name__ == "__main__":
-    # Run with uvicorn
+def main():
+    """Main entry point for the application."""
     uvicorn.run(
         "app.main:app",
         host=settings.host,  # nosec B104 - configurable via settings
@@ -365,3 +365,7 @@ if __name__ == "__main__":
         log_level=settings.log_level.lower(),
         access_log=True,
     )
+
+
+if __name__ == "__main__":
+    main()

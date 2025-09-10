@@ -18,6 +18,8 @@ extend-exclude = '''
   | dist
   | migrations
 )/
+# files
+| setup\.py
 '''
 
 [tool.isort]
