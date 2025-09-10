@@ -2,7 +2,8 @@
 
 from typing import List, Optional
 
-from pydantic import BaseSettings, validator
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -102,39 +103,33 @@ class Settings(BaseSettings):
     dev_mock_llm: bool = False
     dev_debug_workflows: bool = False
 
-    @validator("cors_origins", pre=True)
+    @field_validator("cors_origins", mode="before")
+    @classmethod
     def parse_cors_origins(cls, v):
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         return v
 
-    @validator("cors_methods", pre=True)
+    @field_validator("cors_methods", mode="before")
+    @classmethod
     def parse_cors_methods(cls, v):
         if isinstance(v, str):
             return [method.strip().upper() for method in v.split(",") if method.strip()]
         return v
 
-    @validator("cors_headers", pre=True)
+    @field_validator("cors_headers", mode="before")
+    @classmethod
     def parse_cors_headers(cls, v):
         if isinstance(v, str):
             return [header.strip() for header in v.split(",") if header.strip()]
         return v
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
-
-        # Environment variable prefixes
-        env_prefix = "AGENTS_"
-
-        # Field aliases for environment variables
-        fields = {
-            "database_url": {"env": ["AGENTS_DATABASE_URL", "DATABASE_URL"]},
-            "redis_url": {"env": ["AGENTS_REDIS_URL", "REDIS_URL"]},
-            "secret_key": {"env": ["AGENTS_SECRET_KEY", "SECRET_KEY"]},
-            "api_key": {"env": ["AGENTS_API_KEY", "API_KEY", "OPENAI_API_KEY", "LLM_API_KEY"]},
-        }
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False,
+        "env_prefix": "AGENTS_",
+    }
 
 
 # Global settings instance
@@ -158,7 +153,8 @@ def is_production() -> bool:
 
 def is_testing() -> bool:
     """Check if running in testing mode."""
-    return settings.environment.lower() in ["testing", "test"]
+    import os
+    return os.getenv("AGENTS_ENVIRONMENT", "production").lower() in ["testing", "test"]
 
 
 def get_database_url() -> str:

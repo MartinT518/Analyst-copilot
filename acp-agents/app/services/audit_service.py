@@ -1,7 +1,7 @@
 """Audit service for workflow logging."""
 
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import structlog
 
