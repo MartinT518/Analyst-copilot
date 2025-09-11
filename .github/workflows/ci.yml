@@ -204,8 +204,6 @@ jobs:
           # Install dependencies for each service
           if [ -f acp-ingest/requirements.txt ]; then
             pip install --only-binary=:all: --cache-dir ~/.cache/pip -r acp-ingest/requirements.txt
-            # Install langdetect separately as it doesn't have pre-built wheels
-            pip install langdetect==1.0.9
           fi
           if [ -f acp-agents/requirements.txt ]; then
             pip install --only-binary=:all: --cache-dir ~/.cache/pip -r acp-agents/requirements.txt
