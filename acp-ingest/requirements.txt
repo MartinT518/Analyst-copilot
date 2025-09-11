@@ -122,7 +122,6 @@ sentry-sdk[fastapi]==1.38.0
 # Text processing and NLP
 nltk==3.8.1
 textstat==0.7.3
-langdetect==1.0.9
 
 # Machine learning for enhanced PII detection
 scikit-learn==1.3.2
