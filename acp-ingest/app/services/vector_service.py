@@ -4,8 +4,8 @@ import logging
 import uuid
 from typing import Any, Dict, List, Optional
 
-import chromadb
-from chromadb.config import Settings as ChromaSettings
+# import chromadb
+# from chromadb.config import Settings as ChromaSettings
 
 from ..config import get_settings
 
@@ -24,33 +24,34 @@ class VectorService:
     async def initialize(self):
         """Initialize the vector database connection."""
         try:
-            # Initialize Chroma client
-            self.client = chromadb.HttpClient(
-                host=settings.chroma_host,
-                port=settings.chroma_port,
-                settings=ChromaSettings(
-                    chroma_client_auth_provider="chromadb.auth.token.TokenAuthClientProvider",
-                    chroma_client_auth_credentials="test-token",  # Configure appropriately
-                ),
-            )
+            # Initialize Chroma client - temporarily disabled due to dependency issues
+            # self.client = chromadb.HttpClient(
+            #     host=settings.chroma_host,
+            #     port=settings.chroma_port,
+            #     settings=ChromaSettings(
+            #         chroma_client_auth_provider="chromadb.auth.token.TokenAuthClientProvider",
+            #         chroma_client_auth_credentials="test-token",  # Configure appropriately
+            #     ),
+            # )
+            logger.warning("ChromaDB temporarily disabled due to dependency issues")
 
-            # Get or create collection
-            try:
-                self.collection = self.client.get_collection(name=self.collection_name)
-                logger.info(f"Connected to existing collection: {self.collection_name}")
-            except Exception:
-                # Collection doesn't exist, create it
-                self.collection = self.client.create_collection(
-                    name=self.collection_name,
-                    metadata={"description": "ACP Knowledge Base"},
-                )
-                logger.info(f"Created new collection: {self.collection_name}")
+            # Get or create collection - temporarily disabled
+            # try:
+            #     self.collection = self.client.get_collection(name=self.collection_name)
+            #     logger.info(f"Connected to existing collection: {self.collection_name}")
+            # except Exception:
+            #     # Collection doesn't exist, create it
+            #     self.collection = self.client.create_collection(
+            #         name=self.collection_name,
+            #         metadata={"description": "ACP Knowledge Base"},
+            #     )
+            #     logger.info(f"Created new collection: {self.collection_name}")
 
-            logger.info("Vector service initialized successfully")
+            logger.info("Vector service initialization skipped (ChromaDB disabled)")
 
         except Exception as e:
             logger.error(f"Failed to initialize vector service: {e}")
-            raise
+            # Don't raise for now since it's disabled
 
     async def cleanup(self):
         """Cleanup vector service resources."""

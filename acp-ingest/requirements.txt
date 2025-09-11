@@ -20,7 +20,7 @@ bcrypt==4.1.2
 psycopg2-binary==2.9.10
 sqlalchemy==2.0.23
 alembic==1.13.1
-chromadb==0.5.15
+# chromadb==0.5.20  # Temporarily disabled due to PyPika dependency issues
 
 # Vault integration for secrets management
 hvac==2.0.0
