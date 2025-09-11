@@ -186,7 +186,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .pytest_cache
-          key: ${{ runner.os }}-pytest-${{ matrix.python-version }}-${{ github.sha }}
+          key: ${{ runner.os }}-pytest-${{ matrix.python-version }}-${{ hashFiles('**/test_*.py', '**/*_test.py', '**/conftest.py') }}
           restore-keys: |
             ${{ runner.os }}-pytest-${{ matrix.python-version }}-
             ${{ runner.os }}-pytest-
