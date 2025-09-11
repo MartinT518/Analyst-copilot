@@ -1,22 +1,22 @@
 # Core dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
-pydantic==2.5.0
+pydantic==2.9.2
 pydantic-settings==2.1.0
 
 # Database and ORM
 sqlalchemy==2.0.23
 alembic==1.13.1
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.10
 
 # Code analysis
-ast-tools==0.2.0
+ast-tools==0.1.8
 tree-sitter==0.20.4
-tree-sitter-python==0.20.4
-tree-sitter-javascript==0.20.3
-tree-sitter-java==0.20.2
-tree-sitter-go==0.20.0
-tree-sitter-rust==0.20.4
+tree-sitter-python==0.21.0
+tree-sitter-javascript==0.21.0
+tree-sitter-java==0.21.0
+tree-sitter-go==0.21.0
+tree-sitter-rust==0.21.1
 libcst==1.1.0
 jedi==0.19.1
 rope==1.11.0
@@ -42,7 +42,6 @@ prometheus-client==0.19.0
 pytest==7.4.3
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
-httpx==0.25.2
 
 # Development
 black==23.11.0

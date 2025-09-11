@@ -30,7 +30,7 @@ setup(
         "click==8.1.7",
         "rich==13.7.0",
         "httpx==0.25.2",
-        "pydantic==2.5.0",
+        "pydantic==2.9.2",
     ],
     entry_points={
         "console_scripts": [
