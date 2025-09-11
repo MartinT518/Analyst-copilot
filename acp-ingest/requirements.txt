@@ -21,6 +21,7 @@ psycopg2-binary==2.9.10
 sqlalchemy==2.0.23
 alembic==1.13.1
 chromadb==0.4.24
+PyPika==0.48.9
 
 # Vault integration for secrets management
 hvac==2.0.0
