@@ -4,10 +4,10 @@ import logging
 import uuid
 from typing import Any, Dict, List, Optional
 
+from ..config import get_settings
+
 # import chromadb
 # from chromadb.config import Settings as ChromaSettings
-
-from ..config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
