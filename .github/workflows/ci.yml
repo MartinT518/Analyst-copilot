@@ -37,18 +37,8 @@ jobs:
       - name: Validate each package individually with pip index versions
         run: |
           echo "🔍 Validating each package individually..."
-          # Extract package names from .in files and validate each one
-          for pkg in $(grep -v '^#' requirements.in requirements-dev.in | grep -v '^-r' | grep -v '^$' | grep -v '^[[:space:]]*$' | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1 | cut -d'[' -f1 | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//' | sort -u); do
-            # Skip empty lines and non-package entries
-            if [ -n "$pkg" ] && [ "$pkg" != "requirements.in" ] && [ "$pkg" != "requirements-dev.in" ]; then
-              echo "Checking package: $pkg"
-              pip index versions "$pkg" || {
-                echo "❌ Package $pkg does not exist on PyPI or has no compatible versions"
-                exit 1
-              }
-            fi
-          done
-          echo "✅ All packages validated successfully!"
+          # Use our validation script which properly extracts package names
+          python scripts/validate_dependencies.py --individual-check
 
       - name: Verify pip-compile works without errors
         run: |
