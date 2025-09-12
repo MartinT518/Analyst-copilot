@@ -2,10 +2,10 @@
 
 import logging
 from typing import Any, Dict, List, Optional
+from xml.etree.ElementTree import Element
 
 from bs4 import BeautifulSoup, Tag
 from defusedxml import ElementTree as ET
-from xml.etree.ElementTree import Element
 
 logger = logging.getLogger(__name__)
 
