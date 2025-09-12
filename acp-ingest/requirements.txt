@@ -112,9 +112,9 @@ autoflake==2.3.1
 factory-boy==3.3.0
 
 # Type stubs for MyPy
-types-Markdown==3.7.0.20240822
-types-PyYAML==6.0.12.20240917
-types-aiofiles==23.2.0.20240623
+types-Markdown>=3.7.0
+types-PyYAML>=6.0.12
+types-aiofiles>=23.2.0
 
 # Error tracking and APM
 sentry-sdk[fastapi]==1.38.0
