@@ -7,6 +7,7 @@ exist on PyPI and are compatible with Python 3.10, 3.11, and 3.12.
 
 Usage:
     python scripts/validate_dependencies.py
+    python scripts/validate_dependencies.py --individual-check
 """
 
 import re
@@ -204,10 +205,53 @@ class DependencyValidator:
             return 1
 
 
+def individual_check():
+    """Run individual package validation using pip index versions."""
+    validator = DependencyValidator()
+    packages = set()
+    for file_path in validator.requirements_files:
+        packages.update(validator.extract_package_names(file_path))
+
+    print("Starting individual package validation...")
+    print(f"Found {len(packages)} packages to validate")
+
+    failed_packages = []
+
+    for i, package in enumerate(packages, 1):
+        print(f"[{i}/{len(packages)}] Checking package: {package}")
+        try:
+            result = subprocess.run(
+                ["pip", "index", "versions", package], capture_output=True, text=True, timeout=30
+            )
+            if result.returncode != 0:
+                print(f"  FAIL: {package} - {result.stderr.strip()}")
+                failed_packages.append(package)
+            else:
+                print(f"  OK: {package}")
+        except subprocess.TimeoutExpired:
+            print(f"  TIMEOUT: {package} - Request timed out")
+            failed_packages.append(package)
+        except Exception as e:
+            print(f"  ERROR: {package} - {str(e)}")
+            failed_packages.append(package)
+
+    if failed_packages:
+        print(f"\nFAILED PACKAGES: {len(failed_packages)}")
+        for pkg in failed_packages:
+            print(f"  - {pkg}")
+        return 1
+    else:
+        print(f"\nALL PACKAGES VALID!")
+        return 0
+
+
 def main():
     """Main entry point."""
-    validator = DependencyValidator()
-    exit_code = validator.run_validation()
+    if len(sys.argv) > 1 and sys.argv[1] == "--individual-check":
+        exit_code = individual_check()
+    else:
+        validator = DependencyValidator()
+        exit_code = validator.run_validation()
     sys.exit(exit_code)
 
 

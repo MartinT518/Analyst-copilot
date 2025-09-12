@@ -386,7 +386,7 @@ def validate_settings(settings_instance=None):
     ):
         errors.append("SECRET_KEY must be set to a secure value in production")
 
-    if settings_instance.is_production():
+    if is_production():
         if settings_instance.debug:
             errors.append("DEBUG should be False in production")
 
