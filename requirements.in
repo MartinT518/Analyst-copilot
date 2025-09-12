@@ -65,12 +65,8 @@ psutil>=5.9.6
 opentelemetry-api>=1.21.0
 opentelemetry-sdk>=1.21.0
 opentelemetry-exporter-otlp-proto-grpc>=1.21.0
-opentelemetry-instrumentation-fastapi>=0.42b0
-opentelemetry-instrumentation-httpx>=0.42b0
-opentelemetry-instrumentation-sqlalchemy>=0.42b0
-opentelemetry-instrumentation-redis>=0.42b0
-opentelemetry-instrumentation-psycopg2>=0.42b0
-opentelemetry-instrumentation-celery>=0.42b0
+# Note: OpenTelemetry instrumentation packages are installed separately
+# when needed, as they may not be available for all Python versions
 
 # Environment and configuration
 python-dotenv>=1.0.0

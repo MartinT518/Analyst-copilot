@@ -11,7 +11,36 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # Job 1: Code Quality and Linting
+  # Job 1: Dependency Validation
+  validate-dependencies:
+    name: Validate Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install pip-tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-tools
+
+      - name: Validate all dependencies exist on PyPI
+        run: |
+          echo "🔍 Validating dependencies in requirements.in and requirements-dev.in..."
+          python scripts/validate_dependencies.py
+
+      - name: Verify pip-compile works without errors
+        run: |
+          echo "🔧 Testing pip-compile compilation..."
+          pip-compile --dry-run requirements.in
+          pip-compile --dry-run requirements-dev.in
+
+  # Job 2: Code Quality and Linting
   lint-and-format:
     name: Lint and Format Check
     runs-on: ubuntu-latest
