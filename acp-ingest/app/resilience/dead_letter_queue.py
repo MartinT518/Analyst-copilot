@@ -46,7 +46,7 @@ class DeadLetterJob(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     next_retry_at = Column(DateTime, nullable=True)
     resolved_at = Column(DateTime, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    job_metadata = Column(JSON, nullable=True)
 
 
 class DeadLetterQueue:
@@ -78,7 +78,7 @@ class DeadLetterQueue:
         error_type: str,
         original_job_id: Optional[str] = None,
         max_retries: int = 3,
-        metadata: Optional[Dict[str, Any]] = None,
+        job_metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Add a failed job to the dead letter queue.
 
@@ -89,7 +89,7 @@ class DeadLetterQueue:
             error_type: Type of error
             original_job_id: Original job ID if available
             max_retries: Maximum number of retries
-            metadata: Optional metadata
+            job_metadata: Optional job metadata
 
         Returns:
             Dead letter job ID
@@ -103,7 +103,7 @@ class DeadLetterQueue:
                 error_message=error_message,
                 error_type=error_type,
                 max_retries=max_retries,
-                metadata=metadata or {},
+                job_metadata=job_metadata or {},
             )
 
             session.add(job)

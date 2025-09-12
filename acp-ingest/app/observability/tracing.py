@@ -1,18 +1,19 @@
 """OpenTelemetry distributed tracing for ACP services."""
 
-import os
 from typing import Any, Dict, Optional
 
 import structlog
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+
+# from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.instrumentation.celery import CeleryInstrumentor
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
-from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
-from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
+# from opentelemetry.instrumentation.celery import CeleryInstrumentor
+# from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+# from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+# from opentelemetry.instrumentation.psycopg2 import Psycopg2Instrumentor
+# from opentelemetry.instrumentation.redis import RedisInstrumentor
+# from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -98,20 +99,21 @@ class TracingManager:
 
     def _setup_jaeger_exporter(self, tracer_provider: TracerProvider) -> None:
         """Setup Jaeger exporter."""
-        try:
-            jaeger_exporter = JaegerExporter(
-                agent_host_name=os.getenv("JAEGER_AGENT_HOST", "localhost"),
-                agent_port=int(os.getenv("JAEGER_AGENT_PORT", "6831")),
-                collector_endpoint=self.config.jaeger_endpoint,
-            )
+        # Jaeger exporter temporarily disabled due to missing dependencies
+        # try:
+        #     jaeger_exporter = JaegerExporter(
+        #         agent_host_name=os.getenv("JAEGER_AGENT_HOST", "localhost"),
+        #         agent_port=int(os.getenv("JAEGER_AGENT_PORT", "6831")),
+        #         collector_endpoint=self.config.jaeger_endpoint,
+        #     )
+        #
+        #     span_processor = BatchSpanProcessor(jaeger_exporter)
+        #     tracer_provider.add_span_processor(span_processor)
 
-            span_processor = BatchSpanProcessor(jaeger_exporter)
-            tracer_provider.add_span_processor(span_processor)
-
-            logger.info("Jaeger exporter configured", endpoint=self.config.jaeger_endpoint)
-
-        except Exception as e:
-            logger.error("Failed to setup Jaeger exporter", error=str(e))
+        #     logger.info("Jaeger exporter configured", endpoint=self.config.jaeger_endpoint)
+        #
+        # except Exception as e:
+        #     logger.error("Failed to setup Jaeger exporter", error=str(e))
 
     def _setup_otlp_exporter(self, tracer_provider: TracerProvider) -> None:
         """Setup OTLP exporter."""
@@ -127,51 +129,57 @@ class TracingManager:
 
     def instrument_fastapi(self, app) -> None:
         """Instrument FastAPI application."""
-        try:
-            FastAPIInstrumentor.instrument_app(app, tracer_provider=trace.get_tracer_provider())
-            logger.info("FastAPI instrumentation enabled")
-        except Exception as e:
-            logger.error("Failed to instrument FastAPI", error=str(e))
+        # OpenTelemetry instrumentation temporarily disabled due to missing dependencies
+        # try:
+        #     FastAPIInstrumentor.instrument_app(app, tracer_provider=trace.get_tracer_provider())
+        #     logger.info("FastAPI instrumentation enabled")
+        # except Exception as e:
+        #     logger.error("Failed to instrument FastAPI", error=str(e))
 
     def instrument_httpx(self) -> None:
         """Instrument HTTPX client."""
-        try:
-            HTTPXClientInstrumentor().instrument()
-            logger.info("HTTPX instrumentation enabled")
-        except Exception as e:
-            logger.error("Failed to instrument HTTPX", error=str(e))
+        # OpenTelemetry instrumentation temporarily disabled due to missing dependencies
+        # try:
+        #     HTTPXClientInstrumentor().instrument()
+        #     logger.info("HTTPX instrumentation enabled")
+        # except Exception as e:
+        #     logger.error("Failed to instrument HTTPX", error=str(e))
 
     def instrument_sqlalchemy(self) -> None:
         """Instrument SQLAlchemy."""
-        try:
-            SQLAlchemyInstrumentor().instrument()
-            logger.info("SQLAlchemy instrumentation enabled")
-        except Exception as e:
-            logger.error("Failed to instrument SQLAlchemy", error=str(e))
+        # OpenTelemetry instrumentation temporarily disabled due to missing dependencies
+        # try:
+        #     SQLAlchemyInstrumentor().instrument()
+        #     logger.info("SQLAlchemy instrumentation enabled")
+        # except Exception as e:
+        #     logger.error("Failed to instrument SQLAlchemy", error=str(e))
 
     def instrument_redis(self) -> None:
         """Instrument Redis."""
-        try:
-            RedisInstrumentor().instrument()
-            logger.info("Redis instrumentation enabled")
-        except Exception as e:
-            logger.error("Failed to instrument Redis", error=str(e))
+        # OpenTelemetry instrumentation temporarily disabled due to missing dependencies
+        # try:
+        #     RedisInstrumentor().instrument()
+        #     logger.info("Redis instrumentation enabled")
+        # except Exception as e:
+        #     logger.error("Failed to instrument Redis", error=str(e))
 
     def instrument_psycopg2(self) -> None:
         """Instrument Psycopg2."""
-        try:
-            Psycopg2Instrumentor().instrument()
-            logger.info("Psycopg2 instrumentation enabled")
-        except Exception as e:
-            logger.error("Failed to instrument Psycopg2", error=str(e))
+        # OpenTelemetry instrumentation temporarily disabled due to missing dependencies
+        # try:
+        #     Psycopg2Instrumentor().instrument()
+        #     logger.info("Psycopg2 instrumentation enabled")
+        # except Exception as e:
+        #     logger.error("Failed to instrument Psycopg2", error=str(e))
 
     def instrument_celery(self) -> None:
         """Instrument Celery."""
-        try:
-            CeleryInstrumentor().instrument()
-            logger.info("Celery instrumentation enabled")
-        except Exception as e:
-            logger.error("Failed to instrument Celery", error=str(e))
+        # OpenTelemetry instrumentation temporarily disabled due to missing dependencies
+        # try:
+        #     CeleryInstrumentor().instrument()
+        #     logger.info("Celery instrumentation enabled")
+        # except Exception as e:
+        #     logger.error("Failed to instrument Celery", error=str(e))
 
     def instrument_all(self) -> None:
         """Instrument all available libraries."""
