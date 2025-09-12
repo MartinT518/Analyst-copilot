@@ -2,7 +2,6 @@
 
 import logging
 import logging.config
-import os
 from datetime import datetime
 from typing import Any, Dict, Optional
 
@@ -96,20 +95,33 @@ def create_logging_config(
 
     # Add file handler if specified
     if log_file:
-        # Ensure log directory exists
-        log_dir = os.path.dirname(log_file)
-        if log_dir:
-            os.makedirs(log_dir, exist_ok=True)
+        # Skip file logging in CI/testing environments
+        import os
 
-        handlers["file"] = {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": log_level.upper(),
-            "formatter": log_format,
-            "filename": log_file,
-            "maxBytes": 10485760,  # 10MB
-            "backupCount": 5,
-            "encoding": "utf8",
-        }
+        if not os.getenv("CI") and not os.getenv("TESTING"):
+            # Ensure log directory exists
+            log_dir = os.path.dirname(log_file)
+            if log_dir:
+                try:
+                    os.makedirs(log_dir, exist_ok=True)
+                except PermissionError:
+                    # Fall back to console logging if we can't create log directory
+                    log_file = None
+        else:
+            # Skip file logging in CI/testing
+            log_file = None
+
+        # Only add file handler if log_file is still valid
+        if log_file:
+            handlers["file"] = {
+                "class": "logging.handlers.RotatingFileHandler",
+                "level": log_level.upper(),
+                "formatter": log_format,
+                "filename": log_file,
+                "maxBytes": 10485760,  # 10MB
+                "backupCount": 5,
+                "encoding": "utf8",
+            }
 
     # Define loggers
     loggers = {
