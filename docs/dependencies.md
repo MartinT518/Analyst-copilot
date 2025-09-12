@@ -75,6 +75,39 @@ The project includes multiple validation layers:
 - ✅ No circular dependencies
 - ✅ No conflicting version constraints
 
+### Preventing Invalid Dependencies
+
+**CRITICAL**: Never add packages that don't exist on PyPI. The CI pipeline will fail if you do.
+
+#### Before Adding a New Dependency
+
+Always validate the package exists before adding it:
+
+```bash
+# Check if package exists on PyPI
+pip index versions PACKAGE_NAME
+
+# If the command fails, the package doesn't exist or has no compatible versions
+# DO NOT add it to requirements.in or requirements-dev.in
+```
+
+#### Common Invalid Dependencies to Avoid
+
+- ❌ `pyyaml-ft` - Use `PyYAML>=6.0.2` instead
+- ❌ `fsm` - Use `transitions` instead
+- ❌ `asyncio` - This is a built-in Python module
+- ❌ `pydantic-core` - This is automatically managed by `pydantic`
+- ❌ Any package with typos or incorrect names
+
+#### CI Pipeline Validation
+
+The CI pipeline includes two validation steps:
+
+1. **Comprehensive Validation**: Runs `python scripts/validate_dependencies.py`
+2. **Individual Package Validation**: Runs `pip index versions PACKAGE` for each package
+
+If either step fails, the CI will fail and prevent the merge.
+
 ## Security Features
 
 ### Dependency Scanning
@@ -209,8 +242,22 @@ For dependency-related issues:
 3. Review CI logs
 4. Create an issue with validation output
 
+## Recent Fixes
+
+### Invalid Dependencies Removed (2024-01-XX)
+
+The following invalid dependencies were identified and removed:
+
+- **`pyyaml-ft==8.0.0`**: Removed because it was causing CI failures. Use `PyYAML>=6.0.2` instead.
+- **`ast-tools>=0.1.8`**: Removed because it was unused and pulled in `pyyaml-ft` as a dependency.
+- **`libcst>=1.1.0`**: Removed because it was unused and pulled in `pyyaml-ft` as a dependency.
+
+**Result**: Reduced from 110 to 108 packages, eliminated all invalid dependencies, and ensured CI pipeline passes.
+
 ## Changelog
 
 - **2024-01-XX**: Implemented pip-tools based dependency management
 - **2024-01-XX**: Added comprehensive validation system
 - **2024-01-XX**: Integrated with CI/CD pipeline
+- **2024-01-XX**: Removed invalid dependencies (pyyaml-ft, ast-tools, libcst)
+- **2024-01-XX**: Enhanced CI validation with individual package checking
