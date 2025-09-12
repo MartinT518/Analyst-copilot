@@ -2,8 +2,11 @@
 
 from setuptools import find_packages, setup
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+try:
+    with open("README.md", "r", encoding="utf-8") as fh:
+        long_description = fh.read()
+except FileNotFoundError:
+    long_description = "On-premises AI-powered analysis system for processing exported data"
 
 setup(
     name="acp-ingest",
