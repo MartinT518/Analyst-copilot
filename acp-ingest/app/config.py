@@ -379,14 +379,15 @@ def validate_settings(settings_instance=None):
 
     errors = []
 
-    # Check required settings
-    if (
-        not settings_instance.secret_key
-        or settings_instance.secret_key == "your-secret-key-change-this-in-production"  # nosec B105
-    ):
-        errors.append("SECRET_KEY must be set to a secure value in production")
-
+    # Check required settings - only enforce in production
     if is_production():
+        if (
+            not settings_instance.secret_key
+            or settings_instance.secret_key
+            == "your-secret-key-change-this-in-production"  # nosec B105
+        ):
+            errors.append("SECRET_KEY must be set to a secure value in production")
+
         if settings_instance.debug:
             errors.append("DEBUG should be False in production")
 
@@ -404,22 +405,24 @@ def validate_settings(settings_instance=None):
     ):
         errors.append("VAULT_TOKEN is required when using token authentication")
 
-    # Check file paths
+    # Check file paths - only create directories if not in CI/testing
     import os
 
-    if not os.path.exists(settings_instance.upload_dir):
-        try:
-            os.makedirs(settings_instance.upload_dir, exist_ok=True)
-        except Exception as e:
-            errors.append(f"Cannot create upload directory {settings_instance.upload_dir}: {e}")
-
-    if settings_instance.log_file:
-        log_dir = os.path.dirname(settings_instance.log_file)
-        if not os.path.exists(log_dir):
+    # Skip directory creation in CI/testing environments
+    if not is_testing() and not os.getenv("CI"):
+        if not os.path.exists(settings_instance.upload_dir):
             try:
-                os.makedirs(log_dir, exist_ok=True)
+                os.makedirs(settings_instance.upload_dir, exist_ok=True)
             except Exception as e:
-                errors.append(f"Cannot create log directory {log_dir}: {e}")
+                errors.append(f"Cannot create upload directory {settings_instance.upload_dir}: {e}")
+
+        if settings_instance.log_file:
+            log_dir = os.path.dirname(settings_instance.log_file)
+            if not os.path.exists(log_dir):
+                try:
+                    os.makedirs(log_dir, exist_ok=True)
+                except Exception as e:
+                    errors.append(f"Cannot create log directory {log_dir}: {e}")
 
     if errors:
         raise ValueError(
@@ -428,7 +431,9 @@ def validate_settings(settings_instance=None):
 
 
 # Validate settings on import
-if not is_testing():
+import os
+
+if not is_testing() and not os.getenv("CI"):
     try:
         validate_settings()
     except ValueError as e:
