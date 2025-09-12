@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from bs4 import BeautifulSoup, Tag
 from defusedxml import ElementTree as ET
+from xml.etree.ElementTree import Element
 
 logger = logging.getLogger(__name__)
 
@@ -253,7 +254,7 @@ class ConfluenceParser:
             return None
 
     async def _parse_xml_element(
-        self, element: ET.Element, metadata: Dict[str, Any], page_index: int
+        self, element: Element, metadata: Dict[str, Any], page_index: int
     ) -> Optional[Dict[str, Any]]:
         """
         Parse a single XML element as a page.
@@ -316,7 +317,7 @@ class ConfluenceParser:
 
         return ""
 
-    def _extract_title_from_xml(self, element: ET.Element) -> str:
+    def _extract_title_from_xml(self, element: Element) -> str:
         """Extract title from XML element."""
         # Try different title attributes/elements
         title_paths = [
@@ -403,7 +404,7 @@ class ConfluenceParser:
 
         return "\n\n".join(content_parts)
 
-    def _extract_content_from_xml(self, element: ET.Element) -> str:
+    def _extract_content_from_xml(self, element: Element) -> str:
         """Extract content from XML element."""
         content_parts = []
 
@@ -470,7 +471,7 @@ class ConfluenceParser:
 
         return metadata
 
-    def _extract_metadata_from_xml(self, element: ET.Element) -> Dict[str, Any]:
+    def _extract_metadata_from_xml(self, element: Element) -> Dict[str, Any]:
         """Extract metadata from XML element."""
         metadata = {}
 
