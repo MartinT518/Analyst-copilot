@@ -36,12 +36,6 @@ anyio==4.10.0
     #   watchfiles
 arrow==1.3.0
     # via -r requirements.txt
-ast-tools==0.1.8
-    # via -r requirements.txt
-astor==0.8.1
-    # via
-    #   -r requirements.txt
-    #   ast-tools
 attrs==25.3.0
     # via
     #   -r requirements.txt
@@ -386,10 +380,6 @@ language-data==1.3.0
     # via
     #   -r requirements.txt
     #   langcodes
-libcst==1.8.4
-    # via
-    #   -r requirements.txt
-    #   ast-tools
 license-expression==30.4.4
     # via cyclonedx-python-lib
 limits==5.5.0
@@ -726,10 +716,6 @@ pyyaml==6.0.2
     #   presidio-analyzer
     #   transformers
     #   uvicorn
-pyyaml-ft==8.0.0
-    # via
-    #   -r requirements.txt
-    #   libcst
 redis==6.4.0
     # via -r requirements.txt
 referencing==0.36.2

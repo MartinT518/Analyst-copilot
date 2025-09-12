@@ -34,6 +34,19 @@ jobs:
           echo "🔍 Validating dependencies in requirements.in and requirements-dev.in..."
           python scripts/validate_dependencies.py
 
+      - name: Validate each package individually with pip index versions
+        run: |
+          echo "🔍 Validating each package individually..."
+          # Extract package names from .in files and validate each one
+          for pkg in $(grep -v '^#' requirements.in requirements-dev.in | grep -v '^-r' | grep -v '^$' | cut -d'=' -f1 | cut -d'>' -f1 | cut -d'<' -f1 | cut -d'[' -f1 | sort -u); do
+            echo "Checking package: $pkg"
+            pip index versions "$pkg" || {
+              echo "❌ Package $pkg does not exist on PyPI or has no compatible versions"
+              exit 1
+            }
+          done
+          echo "✅ All packages validated successfully!"
+
       - name: Verify pip-compile works without errors
         run: |
           echo "🔧 Testing pip-compile compilation..."
