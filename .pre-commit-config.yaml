@@ -22,7 +22,8 @@ repos:
     rev: v2.3.1
     hooks:
       - id: autoflake
-        args: [--remove-all-unused-imports, --remove-unused-variables, --in-place]
+        args:
+          [--remove-all-unused-imports, --remove-unused-variables, --in-place]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -32,3 +33,13 @@ repos:
       - id: check-yaml
       - id: check-added-large-files
       - id: check-merge-conflict
+
+  # Custom dependency validation hook
+  - repo: local
+    hooks:
+      - id: validate-dependencies
+        name: Validate Dependencies
+        entry: python scripts/validate_dependencies.py
+        language: system
+        files: ^requirements.*\.(in|txt)$
+        pass_filenames: false
