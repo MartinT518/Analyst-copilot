@@ -132,12 +132,42 @@ def setup_logging(
 
     # Setup file logging if specified
     if log_file:
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(getattr(logging, log_level.upper()))
-        file_handler.setFormatter(logging.Formatter("%(message)s"))
+        # Skip file logging in CI/testing environments
+        import os
 
-        logger = logging.getLogger()
-        logger.addHandler(file_handler)
+        if not os.getenv("CI") and not os.getenv("TESTING"):
+            # Ensure log directory exists
+            log_dir = os.path.dirname(log_file)
+            if log_dir:
+                try:
+                    os.makedirs(log_dir, exist_ok=True)
+                except PermissionError:
+                    # Fall back to console logging if we can't create log directory
+                    log_file = None
+            else:
+                # No directory specified, use current directory
+                pass
+        else:
+            # Skip file logging in CI/testing
+            log_file = None
+
+        # Only add file handler if log_file is still valid
+        if log_file:
+            try:
+                file_handler = logging.FileHandler(log_file)
+                file_handler.setLevel(getattr(logging, log_level.upper()))
+                file_handler.setFormatter(logging.Formatter("%(message)s"))
+
+                logger = logging.getLogger()
+                logger.addHandler(file_handler)
+            except (PermissionError, OSError) as e:
+                # Fall back to console logging if file logging fails
+                import structlog
+
+                logger = structlog.get_logger(__name__)
+                logger.warning(
+                    "Failed to setup file logging, falling back to console", error=str(e)
+                )
 
 
 def get_logger(name: str) -> structlog.BoundLogger:
