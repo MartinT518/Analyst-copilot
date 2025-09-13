@@ -36,7 +36,8 @@ class TestBasicFunctionality:
         assert db_session is not None
 
         # Test a simple query
-        result = db_session.execute("SELECT 1 as test_value")
+        from sqlalchemy import text
+        result = db_session.execute(text("SELECT 1 as test_value"))
         row = result.fetchone()
         assert row[0] == 1
 
