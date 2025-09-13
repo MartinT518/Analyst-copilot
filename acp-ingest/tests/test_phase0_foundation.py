@@ -39,7 +39,8 @@ class TestSecurityConfig:
         # but the config should still be valid for testing
         errors = config.validate_production_security()
         # We expect SSL and Vault validation errors in testing environment
-        assert len(errors) >= 0  # Allow for production validation errors in testing
+        # The test should pass as long as we get some errors (which is expected in testing)
+        assert len(errors) > 0  # Expect production validation errors in testing environment
 
     def test_security_config_validation_failure(self):
         """Test security configuration validation failure."""
