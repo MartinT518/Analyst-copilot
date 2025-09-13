@@ -40,22 +40,34 @@ class TestSecurityConfig:
 
     def test_security_config_validation_failure(self):
         """Test security configuration validation failure."""
-        # In testing environment, the validation is more lenient
-        # So we test that the config can be created even with weak keys
-        config = SecurityConfig(
-            secret_key="your-secret-key-change-this-in-production",
-            jwt_secret_key="test-jwt-secret-key-that-is-long-enough",
-            encryption_key="test-encryption-key-that-is-long-enough",
-            oauth2_client_id="test-client-id",
-            oauth2_client_secret="test-client-secret",
-            oauth2_authorization_url="https://test.com/oauth/authorize",
-            oauth2_token_url="https://test.com/oauth/token",
-            oauth2_userinfo_url="https://test.com/oauth/userinfo",
-            oauth2_redirect_uri="http://localhost:3000/auth/callback",
-        )
+        import os
+        import pytest
 
-        # In testing environment, this should not raise an error
-        assert config.secret_key == "your-secret-key-change-this-in-production"
+        # Test with weak secret key
+        with pytest.raises(ValueError, match="SECRET_KEY must be set"):
+            # Clear environment variable
+            old_secret = os.environ.get("SECRET_KEY")
+            if "SECRET_KEY" in os.environ:
+                del os.environ["SECRET_KEY"]
+
+            try:
+                config = SecurityConfig(
+                    secret_key="weak",
+                    jwt_secret_key="test-jwt-secret-key-that-is-long-enough",
+                    encryption_key="test-encryption-key-that-is-long-enough",
+                    oauth2_client_id="test-client-id",
+                    oauth2_client_secret="test-client-secret",
+                    oauth2_authorization_url="https://test.com/oauth/authorize",
+                    oauth2_token_url="https://test.com/oauth/token",
+                    oauth2_userinfo_url="https://test.com/oauth/userinfo",
+                    oauth2_redirect_uri="http://localhost:3000/auth/callback",
+                )
+                # This should raise an error due to weak secret key
+                config.validate_production_security()
+            finally:
+                # Restore environment variable
+                if old_secret:
+                    os.environ["SECRET_KEY"] = old_secret
 
     def test_cors_origins_parsing(self):
         """Test CORS origins parsing."""
@@ -267,23 +279,10 @@ class TestIntegration:
     @pytest.fixture
     def client(self):
         """Create test client."""
-        from fastapi import FastAPI
         from fastapi.testclient import TestClient
 
-        # Create a minimal FastAPI app for testing
-        app = FastAPI()
-
-        @app.get("/health")
-        def health_check():
-            return {"status": "healthy", "services": {"database": "ok", "redis": "ok"}}
-
-        @app.get("/metrics")
-        def metrics():
-            return '# HELP acp_service_info Service information\n# TYPE acp_service_info gauge\nacp_service_info{service="test-service",version="1.0.0"} 1'
-
-        @app.get("/")
-        def root():
-            return {"message": "Test API"}
+        # Import the real app to get all routers and middleware
+        from app.main import app
 
         return TestClient(app)
 
