@@ -38,36 +38,25 @@ class TestSecurityConfig:
         # The test should pass as long as we get some errors (which is expected in testing)
         assert len(errors) > 0  # Expect production validation errors in testing environment
 
-    def test_security_config_validation_failure(self):
+    def test_security_config_validation_failure(self, monkeypatch):
         """Test security configuration validation failure."""
-        import os
-        import pytest
-
         # Test with weak secret key
-        with pytest.raises(ValueError, match="SECRET_KEY must be set"):
-            # Clear environment variable
-            old_secret = os.environ.get("SECRET_KEY")
-            if "SECRET_KEY" in os.environ:
-                del os.environ["SECRET_KEY"]
+        monkeypatch.delenv("SECRET_KEY", raising=False)
 
-            try:
-                config = SecurityConfig(
-                    secret_key="weak",
-                    jwt_secret_key="test-jwt-secret-key-that-is-long-enough",
-                    encryption_key="test-encryption-key-that-is-long-enough",
-                    oauth2_client_id="test-client-id",
-                    oauth2_client_secret="test-client-secret",
-                    oauth2_authorization_url="https://test.com/oauth/authorize",
-                    oauth2_token_url="https://test.com/oauth/token",
-                    oauth2_userinfo_url="https://test.com/oauth/userinfo",
-                    oauth2_redirect_uri="http://localhost:3000/auth/callback",
-                )
-                # This should raise an error due to weak secret key
-                config.validate_production_security()
-            finally:
-                # Restore environment variable
-                if old_secret:
-                    os.environ["SECRET_KEY"] = old_secret
+        with pytest.raises(ValueError, match="SECRET_KEY must be set"):
+            config = SecurityConfig(
+                secret_key="weak",
+                jwt_secret_key="test-jwt-secret-key-that-is-long-enough",
+                encryption_key="test-encryption-key-that-is-long-enough",
+                oauth2_client_id="test-client-id",
+                oauth2_client_secret="test-client-secret",
+                oauth2_authorization_url="https://test.com/oauth/authorize",
+                oauth2_token_url="https://test.com/oauth/token",
+                oauth2_userinfo_url="https://test.com/oauth/userinfo",
+                oauth2_redirect_uri="http://localhost:3000/auth/callback",
+            )
+            # This should raise an error due to weak secret key
+            config.validate_production_security()
 
     def test_cors_origins_parsing(self):
         """Test CORS origins parsing."""

@@ -12,6 +12,21 @@ os.environ["USE_SQLITE_FOR_TESTS"] = "true"
 
 from app.config import get_settings
 
+
+@pytest.fixture(autouse=True)
+def mock_auth(monkeypatch):
+    """Mock authentication for all tests."""
+    # Mock the auth service to bypass real authentication
+    monkeypatch.setattr(
+        "app.services.auth_service.verify_token",
+        lambda *a, **kw: {"user_id": "test-user", "username": "test-user"},
+    )
+    monkeypatch.setattr(
+        "app.services.auth_service.get_current_user",
+        lambda *a, **kw: {"user_id": "test-user", "username": "test-user"},
+    )
+
+
 # Get test settings
 settings = get_settings()
 
@@ -45,6 +60,22 @@ def db_session():
         # Clean up tables
         AppBase.metadata.drop_all(bind=test_engine)
         DLQBase.metadata.drop_all(bind=test_engine)
+
+
+@pytest.fixture(autouse=True)
+def setup_test_environment():
+    """Set up test environment before each test."""
+    import os
+    from pathlib import Path
+
+    # Create necessary directories
+    uploads_dir = Path("/app/uploads")
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+
+    # Set additional test environment variables
+    os.environ["SECRET_KEY"] = "test-secret-key-for-testing-only"
+    os.environ["JWT_SECRET_KEY"] = "test-jwt-secret-key-for-testing-only"
+    os.environ["ENCRYPTION_KEY"] = "test-encryption-key-for-testing-only"
 
 
 @pytest.fixture(scope="function")
