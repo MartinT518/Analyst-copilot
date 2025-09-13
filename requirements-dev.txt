@@ -217,8 +217,6 @@ filelock==3.19.1
     #   tldextract
     #   transformers
     #   virtualenv
-flake8==7.3.0
-    # via -r requirements-dev.in
 flower==2.0.1
     # via -r requirements.txt
 frozenlist==1.7.0
@@ -300,8 +298,6 @@ importlib-metadata==8.7.0
     #   opentelemetry-api
 iniconfig==2.1.0
     # via pytest
-isort==6.0.1
-    # via -r requirements-dev.in
 jedi==0.19.2
     # via -r requirements.txt
 jinja2==3.1.6
@@ -414,8 +410,6 @@ marshmallow==3.26.1
     #   -r requirements.txt
     #   dataclasses-json
     #   safety
-mccabe==0.7.0
-    # via flake8
 mdurl==0.1.2
     # via
     #   -r requirements.txt
@@ -609,8 +603,6 @@ pyasn1==0.6.1
     #   -r requirements.txt
     #   python-jose
     #   rsa
-pycodestyle==2.14.0
-    # via flake8
 pycparser==2.23
     # via
     #   -r requirements.txt
@@ -639,9 +631,7 @@ pydantic-settings==2.10.1
     #   -r requirements.txt
     #   langchain-community
 pyflakes==3.4.0
-    # via
-    #   autoflake
-    #   flake8
+    # via autoflake
 pygit2==1.18.2
     # via -r requirements.txt
 pygments==2.19.2
@@ -782,6 +772,8 @@ ruamel-yaml==0.18.15
     #   safety-schemas
 ruamel-yaml-clib==0.2.12
     # via ruamel-yaml
+ruff==0.13.0
+    # via -r requirements-dev.in
 safetensors==0.6.2
     # via
     #   -r requirements.txt

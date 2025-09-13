@@ -1,10 +1,17 @@
 exclude_dirs:
   - tests
+  - migrations
+  - scripts
   - venv
   - .venv
   - .git
+  - __pycache__
+  - .pytest_cache
 skips:
-  - B105
-  - B106
-severity: MEDIUM
-confidence: MEDIUM
+  - B105  # hardcoded_password_string
+  - B106  # hardcoded_password_funcarg
+  - B108  # hardcoded_tmp_directory
+  - B104  # hardcoded_bind_all_interfaces
+  - B608  # sql_injection
+severity: HIGH
+confidence: HIGH

@@ -25,6 +25,18 @@ def mock_auth(monkeypatch):
         "app.services.auth_service.get_current_user",
         lambda *a, **kw: {"user_id": "test-user", "username": "test-user"},
     )
+    # Mock external services
+    monkeypatch.setattr(
+        "httpx.AsyncClient",
+        lambda *a, **kw: type("MockClient", (), {
+            "__aenter__": lambda self: type("MockResponse", (), {
+                "get": lambda *a, **kw: type("MockResp", (), {
+                    "status_code": 200,
+                    "raise_for_status": lambda: None
+                })()
+            })()
+        })()
+    )
 
 
 # Get test settings
