@@ -37,6 +37,7 @@ class TestBasicFunctionality:
 
         # Test a simple query
         from sqlalchemy import text
+
         result = db_session.execute(text("SELECT 1 as test_value"))
         row = result.fetchone()
         assert row[0] == 1
