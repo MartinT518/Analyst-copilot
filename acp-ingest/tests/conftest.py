@@ -11,7 +11,6 @@ os.environ["TESTING"] = "true"
 os.environ["USE_SQLITE_FOR_TESTS"] = "true"
 
 from app.config import get_settings
-from app.database import Base
 
 # Get test settings
 settings = get_settings()
@@ -29,8 +28,13 @@ TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_eng
 @pytest.fixture(scope="function")
 def db_session():
     """Create a test database session."""
-    # Create tables
-    Base.metadata.create_all(bind=test_engine)
+    # Import all models to ensure they're registered
+    from app.models import Base as AppBase
+    from app.resilience.dead_letter_queue import Base as DLQBase
+
+    # Create tables for all models
+    AppBase.metadata.create_all(bind=test_engine)
+    DLQBase.metadata.create_all(bind=test_engine)
 
     # Create session
     session = TestSessionLocal()
@@ -39,7 +43,8 @@ def db_session():
     finally:
         session.close()
         # Clean up tables
-        Base.metadata.drop_all(bind=test_engine)
+        AppBase.metadata.drop_all(bind=test_engine)
+        DLQBase.metadata.drop_all(bind=test_engine)
 
 
 @pytest.fixture(scope="function")

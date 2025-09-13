@@ -51,12 +51,18 @@ def test_paste_text(test_client: TestClient, db_session: Session):
 
 def test_get_job_status(test_client: TestClient, db_session: Session):
     """Test get job status endpoint."""
-    # Create a dummy job
-    job = IngestJob(origin="test", sensitivity="high", status="completed")
+    # Create a dummy job with required fields
+    job = IngestJob(
+        source_type="test",
+        origin="test",
+        sensitivity="high",
+        status="completed",
+        uploader=1,  # Dummy user ID
+    )
     db_session.add(job)
     db_session.commit()
 
-    response = test_client.get(f"/api/v1/ingest/status/{job.id}")
+    response = test_client.get(f"/api/v1/ingest/jobs/{job.id}")
 
     assert response.status_code == 200
     data = response.json()
@@ -66,9 +72,17 @@ def test_get_job_status(test_client: TestClient, db_session: Session):
 
 def test_list_jobs(test_client: TestClient, db_session: Session):
     """Test list jobs endpoint."""
-    # Create some dummy jobs
-    db_session.add(IngestJob(origin="test1", sensitivity="low", status="pending"))
-    db_session.add(IngestJob(origin="test2", sensitivity="high", status="completed"))
+    # Create some dummy jobs with required fields
+    db_session.add(
+        IngestJob(
+            source_type="test", origin="test1", sensitivity="low", status="pending", uploader=1
+        )
+    )
+    db_session.add(
+        IngestJob(
+            source_type="test", origin="test2", sensitivity="high", status="completed", uploader=1
+        )
+    )
     db_session.commit()
 
     response = test_client.get("/api/v1/ingest/jobs")
