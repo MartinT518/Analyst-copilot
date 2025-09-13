@@ -1,62 +1,47 @@
-"""Pytest configuration and fixtures."""
+"""Pytest configuration and fixtures for acp-ingest tests."""
 
+import os
 import pytest
-from app.config import get_settings
-from app.database import Base, get_db
-from app.main import app
-from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# Get settings
+# Set test environment variables
+os.environ["TESTING"] = "true"
+os.environ["USE_SQLITE_FOR_TESTS"] = "true"
+
+from app.config import get_settings
+from app.database import Base
+
+# Get test settings
 settings = get_settings()
 
-# Use a separate test database
-TEST_DATABASE_URL = "sqlite:///./test.db"
+# Create test database engine
+test_engine = create_engine(
+    settings.get_database_url(),
+    connect_args={"check_same_thread": False} if "sqlite" in settings.get_database_url() else {},
+)
 
-# Create a new database engine for testing
-engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-
-# Create a new sessionmaker for testing
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-@pytest.fixture(scope="session")
-def db_engine():
-    """Fixture for the database engine."""
-    Base.metadata.create_all(bind=engine)
-    yield engine
-    Base.metadata.drop_all(bind=engine)
+# Create test session factory
+TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 
 @pytest.fixture(scope="function")
-def db_session(db_engine):
-    """Fixture for the database session."""
-    connection = db_engine.connect()
-    transaction = connection.begin()
-    session = TestingSessionLocal(bind=connection)
+def db_session():
+    """Create a test database session."""
+    # Create tables
+    Base.metadata.create_all(bind=test_engine)
 
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
+    # Create session
+    session = TestSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+        # Clean up tables
+        Base.metadata.drop_all(bind=test_engine)
 
 
 @pytest.fixture(scope="function")
-def test_client(db_session):
-    """Fixture for the test client."""
-
-    def override_get_db():
-        try:
-            yield db_session
-        finally:
-            db_session.close()
-
-    app.dependency_overrides[get_db] = override_get_db
-
-    with TestClient(app) as client:
-        yield client
-
-    # Clean up dependency overrides
-    app.dependency_overrides = {}
+def test_settings():
+    """Get test settings."""
+    return settings

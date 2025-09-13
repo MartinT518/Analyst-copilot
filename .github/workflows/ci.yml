@@ -276,6 +276,7 @@ jobs:
           DATABASE_URL: postgresql://acp_user:acp_password@localhost:5432/acp_test_db
           REDIS_URL: redis://localhost:6379/0
           TESTING: true
+          USE_SQLITE_FOR_TESTS: "true"
         run: |
           # Create test databases
           PGPASSWORD=acp_password createdb -h localhost -U acp_user acp_ingest_test || true
@@ -286,6 +287,7 @@ jobs:
           DATABASE_URL: postgresql://acp_user:acp_password@localhost:5432/acp_test_db
           REDIS_URL: redis://localhost:6379/0
           TESTING: true
+          USE_SQLITE_FOR_TESTS: "true"
           COVERAGE_THRESHOLD: 80
         run: |
           # Run tests for each service with caching
