@@ -41,7 +41,6 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-profile = "black"
 force-single-line = false
 
 [tool.ruff.lint.pycodestyle]
