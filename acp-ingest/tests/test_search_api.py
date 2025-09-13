@@ -11,7 +11,7 @@ def test_search_knowledge(test_client: TestClient, db_session: Session):
     chunk = KnowledgeChunk(
         chunk_text="This is a test chunk for searching.",
         source_type="test",
-        metadata={"origin": "test-search"},
+        chunk_metadata={"origin": "test-search"},
     )
     db_session.add(chunk)
     db_session.commit()
@@ -31,7 +31,7 @@ def test_find_similar_chunks(test_client: TestClient, db_session: Session):
     chunk = KnowledgeChunk(
         chunk_text="This is another test chunk.",
         source_type="test",
-        metadata={"origin": "test-similar"},
+        chunk_metadata={"origin": "test-similar"},
     )
     db_session.add(chunk)
     db_session.commit()

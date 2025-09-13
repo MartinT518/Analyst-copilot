@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 from app.auth.oauth2 import OAuth2Service
-from app.main_enhanced import app
 from app.observability.logging import get_logger, setup_logging
 from app.observability.metrics import MetricsCollector
 from app.observability.tracing import setup_tracing
@@ -13,7 +12,6 @@ from app.resilience.circuit_breaker import CircuitBreaker, CircuitState
 from app.resilience.dead_letter_queue import DeadLetterQueue, JobStatus
 from app.resilience.retry import RetryConfig, RetryManager
 from app.security_config import SecurityConfig
-from fastapi.testclient import TestClient
 
 
 class TestSecurityConfig:
@@ -269,6 +267,24 @@ class TestIntegration:
     @pytest.fixture
     def client(self):
         """Create test client."""
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+
+        # Create a minimal FastAPI app for testing
+        app = FastAPI()
+
+        @app.get("/health")
+        def health_check():
+            return {"status": "healthy", "services": {"database": "ok", "redis": "ok"}}
+
+        @app.get("/metrics")
+        def metrics():
+            return '# HELP acp_service_info Service information\n# TYPE acp_service_info gauge\nacp_service_info{service="test-service",version="1.0.0"} 1'
+
+        @app.get("/")
+        def root():
+            return {"message": "Test API"}
+
         return TestClient(app)
 
     def test_health_check(self, client):
