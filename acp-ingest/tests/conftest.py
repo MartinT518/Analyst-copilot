@@ -68,8 +68,10 @@ def setup_test_environment():
     import os
     from pathlib import Path
 
-    # Create necessary directories
-    uploads_dir = Path("/app/uploads")
+    # Create necessary directories (use temp directory for CI)
+    import tempfile
+
+    uploads_dir = Path(tempfile.gettempdir()) / "acp_uploads"
     uploads_dir.mkdir(parents=True, exist_ok=True)
 
     # Set additional test environment variables
