@@ -1,5 +1,7 @@
 """Tests for the ingest API endpoints."""
 
+from uuid import UUID
+
 from app.models import IngestJob
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -19,7 +21,8 @@ def test_upload_file(test_client: TestClient, db_session: Session):
     assert data["message"] == "File uploaded successfully and queued for processing"
 
     # Check if job is in the database
-    job = db_session.query(IngestJob).filter(IngestJob.id == data["job_id"]).first()
+    job_id = UUID(data["job_id"])
+    job = db_session.query(IngestJob).filter(IngestJob.id == job_id).first()
     assert job is not None
     assert job.origin == "test"
     assert job.sensitivity == "low"
@@ -43,7 +46,8 @@ def test_paste_text(test_client: TestClient, db_session: Session):
     assert data["message"] == "Text pasted successfully and queued for processing"
 
     # Check if job is in the database
-    job = db_session.query(IngestJob).filter(IngestJob.id == data["job_id"]).first()
+    job_id = UUID(data["job_id"])
+    job = db_session.query(IngestJob).filter(IngestJob.id == job_id).first()
     assert job is not None
     assert job.origin == "test-paste"
     assert job.sensitivity == "medium"

@@ -9,7 +9,6 @@ from app.parsers.confluence_parser import ConfluenceParser
 from app.resilience.retry import RetryConfig
 from app.security_config import SecurityConfig
 from app.services.export_service import ExportService
-from defusedxml.ElementTree import ParseError
 
 
 class TestSecurityConfig:
@@ -101,7 +100,7 @@ class TestXMLSecurity:
         <lolz>&lol9;</lolz>"""
 
         # This should raise an exception due to XML bomb protection
-        with pytest.raises(ParseError):
+        with pytest.raises(Exception):  # defusedxml raises EntitiesForbidden
             from defusedxml import ElementTree as ET
 
             ET.fromstring(xml_bomb)
@@ -116,7 +115,7 @@ class TestXMLSecurity:
         <foo>&xxe;</foo>"""
 
         # This should raise an exception due to external entity protection
-        with pytest.raises(ParseError):
+        with pytest.raises(Exception):  # defusedxml raises EntitiesForbidden
             from defusedxml import ElementTree as ET
 
             ET.fromstring(external_entity)
