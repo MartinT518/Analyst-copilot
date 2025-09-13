@@ -47,7 +47,7 @@ class User(Base):
     )
 
     # Relationships
-    user_roles = relationship("UserRole", back_populates="user")
+    user_roles = relationship("UserRole", back_populates="user", foreign_keys="UserRole.user_id")
     ingest_jobs = relationship("IngestJob", back_populates="uploader_user")
     audit_logs = relationship("AuditLog", back_populates="user")
 
