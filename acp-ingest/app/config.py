@@ -30,6 +30,24 @@ class Settings(BaseSettings):
     database_max_overflow: int = 20
     database_pool_timeout: int = 30
 
+    # Test database fallback
+    use_sqlite_for_tests: bool = False
+
+    def get_database_url(self) -> str:
+        """Get database URL with SQLite fallback for tests."""
+        import os
+
+        # If explicitly set to use SQLite for tests
+        if self.use_sqlite_for_tests or os.getenv("USE_SQLITE_FOR_TESTS"):
+            return "sqlite:///./test.db"
+
+        # If TESTING environment variable is set and no explicit DATABASE_URL
+        if os.getenv("TESTING") and not os.getenv("DATABASE_URL"):
+            return "sqlite:///./test.db"
+
+        # Use the configured database URL
+        return self.database_url
+
     # Redis settings
     redis_url: str = "redis://localhost:6379/0"
     REDIS_URL: str = "redis://localhost:6379/0"  # Alias for compatibility

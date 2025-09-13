@@ -16,7 +16,7 @@ settings = get_settings()
 
 # Create database engine
 engine = create_engine(
-    settings.database_url,
+    settings.get_database_url(),
     poolclass=StaticPool,
     pool_pre_ping=True,
     pool_recycle=300,
