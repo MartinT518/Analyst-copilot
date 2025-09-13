@@ -1,13 +1,12 @@
 """Database connection and session management."""
 
 import logging
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
 
 from .config import get_settings
 
@@ -17,9 +16,12 @@ settings = get_settings()
 # Create database engine
 engine = create_engine(
     settings.get_database_url(),
-    poolclass=StaticPool,
+    poolclass=None,  # Use default QueuePool for PostgreSQL
+    pool_size=settings.database_pool_size,
+    max_overflow=settings.database_max_overflow,
     pool_pre_ping=True,
     pool_recycle=300,
+    pool_timeout=settings.database_pool_timeout,
     echo=settings.debug,
 )
 
@@ -31,8 +33,7 @@ Base = declarative_base()
 
 
 def get_db() -> Generator[Session, None, None]:
-    """
-    Dependency to get database session.
+    """Dependency to get database session.
 
     Yields:
         Session: Database session
@@ -50,8 +51,7 @@ def get_db() -> Generator[Session, None, None]:
 
 @contextmanager
 def get_db_context() -> Generator[Session, None, None]:
-    """
-    Context manager for database sessions.
+    """Context manager for database sessions.
 
     Yields:
         Session: Database session
@@ -81,8 +81,7 @@ def init_db() -> None:
 
 
 def check_db_connection() -> bool:
-    """
-    Check if database connection is working.
+    """Check if database connection is working.
 
     Returns:
         bool: True if connection is working, False otherwise

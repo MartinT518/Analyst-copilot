@@ -2,20 +2,10 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
+from acp_shared_models.workflows import WorkflowStatus
 from pydantic import BaseModel, Field, validator
-
-
-class WorkflowStatus(str, Enum):
-    """Workflow status enumeration."""
-
-    PENDING = "pending"
-    PROCESSING = "processing"
-    WAITING_FOR_INPUT = "waiting_for_input"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
 
 
 class RequestType(str, Enum):
@@ -32,7 +22,7 @@ class WorkflowRequest(BaseModel):
 
     request_type: RequestType = Field(..., description="Type of workflow to start")
     initial_requirements: str = Field(..., description="Initial requirements or description")
-    context: Optional[Dict[str, Any]] = Field(None, description="Additional context information")
+    context: Optional[dict[str, Any]] = Field(None, description="Additional context information")
     priority: str = Field("medium", description="Workflow priority (low, medium, high)")
     client_id: Optional[str] = Field(None, description="Client identifier")
 
@@ -51,7 +41,7 @@ class ClarifyingQuestion(BaseModel):
     question_type: str = Field(
         "open", description="Type of question (open, multiple_choice, yes_no)"
     )
-    options: Optional[List[str]] = Field(None, description="Options for multiple choice questions")
+    options: Optional[list[str]] = Field(None, description="Options for multiple choice questions")
     required: bool = Field(True, description="Whether this question is required")
     context: Optional[str] = Field(None, description="Additional context for the question")
 
@@ -59,7 +49,7 @@ class ClarifyingQuestion(BaseModel):
 class ClarifyingQuestions(BaseModel):
     """Collection of clarifying questions."""
 
-    questions: List[ClarifyingQuestion] = Field(..., description="List of clarifying questions")
+    questions: list[ClarifyingQuestion] = Field(..., description="List of clarifying questions")
     instructions: str = Field(..., description="Instructions for answering questions")
     estimated_time: Optional[int] = Field(None, description="Estimated time to answer in minutes")
 
@@ -75,7 +65,7 @@ class ClientAnswer(BaseModel):
 class ClientAnswers(BaseModel):
     """Collection of client answers."""
 
-    answers: List[ClientAnswer] = Field(..., description="List of client answers")
+    answers: list[ClientAnswer] = Field(..., description="List of client answers")
     additional_context: Optional[str] = Field(
         None, description="Additional context provided by client"
     )
@@ -90,12 +80,12 @@ class ASISDocument(BaseModel):
     title: str = Field(..., description="Document title")
     executive_summary: str = Field(..., description="Executive summary")
     current_state_description: str = Field(..., description="Description of current state")
-    pain_points: List[str] = Field(..., description="List of identified pain points")
-    stakeholders: List[str] = Field(..., description="List of stakeholders")
-    processes: List[Dict[str, Any]] = Field(..., description="Current processes")
-    systems: List[Dict[str, Any]] = Field(..., description="Current systems")
-    data_flows: List[Dict[str, Any]] = Field(..., description="Current data flows")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    pain_points: list[str] = Field(..., description="List of identified pain points")
+    stakeholders: list[str] = Field(..., description="List of stakeholders")
+    processes: list[dict[str, Any]] = Field(..., description="Current processes")
+    systems: list[dict[str, Any]] = Field(..., description="Current systems")
+    data_flows: list[dict[str, Any]] = Field(..., description="Current data flows")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 class TOBEDocument(BaseModel):
@@ -104,13 +94,13 @@ class TOBEDocument(BaseModel):
     title: str = Field(..., description="Document title")
     executive_summary: str = Field(..., description="Executive summary")
     future_state_vision: str = Field(..., description="Vision for future state")
-    benefits: List[str] = Field(..., description="Expected benefits")
-    success_criteria: List[str] = Field(..., description="Success criteria")
-    sections: List[Dict[str, Any]] = Field(..., description="Document sections")
+    benefits: list[str] = Field(..., description="Expected benefits")
+    success_criteria: list[str] = Field(..., description="Success criteria")
+    sections: list[dict[str, Any]] = Field(..., description="Document sections")
     implementation_approach: str = Field(..., description="High-level implementation approach")
-    risks: List[str] = Field(..., description="Identified risks")
-    assumptions: List[str] = Field(..., description="Key assumptions")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    risks: list[str] = Field(..., description="Identified risks")
+    assumptions: list[str] = Field(..., description="Key assumptions")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 class UserStory(BaseModel):
@@ -119,11 +109,11 @@ class UserStory(BaseModel):
     story_id: str = Field(..., description="Unique story identifier")
     title: str = Field(..., description="Story title")
     description: str = Field(..., description="Story description")
-    acceptance_criteria: List[str] = Field(..., description="Acceptance criteria")
+    acceptance_criteria: list[str] = Field(..., description="Acceptance criteria")
     priority: str = Field("medium", description="Priority level")
     story_points: Optional[int] = Field(None, description="Estimated story points")
     epic: Optional[str] = Field(None, description="Epic this story belongs to")
-    labels: List[str] = Field(default_factory=list, description="Story labels")
+    labels: list[str] = Field(default_factory=list, description="Story labels")
 
 
 class TechnicalNote(BaseModel):
@@ -135,7 +125,7 @@ class TechnicalNote(BaseModel):
     )
     description: str = Field(..., description="Technical note description")
     impact: str = Field("medium", description="Impact level (low, medium, high)")
-    references: List[str] = Field(default_factory=list, description="Reference links or documents")
+    references: list[str] = Field(default_factory=list, description="Reference links or documents")
 
 
 class DeveloperTask(BaseModel):
@@ -144,14 +134,14 @@ class DeveloperTask(BaseModel):
     task_id: str = Field(..., description="Unique task identifier")
     title: str = Field(..., description="Task title")
     description: str = Field(..., description="Task description")
-    user_stories: List[UserStory] = Field(..., description="User stories for this task")
-    technical_notes: List[TechnicalNote] = Field(..., description="Technical implementation notes")
+    user_stories: list[UserStory] = Field(..., description="User stories for this task")
+    technical_notes: list[TechnicalNote] = Field(..., description="Technical implementation notes")
     estimated_effort: str = Field(..., description="Estimated effort (e.g., '3 days', '2 weeks')")
     priority: str = Field("medium", description="Task priority")
-    dependencies: List[str] = Field(default_factory=list, description="Task dependencies")
-    labels: List[str] = Field(default_factory=list, description="Task labels")
+    dependencies: list[str] = Field(default_factory=list, description="Task dependencies")
+    labels: list[str] = Field(default_factory=list, description="Task labels")
     epic: Optional[str] = Field(None, description="Epic this task belongs to")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
 class VerificationFlag(BaseModel):
@@ -180,7 +170,7 @@ class WorkflowResponse(BaseModel):
     estimated_completion: Optional[str] = Field(None, description="Estimated completion time")
     progress_percentage: Optional[int] = Field(None, description="Progress percentage (0-100)")
     current_step: Optional[str] = Field(None, description="Current workflow step")
-    results: Optional[Dict[str, Any]] = Field(None, description="Workflow results if completed")
+    results: Optional[dict[str, Any]] = Field(None, description="Workflow results if completed")
 
 
 class WorkflowStatus(BaseModel):
@@ -194,11 +184,11 @@ class WorkflowStatus(BaseModel):
     progress_percentage: int = Field(0, description="Progress percentage (0-100)")
     current_step: Optional[str] = Field(None, description="Current workflow step")
     error_message: Optional[str] = Field(None, description="Error message if failed")
-    metadata: Dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
     # Workflow state components
     initial_request: Optional[WorkflowRequest] = Field(None, description="Initial workflow request")
-    retrieved_context: Optional[Dict[str, Any]] = Field(
+    retrieved_context: Optional[dict[str, Any]] = Field(
         None, description="Retrieved context from knowledge base"
     )
     clarifying_questions: Optional[ClarifyingQuestions] = Field(
@@ -208,10 +198,10 @@ class WorkflowStatus(BaseModel):
     asis_document: Optional[ASISDocument] = Field(None, description="AS-IS document")
     tobe_document: Optional[TOBEDocument] = Field(None, description="TO-BE document")
     developer_task: Optional[DeveloperTask] = Field(None, description="Generated developer task")
-    verification_flags: List[VerificationFlag] = Field(
+    verification_flags: list[VerificationFlag] = Field(
         default_factory=list, description="Verification flags"
     )
-    history: List[Dict[str, Any]] = Field(
+    history: list[dict[str, Any]] = Field(
         default_factory=list, description="Workflow execution history"
     )
 
@@ -237,6 +227,6 @@ class SystemHealth(BaseModel):
     timestamp: datetime = Field(
         default_factory=datetime.utcnow, description="Health check timestamp"
     )
-    services: Dict[str, bool] = Field(..., description="Individual service health status")
-    metrics: Dict[str, Any] = Field(default_factory=dict, description="System metrics")
-    errors: List[str] = Field(default_factory=list, description="Any errors or warnings")
+    services: dict[str, bool] = Field(..., description="Individual service health status")
+    metrics: dict[str, Any] = Field(default_factory=dict, description="System metrics")
+    errors: list[str] = Field(default_factory=list, description="Any errors or warnings")

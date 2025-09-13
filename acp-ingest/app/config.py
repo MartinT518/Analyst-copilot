@@ -1,6 +1,6 @@
 """Configuration management for ACP Ingest service."""
 
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
@@ -80,7 +80,7 @@ class Settings(BaseSettings):
     embedding_timeout: int = 30
 
     # Security settings
-    secret_key: str = "your-secret-key-change-this-in-production"
+    secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440  # 24 hours
     access_token_expire_minutes: int = 1440  # 24 hours
@@ -102,14 +102,15 @@ class Settings(BaseSettings):
     # RBAC settings
     rbac_enabled: bool = True
     default_user_role: str = "analyst"
-    admin_users: List[str] = []
+    admin_users: list[str] = []
 
     # File upload settings
     max_file_size: int = 104857600  # 100MB
+    max_file_size_for_memory: int = 52428800  # 50MB - files larger than this use streaming
     MAX_FILE_SIZE: int = 104857600  # Alias for compatibility
     upload_dir: str = "/app/uploads"
     UPLOAD_DIR: str = "/app/uploads"  # Alias for compatibility
-    allowed_extensions: List[str] = [
+    allowed_extensions: list[str] = [
         "csv",
         "html",
         "htm",
@@ -138,7 +139,7 @@ class Settings(BaseSettings):
     pii_confidence_threshold: float = 0.8
     presidio_enabled: bool = False
     presidio_endpoint: Optional[str] = None
-    custom_pii_patterns: List[str] = []
+    custom_pii_patterns: list[str] = []
 
     # Audit settings
     audit_enabled: bool = True
@@ -172,7 +173,7 @@ class Settings(BaseSettings):
     export_dir: str = "/app/exports"
     export_retention_hours: int = 48
     max_export_size: int = 1073741824  # 1GB
-    export_formats: List[str] = ["csv", "json", "markdown", "html"]
+    export_formats: list[str] = ["csv", "json", "markdown", "html"]
 
     # Rate limiting settings
     rate_limit_enabled: bool = True
@@ -181,9 +182,9 @@ class Settings(BaseSettings):
 
     # CORS settings
     cors_enabled: bool = True
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
-    cors_methods: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    cors_headers: List[str] = ["*"]
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    cors_methods: list[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    cors_headers: list[str] = ["*"]
 
     # SSL/TLS settings
     ssl_enabled: bool = False
@@ -401,8 +402,7 @@ def validate_settings(settings_instance=None):
     if is_production():
         if (
             not settings_instance.secret_key
-            or settings_instance.secret_key
-            == "your-secret-key-change-this-in-production"  # nosec B105
+            or settings_instance.secret_key == "your-secret-key-change-this-in-production"  # nosec B105
         ):
             errors.append("SECRET_KEY must be set to a secure value in production")
 

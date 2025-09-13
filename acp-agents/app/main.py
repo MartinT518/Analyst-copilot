@@ -1,16 +1,18 @@
 """Main FastAPI application for ACP Agents service."""
 
+import time
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
 
 import structlog
 import uvicorn
-from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 
+from .api import health
 from .config import get_settings
 from .schemas import ClientAnswers, WorkflowRequest, WorkflowResponse, WorkflowStatus
 from .services.audit_service import AuditService
@@ -102,12 +104,56 @@ if not settings.debug:
     )
 
 
+# Request logging middleware with correlation IDs
+@app.middleware("http")
+async def request_logging_middleware(request: Request, call_next):
+    """Middleware to log requests with correlation IDs."""
+    start_time = time.time()
+
+    # Generate correlation ID
+    correlation_id = str(uuid.uuid4())
+
+    # Add correlation ID to request state
+    request.state.correlation_id = correlation_id
+
+    # Log request start
+    logger.info(
+        "Request started",
+        correlation_id=correlation_id,
+        method=request.method,
+        path=request.url.path,
+        user_agent=request.headers.get("user-agent"),
+    )
+
+    # Process request
+    response = await call_next(request)
+
+    # Log request completion
+    duration_ms = (time.time() - start_time) * 1000
+    logger.info(
+        "Request completed",
+        correlation_id=correlation_id,
+        method=request.method,
+        path=request.url.path,
+        status_code=response.status_code,
+        duration_ms=duration_ms,
+    )
+
+    # Add correlation ID to response headers
+    response.headers["X-Correlation-ID"] = correlation_id
+
+    return response
+
+
 # Global exception handler
 @app.exception_handler(Exception)
-async def global_exception_handler(request, exc: Exception):
-    """Global exception handler."""
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler with correlation IDs."""
+    correlation_id = getattr(request.state, "correlation_id", None)
+
     logger.error(
         "Unhandled exception",
+        correlation_id=correlation_id,
         path=request.url.path,
         method=request.method,
         error=str(exc),
@@ -121,25 +167,42 @@ async def global_exception_handler(request, exc: Exception):
                 "detail": str(exc),
                 "type": type(exc).__name__,
                 "path": request.url.path,
+                "correlation_id": correlation_id,
             },
         )
     else:
-        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": "Internal server error",
+                "correlation_id": correlation_id,
+            },
+        )
 
 
 # HTTP exception handler
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc: HTTPException):
-    """HTTP exception handler."""
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """HTTP exception handler with correlation IDs."""
+    correlation_id = getattr(request.state, "correlation_id", None)
+
     logger.warning(
         "HTTP exception",
+        correlation_id=correlation_id,
         path=request.url.path,
         method=request.method,
         status_code=exc.status_code,
         detail=exc.detail,
     )
 
-    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail, "correlation_id": correlation_id},
+    )
+
+
+# Include API routers
+app.include_router(health.router)
 
 
 # Root endpoint
@@ -152,31 +215,6 @@ async def root():
         "status": "running",
         "docs_url": "/docs" if settings.debug else None,
     }
-
-
-# Health check endpoint
-@app.get("/health")
-async def health_check():
-    """Health check endpoint."""
-    try:
-        # Check workflow manager health
-        workflow_healthy = await workflow_manager.health_check()
-
-        return {
-            "status": "healthy" if workflow_healthy else "unhealthy",
-            "timestamp": datetime.utcnow().isoformat(),
-            "workflow_manager": workflow_healthy,
-        }
-    except Exception as e:
-        logger.error("Health check failed", error=str(e))
-        return JSONResponse(
-            status_code=503,
-            content={
-                "status": "unhealthy",
-                "error": str(e),
-                "timestamp": datetime.utcnow().isoformat(),
-            },
-        )
 
 
 # API info endpoint

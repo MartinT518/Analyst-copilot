@@ -1,7 +1,7 @@
 """Search service for semantic search and knowledge retrieval."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID
 
 import httpx
@@ -35,8 +35,7 @@ class SearchService:
         await self.vector_service.cleanup()
 
     async def health_check(self) -> str:
-        """
-        Check search service health.
+        """Check search service health.
 
         Returns:
             str: Health status
@@ -48,11 +47,10 @@ class SearchService:
         query: str,
         limit: int = 10,
         similarity_threshold: float = 0.7,
-        filters: Optional[Dict[str, Any]] = None,
+        filters: Optional[dict[str, Any]] = None,
         db: Session = None,
-    ) -> List[SearchResult]:
-        """
-        Perform semantic search on knowledge chunks.
+    ) -> list[SearchResult]:
+        """Perform semantic search on knowledge chunks.
 
         Args:
             query: Search query
@@ -76,24 +74,31 @@ class SearchService:
                 filters=filters,
             )
 
-            # Get corresponding knowledge chunks from database
+            # Get corresponding knowledge chunks from database (optimized to prevent N+1)
             search_results = []
-            for i, vector_result in enumerate(vector_results):
-                # Find chunk by vector_id
-                chunk = (
-                    db.query(KnowledgeChunk)
-                    .filter(KnowledgeChunk.vector_id == vector_result["id"])
-                    .first()
+            if vector_results:
+                # Collect all vector IDs first
+                vector_ids = [result["id"] for result in vector_results]
+
+                # Single query to fetch all chunks
+                chunks = (
+                    db.query(KnowledgeChunk).filter(KnowledgeChunk.vector_id.in_(vector_ids)).all()
                 )
 
-                if chunk:
-                    chunk_response = ChunkResponse.from_orm(chunk)
-                    search_result = SearchResult(
-                        chunk=chunk_response,
-                        similarity_score=vector_result["similarity"],
-                        rank=i + 1,
-                    )
-                    search_results.append(search_result)
+                # Create lookup dictionary for O(1) access
+                chunk_lookup = {chunk.vector_id: chunk for chunk in chunks}
+
+                # Build results using lookup
+                for i, vector_result in enumerate(vector_results):
+                    chunk = chunk_lookup.get(vector_result["id"])
+                    if chunk:
+                        chunk_response = ChunkResponse.from_orm(chunk)
+                        search_result = SearchResult(
+                            chunk=chunk_response,
+                            similarity_score=vector_result["similarity"],
+                            rank=i + 1,
+                        )
+                        search_results.append(search_result)
 
             logger.info(f"Search query '{query}' returned {len(search_results)} results")
             return search_results
@@ -103,10 +108,9 @@ class SearchService:
             raise
 
     async def search_by_metadata(
-        self, filters: Dict[str, Any], limit: int = 100, db: Session = None
-    ) -> List[ChunkResponse]:
-        """
-        Search chunks by metadata filters only.
+        self, filters: dict[str, Any], limit: int = 100, db: Session = None
+    ) -> list[ChunkResponse]:
+        """Search chunks by metadata filters only.
 
         Args:
             filters: Metadata filters
@@ -139,8 +143,7 @@ class SearchService:
             raise
 
     async def get_chunk(self, chunk_id: UUID, db: Session) -> Optional[ChunkResponse]:
-        """
-        Get a specific chunk by ID.
+        """Get a specific chunk by ID.
 
         Args:
             chunk_id: Chunk identifier
@@ -160,9 +163,8 @@ class SearchService:
         limit: int = 5,
         similarity_threshold: float = 0.8,
         db: Session = None,
-    ) -> List[SearchResult]:
-        """
-        Get chunks related to a specific chunk.
+    ) -> list[SearchResult]:
+        """Get chunks related to a specific chunk.
 
         Args:
             chunk_id: Reference chunk ID
@@ -224,9 +226,8 @@ class SearchService:
         origin: Optional[str] = None,
         limit: int = 100,
         db: Session = None,
-    ) -> List[ChunkResponse]:
-        """
-        Get chunks by source type and origin.
+    ) -> list[ChunkResponse]:
+        """Get chunks by source type and origin.
 
         Args:
             source_type: Source type filter
@@ -246,8 +247,7 @@ class SearchService:
         return [ChunkResponse.from_orm(chunk) for chunk in chunks]
 
     async def delete_chunks_by_source(self, source_type: str, origin: str, db: Session) -> int:
-        """
-        Delete chunks by source type and origin.
+        """Delete chunks by source type and origin.
 
         Args:
             source_type: Source type
@@ -295,9 +295,8 @@ class SearchService:
 
     async def get_search_suggestions(
         self, partial_query: str, limit: int = 5, db: Session = None
-    ) -> List[str]:
-        """
-        Get search suggestions based on partial query.
+    ) -> list[str]:
+        """Get search suggestions based on partial query.
 
         Args:
             partial_query: Partial search query
@@ -335,9 +334,8 @@ class SearchService:
             logger.error(f"Failed to get search suggestions: {e}")
             return []
 
-    async def get_search_stats(self, db: Session) -> Dict[str, Any]:
-        """
-        Get search and indexing statistics.
+    async def get_search_stats(self, db: Session) -> dict[str, Any]:
+        """Get search and indexing statistics.
 
         Args:
             db: Database session
@@ -380,9 +378,8 @@ class SearchService:
             logger.error(f"Failed to get search stats: {e}")
             return {}
 
-    async def _generate_embedding(self, text: str) -> List[float]:
-        """
-        Generate embedding for text.
+    async def _generate_embedding(self, text: str) -> list[float]:
+        """Generate embedding for text.
 
         Args:
             text: Text to embed
@@ -407,7 +404,7 @@ class SearchService:
 
     def find_similar(
         self, query: str, limit: int = 10, threshold: float = 0.7
-    ) -> List[SearchResult]:
+    ) -> list[SearchResult]:
         """Find similar chunks using semantic search.
 
         Args:
@@ -421,7 +418,7 @@ class SearchService:
         # TODO: Implement semantic similarity search
         raise NotImplementedError("find_similar method not yet implemented")
 
-    def get_available_filters(self) -> Dict[str, Any]:
+    def get_available_filters(self) -> dict[str, Any]:
         """Get available filter options for search.
 
         Returns:
@@ -430,7 +427,7 @@ class SearchService:
         # TODO: Implement filter options
         raise NotImplementedError("get_available_filters method not yet implemented")
 
-    def export_results(self, results: List[SearchResult], format: str = "json") -> str:
+    def export_results(self, results: list[SearchResult], format: str = "json") -> str:
         """Export search results in specified format.
 
         Args:
@@ -443,7 +440,7 @@ class SearchService:
         # TODO: Implement result export
         raise NotImplementedError("export_results method not yet implemented")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get search service statistics.
 
         Returns:

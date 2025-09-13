@@ -4,7 +4,12 @@ import json
 import os
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
+
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.database import get_db
@@ -14,10 +19,6 @@ from app.services.auth_service import get_current_user
 from app.services.ingest_service import IngestService
 from app.utils.file_utils import detect_file_type, get_file_info, save_upload_file
 from app.utils.logging_config import get_audit_logger, get_logger, get_performance_logger
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 logger = get_logger(__name__)
 audit_logger = get_audit_logger()
@@ -33,7 +34,7 @@ class UploadResponse(BaseModel):
     job_id: str
     status: str
     message: str
-    file_info: Dict[str, Any]
+    file_info: dict[str, Any]
 
 
 class PasteResponse(BaseModel):
@@ -48,7 +49,7 @@ class PasteResponse(BaseModel):
 class JobListResponse(BaseModel):
     """Response model for job listing."""
 
-    jobs: List[IngestJobResponse]
+    jobs: list[IngestJobResponse]
     total: int
     skip: int
     limit: int
@@ -65,10 +66,9 @@ async def upload_file(
     ),
     metadata: str = Form("{}", description="Additional metadata as JSON string"),
     db: Session = Depends(get_db),
-    current_user: Optional[Dict[str, Any]] = Depends(get_current_user),
+    current_user: Optional[dict[str, Any]] = Depends(get_current_user),
 ):
-    """
-    Upload a file for ingestion.
+    """Upload a file for ingestion.
 
     Args:
         file: File to upload
@@ -206,10 +206,9 @@ async def paste_text(
     request: PasteRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: Optional[Dict[str, Any]] = Depends(get_current_user),
+    current_user: Optional[dict[str, Any]] = Depends(get_current_user),
 ):
-    """
-    Paste text content for ingestion.
+    """Paste text content for ingestion.
 
     Args:
         request: Paste request with text and metadata
@@ -326,10 +325,9 @@ async def paste_text(
 async def get_job_status(
     job_id: str,
     db: Session = Depends(get_db),
-    current_user: Optional[Dict[str, Any]] = Depends(get_current_user),
+    current_user: Optional[dict[str, Any]] = Depends(get_current_user),
 ):
-    """
-    Get status of an ingest job.
+    """Get status of an ingest job.
 
     Args:
         job_id: Job ID to check
@@ -385,10 +383,9 @@ async def list_jobs(
     origin: Optional[str] = None,
     source_type: Optional[str] = None,
     db: Session = Depends(get_db),
-    current_user: Optional[Dict[str, Any]] = Depends(get_current_user),
+    current_user: Optional[dict[str, Any]] = Depends(get_current_user),
 ):
-    """
-    List ingest jobs with optional filtering.
+    """List ingest jobs with optional filtering.
 
     Args:
         skip: Number of jobs to skip
@@ -421,13 +418,22 @@ async def list_jobs(
         # Get total count
         total = query.count()
 
-        # Apply pagination and ordering
-        jobs = query.order_by(IngestJob.created_at.desc()).offset(skip).limit(limit).all()
+        # Apply pagination and ordering with eager loading to prevent N+1 queries
+        from sqlalchemy.orm import selectinload
+
+        jobs = (
+            query.options(selectinload(IngestJob.knowledge_chunks))
+            .order_by(IngestJob.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
         # Convert to response models
         job_responses = []
         for job in jobs:
-            chunk_count = db.query(KnowledgeChunk).filter(KnowledgeChunk.job_id == job.id).count()
+            # Use the eagerly loaded chunks instead of a separate query
+            chunk_count = len(job.knowledge_chunks) if job.knowledge_chunks else 0
 
             job_responses.append(
                 IngestJobResponse(
@@ -458,10 +464,9 @@ async def list_jobs(
 async def delete_job(
     job_id: str,
     db: Session = Depends(get_db),
-    current_user: Optional[Dict[str, Any]] = Depends(get_current_user),
+    current_user: Optional[dict[str, Any]] = Depends(get_current_user),
 ):
-    """
-    Delete an ingest job and its associated data.
+    """Delete an ingest job and its associated data.
 
     Args:
         job_id: Job ID to delete
@@ -525,10 +530,9 @@ async def retry_job(
     job_id: str,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: Optional[Dict[str, Any]] = Depends(get_current_user),
+    current_user: Optional[dict[str, Any]] = Depends(get_current_user),
 ):
-    """
-    Retry a failed ingest job.
+    """Retry a failed ingest job.
 
     Args:
         job_id: Job ID to retry
@@ -597,10 +601,9 @@ async def retry_job(
 @router.get("/stats")
 async def get_ingest_stats(
     db: Session = Depends(get_db),
-    current_user: Optional[Dict[str, Any]] = Depends(get_current_user),
+    current_user: Optional[dict[str, Any]] = Depends(get_current_user),
 ):
-    """
-    Get ingestion statistics.
+    """Get ingestion statistics.
 
     Args:
         db: Database session

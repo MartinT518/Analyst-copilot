@@ -1,6 +1,6 @@
 """Configuration management for ACP Agents service."""
 
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseSettings, validator
 
@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     ingest_service_api_key: Optional[str] = None
 
     # Security settings
-    secret_key: str = "your-secret-key-change-this-in-production"
+    secret_key: str
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440
 
@@ -82,9 +82,9 @@ class Settings(BaseSettings):
 
     # CORS settings
     cors_enabled: bool = True
-    cors_origins: List[str] = ["*"]
-    cors_methods: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    cors_headers: List[str] = ["*"]
+    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    cors_methods: list[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    cors_headers: list[str] = ["*"]
 
     # Workflow persistence
     persist_workflows: bool = True
@@ -192,7 +192,7 @@ def validate_settings():
         if settings.debug:
             errors.append("DEBUG should be False in production")
 
-        if settings.cors_origins == ["*"]:
+        if "*" in settings.cors_origins:
             errors.append("CORS origins should be restricted in production")
 
     # Check file paths

@@ -5,7 +5,7 @@ import logging
 import os
 import tempfile
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from uuid import UUID
 
 import aiofiles
@@ -76,8 +76,7 @@ class IngestService:
         await self.vector_service.cleanup()
 
     async def check_embedding_service(self) -> str:
-        """
-        Check if embedding service is available.
+        """Check if embedding service is available.
 
         Returns:
             str: Service status
@@ -103,8 +102,7 @@ class IngestService:
         uploader: str,
         db: Session,
     ) -> IngestJob:
-        """
-        Create a new upload job.
+        """Create a new upload job.
 
         Args:
             file: Uploaded file
@@ -175,8 +173,7 @@ class IngestService:
     async def create_paste_job(
         self, request: IngestPasteRequest, uploader: str, db: Session
     ) -> IngestJob:
-        """
-        Create a new paste job.
+        """Create a new paste job.
 
         Args:
             request: Paste request data
@@ -234,8 +231,7 @@ class IngestService:
             raise
 
     async def process_job(self, job_id: UUID, db: Session):
-        """
-        Process an ingestion job.
+        """Process an ingestion job.
 
         Args:
             job_id: Job identifier
@@ -298,9 +294,8 @@ class IngestService:
             db.add(audit_log)
             db.commit()
 
-    async def _process_document(self, document: Dict[str, Any], job: IngestJob, db: Session) -> int:
-        """
-        Process a single document and create chunks.
+    async def _process_document(self, document: dict[str, Any], job: IngestJob, db: Session) -> int:
+        """Process a single document and create chunks.
 
         Args:
             document: Parsed document data
@@ -380,9 +375,8 @@ class IngestService:
             db.rollback()
             return 0
 
-    async def _generate_embedding(self, text: str) -> List[float]:
-        """
-        Generate embedding for text.
+    async def _generate_embedding(self, text: str) -> list[float]:
+        """Generate embedding for text.
 
         Args:
             text: Text to embed
@@ -406,8 +400,7 @@ class IngestService:
             raise
 
     async def get_job_status(self, job_id: UUID, db: Session) -> Optional[JobResponse]:
-        """
-        Get job status.
+        """Get job status.
 
         Args:
             job_id: Job identifier
@@ -429,9 +422,8 @@ class IngestService:
         status: Optional[str] = None,
         origin: Optional[str] = None,
         db: Session = None,
-    ) -> List[JobResponse]:
-        """
-        List ingestion jobs.
+    ) -> list[JobResponse]:
+        """List ingestion jobs.
 
         Args:
             skip: Number of jobs to skip
@@ -454,8 +446,7 @@ class IngestService:
         return [JobResponse.from_orm(job) for job in jobs]
 
     async def estimate_processing_time(self, size: int) -> int:
-        """
-        Estimate processing time based on content size.
+        """Estimate processing time based on content size.
 
         Args:
             size: Content size in bytes
@@ -468,8 +459,7 @@ class IngestService:
         return min(base_time, 300)  # Cap at 5 minutes
 
     async def get_processing_stats(self, db: Session) -> ProcessingStats:
-        """
-        Get processing statistics.
+        """Get processing statistics.
 
         Args:
             db: Database session
@@ -525,8 +515,7 @@ class IngestService:
         )
 
     async def get_system_status(self) -> SystemStatus:
-        """
-        Get detailed system status.
+        """Get detailed system status.
 
         Returns:
             SystemStatus: System status information
@@ -575,7 +564,72 @@ class IngestService:
             memory_usage_percent=memory_usage,
         )
 
-    async def process_job_async(self, job_id: UUID, db: Optional[Session] = None) -> Dict[str, Any]:
+    def process_job_sync(self, job_id: UUID, db: Optional[Session] = None) -> dict[str, Any]:
+        """Process an ingest job synchronously.
+
+        Args:
+            job_id: ID of the job to process
+            db: Database session
+
+        Returns:
+            Dictionary with processing results
+        """
+        if db is None:
+            from ..database import SessionLocal
+
+            db = SessionLocal()
+            should_close_db = True
+        else:
+            should_close_db = False
+
+        try:
+            # Get job from database
+            job = db.query(IngestJob).filter(IngestJob.id == job_id).first()
+            if not job:
+                return {"status": "error", "message": "Job not found"}
+
+            # Update job status to processing
+            job.status = "processing"
+            job.updated_at = datetime.utcnow()
+            db.commit()
+
+            # Process the job based on its type
+            result = {"status": "success", "job_id": str(job_id)}
+
+            if job.source_type == "file":
+                # Process file-based job
+                result.update(self._process_file_job_sync(job, db))
+            elif job.source_type == "paste":
+                # Process paste-based job
+                result.update(self._process_paste_job_sync(job, db))
+            else:
+                result = {
+                    "status": "error",
+                    "message": f"Unsupported source type: {job.source_type}",
+                }
+
+            # Update job status
+            if result["status"] == "success":
+                job.status = "completed"
+                job.completed_at = datetime.utcnow()
+            else:
+                job.status = "failed"
+                job.error_message = result.get("message", "Unknown error")
+                job.completed_at = datetime.utcnow()
+
+            job.updated_at = datetime.utcnow()
+            db.commit()
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Job processing failed: {e}")
+            return {"status": "error", "message": str(e)}
+        finally:
+            if should_close_db:
+                db.close()
+
+    async def process_job_async(self, job_id: UUID, db: Optional[Session] = None) -> dict[str, Any]:
         """Process an ingest job asynchronously.
 
         Args:
@@ -585,5 +639,213 @@ class IngestService:
         Returns:
             Dictionary with processing results
         """
-        # TODO: Implement async job processing
-        raise NotImplementedError("process_job_async method not yet implemented")
+        # For now, delegate to sync method - can be enhanced later for true async processing
+        return self.process_job_sync(job_id, db)
+
+    def _process_file_job_sync(self, job: IngestJob, db: Session) -> dict[str, Any]:
+        """Process a file-based job synchronously."""
+        try:
+            # Get the file path
+            file_path = os.path.join(settings.upload_dir, job.filename)
+
+            if not os.path.exists(file_path):
+                return {"status": "error", "message": "File not found"}
+
+            # Check file size to determine if streaming is needed
+            file_size = os.path.getsize(file_path)
+            use_streaming = file_size > settings.max_file_size_for_memory  # e.g., 50MB
+
+            if use_streaming:
+                # Use streaming parser for large files
+                chunks_created = self._process_file_streaming(file_path, job, db)
+            else:
+                # Use regular parser for smaller files
+                parser = self._get_parser_for_file(job.filename)
+                if not parser:
+                    return {"status": "error", "message": "Unsupported file type"}
+
+                # Parse the file
+                content = parser.parse_file(file_path)
+
+                # Create knowledge chunks
+                chunks_created = self._create_knowledge_chunks_sync(content, job, db)
+
+            return {
+                "status": "success",
+                "chunks_created": chunks_created,
+                "file_processed": job.filename,
+                "streaming_used": use_streaming,
+            }
+
+        except Exception as e:
+            logger.error(f"File job processing failed: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def _process_paste_job_sync(self, job: IngestJob, db: Session) -> dict[str, Any]:
+        """Process a paste-based job synchronously."""
+        try:
+            # Get the paste content from job metadata
+            if not job.metadata or "content" not in job.metadata:
+                return {"status": "error", "message": "No content found in job"}
+
+            content = job.metadata["content"]
+
+            # Create knowledge chunks
+            chunks_created = self._create_knowledge_chunks_sync(content, job, db)
+
+            return {"status": "success", "chunks_created": chunks_created, "content_type": "paste"}
+
+        except Exception as e:
+            logger.error(f"Paste job processing failed: {e}")
+            return {"status": "error", "message": str(e)}
+
+    def _create_knowledge_chunks_sync(self, content: str, job: IngestJob, db: Session) -> int:
+        """Create knowledge chunks synchronously."""
+        try:
+            # Split content into chunks
+            chunks = self._split_content_into_chunks(content)
+
+            # Create knowledge chunk records
+            chunks_created = 0
+            for i, chunk_text in enumerate(chunks):
+                chunk = KnowledgeChunk(
+                    job_id=job.id,
+                    chunk_index=i,
+                    content=chunk_text,
+                    metadata={
+                        "job_id": str(job.id),
+                        "chunk_index": i,
+                        "source_type": job.source_type,
+                        "origin": job.origin,
+                    },
+                )
+                db.add(chunk)
+                chunks_created += 1
+
+            db.commit()
+            return chunks_created
+
+        except Exception as e:
+            logger.error(f"Failed to create knowledge chunks: {e}")
+            db.rollback()
+            return 0
+
+    def _process_file_streaming(self, file_path: str, job: IngestJob, db: Session) -> int:
+        """Process large file using streaming to avoid memory issues.
+
+        Args:
+            file_path: Path to the file
+            job: Ingest job
+            db: Database session
+
+        Returns:
+            int: Number of chunks created
+        """
+        try:
+            file_extension = os.path.splitext(job.filename)[1].lower()
+            chunks_created = 0
+
+            # Import streaming parsers
+            from ..parsers.streaming_markdown_parser import StreamingMarkdownParser
+            from ..parsers.text_parser import StreamingTextParser
+
+            # Choose appropriate streaming parser
+            if file_extension in [".txt", ".log", ".csv"]:
+                parser = StreamingTextParser()
+                chunks_iterator = parser.parse_file_streaming(file_path, job.metadata or {})
+            elif file_extension in [".md", ".markdown"]:
+                parser = StreamingMarkdownParser()
+                chunks_iterator = parser.parse_file_streaming(file_path, job.metadata or {})
+            else:
+                # Fall back to regular processing for unsupported streaming formats
+                logger.warning(
+                    f"Streaming not supported for {file_extension}, using regular processing"
+                )
+                regular_parser = self._get_parser_for_file(job.filename)
+                if not regular_parser:
+                    raise ValueError(f"Unsupported file type: {file_extension}")
+
+                content = regular_parser.parse_file(file_path)
+                return self._create_knowledge_chunks_sync(content, job, db)
+
+            # Process chunks in batches to avoid overwhelming the database
+            batch_size = 100
+            batch = []
+
+            for chunk_data in chunks_iterator:
+                batch.append(chunk_data)
+
+                # Process batch when it reaches batch_size
+                if len(batch) >= batch_size:
+                    chunks_created += self._create_knowledge_chunks_from_batch(batch, job, db)
+                    batch = []
+
+                    # Commit periodically to avoid long transactions
+                    db.commit()
+
+            # Process remaining chunks in batch
+            if batch:
+                chunks_created += self._create_knowledge_chunks_from_batch(batch, job, db)
+
+            return chunks_created
+
+        except Exception as e:
+            logger.error(f"Streaming file processing failed: {e}")
+            db.rollback()
+            raise
+
+    def _create_knowledge_chunks_from_batch(
+        self, chunk_batch: list[dict[str, Any]], job: IngestJob, db: Session
+    ) -> int:
+        """Create knowledge chunks from a batch of parsed data.
+
+        Args:
+            chunk_batch: Batch of chunk data
+            job: Ingest job
+            db: Database session
+
+        Returns:
+            int: Number of chunks created
+        """
+        chunks_created = 0
+
+        for chunk_data in chunk_batch:
+            chunk = KnowledgeChunk(
+                job_id=job.id,
+                chunk_index=chunk_data.get("chunk_index", 0),
+                content=chunk_data["content"],
+                metadata={
+                    "job_id": str(job.id),
+                    "chunk_index": chunk_data.get("chunk_index", 0),
+                    "source_type": job.source_type,
+                    "origin": job.origin,
+                    "chunk_type": chunk_data.get("metadata", {}).get("chunk_type", "text"),
+                    **chunk_data.get("metadata", {}),
+                },
+            )
+            db.add(chunk)
+            chunks_created += 1
+
+        return chunks_created
+
+    def _get_parser_for_file(self, filename: str):
+        """Get the appropriate parser for a file."""
+        from ..parsers import get_parser_for_file
+
+        return get_parser_for_file(filename)
+
+    def _split_content_into_chunks(self, content: str, chunk_size: int = None) -> list[str]:
+        """Split content into chunks."""
+        if chunk_size is None:
+            chunk_size = settings.max_chunk_size
+
+        if len(content) <= chunk_size:
+            return [content]
+
+        chunks = []
+        for i in range(0, len(content), chunk_size - settings.chunk_overlap):
+            chunk = content[i : i + chunk_size]
+            if chunk.strip():  # Only add non-empty chunks
+                chunks.append(chunk)
+
+        return chunks

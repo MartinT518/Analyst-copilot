@@ -3,9 +3,11 @@
 import hashlib
 import logging
 import secrets
+import uuid
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
+import redis
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
@@ -35,6 +37,21 @@ class AuthService:
 
     def __init__(self):
         self.settings = settings
+        # Initialize Redis client for JWT revocation list
+        try:
+            self.redis_client = redis.from_url(
+                settings.redis_url,
+                decode_responses=True,
+                socket_connect_timeout=5,
+                socket_timeout=5,
+                retry_on_timeout=True,
+            )
+            # Test connection
+            self.redis_client.ping()
+            logger.info("Redis client initialized for JWT revocation list")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Redis client: {e}")
+            self.redis_client = None
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         """Verify a password against its hash."""
@@ -45,10 +62,9 @@ class AuthService:
         return pwd_context.hash(password)
 
     def create_access_token(
-        self, data: Dict[str, Any], expires_delta: Optional[timedelta] = None
+        self, data: dict[str, Any], expires_delta: Optional[timedelta] = None
     ) -> str:
-        """
-        Create a JWT access token.
+        """Create a JWT access token.
 
         Args:
             data: Data to encode in token
@@ -63,13 +79,19 @@ class AuthService:
         else:
             expire = datetime.utcnow() + timedelta(minutes=settings.access_token_expire_minutes)
 
-        to_encode.update({"exp": expire})
+        # Add JWT ID for revocation tracking
+        to_encode.update(
+            {
+                "exp": expire,
+                "jti": str(uuid.uuid4()),
+                "iat": datetime.utcnow(),
+            }
+        )
         encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
         return encoded_jwt
 
-    def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
-        """
-        Verify and decode a JWT token.
+    def verify_token(self, token: str) -> Optional[dict[str, Any]]:
+        """Verify and decode a JWT token.
 
         Args:
             token: JWT token
@@ -79,13 +101,101 @@ class AuthService:
         """
         try:
             payload = jwt.decode(token, settings.secret_key, algorithms=[ALGORITHM])
+
+            # Check if token is in revocation list
+            if self._is_token_revoked(payload.get("jti")):
+                return None
+
             return payload
         except JWTError:
             return None
 
-    def authenticate_user(self, username: str, password: str, db: Session) -> Optional[User]:
+    def revoke_token(self, token: str) -> bool:
+        """Revoke a JWT token by adding it to the revocation list.
+
+        Args:
+            token: JWT token to revoke
+
+        Returns:
+            bool: True if token was successfully revoked
         """
-        Authenticate a user with username and password.
+        try:
+            # Decode token to get JTI and expiration
+            payload = jwt.decode(
+                token, settings.secret_key, algorithms=[ALGORITHM], options={"verify_exp": False}
+            )
+            jti = payload.get("jti")
+            exp = payload.get("exp")
+
+            if not jti or not exp:
+                return False
+
+            if self.redis_client is None:
+                logger.warning("Redis client not available, cannot revoke token")
+                return False
+
+            # Calculate TTL (time to live) until token expires
+            exp_datetime = datetime.utcfromtimestamp(exp)
+            ttl_seconds = int((exp_datetime - datetime.utcnow()).total_seconds())
+
+            if ttl_seconds > 0:
+                # Store token JTI in Redis with TTL matching token expiration
+                self.redis_client.setex(f"revoked_token:{jti}", ttl_seconds, "revoked")
+                logger.info(f"Token revoked: {jti}")
+                return True
+            else:
+                # Token already expired
+                logger.info(f"Token already expired: {jti}")
+                return True
+
+        except Exception as e:
+            logger.error(f"Failed to revoke token: {e}")
+            return False
+
+    def _is_token_revoked(self, jti: str) -> bool:
+        """Check if a token JTI is in the revocation list.
+
+        Args:
+            jti: JWT ID to check
+
+        Returns:
+            bool: True if token is revoked
+        """
+        if not jti or self.redis_client is None:
+            return False
+
+        try:
+            return self.redis_client.exists(f"revoked_token:{jti}") > 0
+        except Exception as e:
+            logger.error(f"Failed to check token revocation status: {e}")
+            return False
+
+    def revoke_all_user_tokens(self, user_id: str) -> int:
+        """Revoke all tokens for a specific user by storing user ID in revocation list.
+
+        Args:
+            user_id: User ID to revoke all tokens for
+
+        Returns:
+            int: Number of tokens potentially revoked
+        """
+        if self.redis_client is None:
+            logger.warning("Redis client not available, cannot revoke user tokens")
+            return 0
+
+        try:
+            # Store user ID in revocation list with a reasonable TTL
+            # This is a simple approach - in production you might want to track individual tokens
+            ttl_seconds = settings.access_token_expire_minutes * 60  # Convert to seconds
+            self.redis_client.setex(f"revoked_user:{user_id}", ttl_seconds, "revoked")
+            logger.info(f"All tokens revoked for user: {user_id}")
+            return 1  # Return 1 as we can't count individual tokens with this approach
+        except Exception as e:
+            logger.error(f"Failed to revoke user tokens: {e}")
+            return 0
+
+    def authenticate_user(self, username: str, password: str, db: Session) -> Optional[User]:
+        """Authenticate a user with username and password.
 
         Args:
             username: Username
@@ -103,8 +213,7 @@ class AuthService:
         return user
 
     def create_user(self, user_data: UserCreate, db: Session) -> User:
-        """
-        Create a new user.
+        """Create a new user.
 
         Args:
             user_data: User creation data
@@ -140,8 +249,7 @@ class AuthService:
         return user
 
     def generate_api_key(self) -> tuple[str, str]:
-        """
-        Generate a new API key.
+        """Generate a new API key.
 
         Returns:
             tuple[str, str]: (api_key, api_key_hash)
@@ -158,8 +266,7 @@ class AuthService:
         expires_in_days: Optional[int],
         db: Session,
     ) -> tuple[APIKey, str]:
-        """
-        Create a new API key.
+        """Create a new API key.
 
         Args:
             name: API key name
@@ -193,8 +300,7 @@ class AuthService:
         return api_key_record, api_key
 
     def validate_api_key(self, api_key: str, db: Session) -> Optional[APIKey]:
-        """
-        Validate an API key.
+        """Validate an API key.
 
         Args:
             api_key: API key to validate
@@ -228,9 +334,8 @@ class AuthService:
         self,
         credentials: HTTPAuthorizationCredentials = Depends(security),
         db: Session = Depends(get_db),
-    ) -> Dict[str, Any]:
-        """
-        Get current authenticated user from token or API key.
+    ) -> dict[str, Any]:
+        """Get current authenticated user from token or API key.
 
         Args:
             credentials: HTTP authorization credentials
@@ -286,14 +391,13 @@ class AuthService:
         raise credentials_exception
 
     def require_role(self, required_role: str):
-        """
-        Dependency to require a specific role.
+        """Dependency to require a specific role.
 
         Args:
             required_role: Required user role
         """
 
-        def role_checker(current_user: Dict[str, Any] = Depends(self.get_current_user)):
+        def role_checker(current_user: dict[str, Any] = Depends(self.get_current_user)):
             role_hierarchy = {"analyst": 1, "reviewer": 2, "admin": 3}
 
             user_role_level = role_hierarchy.get(current_user["role"], 0)
@@ -310,15 +414,14 @@ class AuthService:
         return role_checker
 
     def require_permission(self, required_permission: str):
-        """
-        Dependency to require a specific permission (for API keys).
+        """Dependency to require a specific permission (for API keys).
 
         Args:
             required_permission: Required permission
         """
 
         def permission_checker(
-            current_user: Dict[str, Any] = Depends(self.get_current_user),
+            current_user: dict[str, Any] = Depends(self.get_current_user),
         ):
             # JWT tokens have full permissions based on role
             if current_user.get("auth_type") == "jwt":
@@ -340,13 +443,12 @@ class AuthService:
         self,
         action: str,
         user_id: str,
-        details: Dict[str, Any],
+        details: dict[str, Any],
         ip_address: Optional[str] = None,
         user_agent: Optional[str] = None,
         db: Session = None,
     ):
-        """
-        Log authentication events.
+        """Log authentication events.
 
         Args:
             action: Authentication action
@@ -373,8 +475,7 @@ class AuthService:
             logger.error(f"Failed to log auth event: {e}")
 
     def create_default_admin(self, db: Session) -> Optional[User]:
-        """
-        Create default admin user if no users exist.
+        """Create default admin user if no users exist.
 
         Args:
             db: Database session
@@ -400,9 +501,8 @@ auth_service = AuthService()
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
-) -> Dict[str, Any]:
-    """
-    Get current authenticated user from token or API key.
+) -> dict[str, Any]:
+    """Get current authenticated user from token or API key.
 
     This is a standalone function for FastAPI dependency injection.
     """

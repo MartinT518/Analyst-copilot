@@ -1,9 +1,10 @@
 """Confluence HTML/XML parser for processing exported Confluence pages."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 from xml.etree.ElementTree import Element
 
+import bleach
 from bs4 import BeautifulSoup, Tag
 from defusedxml import ElementTree as ET
 
@@ -42,9 +43,49 @@ class ConfluenceParser:
         # Tags to ignore
         self.ignore_tags = ["script", "style", "nav", "footer", "header", "aside"]
 
-    async def parse(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
+        # Bleach configuration for HTML sanitization
+        self.allowed_tags = set(
+            self.structure_tags
+            + self.content_tags
+            + ["a", "strong", "em", "b", "i", "u", "br", "hr", "span", "img"]
+        )
+
+        self.allowed_attributes = {
+            "a": ["href", "title"],
+            "img": ["src", "alt", "title", "width", "height"],
+            "table": ["border", "cellpadding", "cellspacing"],
+            "td": ["colspan", "rowspan"],
+            "th": ["colspan", "rowspan"],
+        }
+
+        self.allowed_protocols = ["http", "https", "mailto"]
+
+    def _sanitize_html(self, content: str) -> str:
+        """Sanitize HTML content using bleach.
+
+        Args:
+            content: Raw HTML content
+
+        Returns:
+            Sanitized HTML content
         """
-        Parse Confluence HTML/XML content.
+        try:
+            sanitized = bleach.clean(
+                content,
+                tags=self.allowed_tags,
+                attributes=self.allowed_attributes,
+                protocols=self.allowed_protocols,
+                strip=True,
+                strip_comments=True,
+            )
+            return sanitized
+        except Exception as e:
+            logger.warning(f"HTML sanitization failed: {e}")
+            # Return empty content if sanitization fails
+            return ""
+
+    async def parse(self, content: str, metadata: dict[str, Any]) -> list[dict[str, Any]]:
+        """Parse Confluence HTML/XML content.
 
         Args:
             content: HTML/XML content as string
@@ -66,9 +107,8 @@ class ConfluenceParser:
             logger.error(f"Failed to parse Confluence content: {e}")
             raise
 
-    async def _parse_html(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """
-        Parse Confluence HTML export.
+    async def _parse_html(self, content: str, metadata: dict[str, Any]) -> list[dict[str, Any]]:
+        """Parse Confluence HTML export.
 
         Args:
             content: HTML content
@@ -78,7 +118,9 @@ class ConfluenceParser:
             List[Dict[str, Any]]: Parsed documents
         """
         try:
-            soup = BeautifulSoup(content, "html.parser")
+            # Sanitize HTML content before parsing
+            sanitized_content = self._sanitize_html(content)
+            soup = BeautifulSoup(sanitized_content, "html.parser")
 
             # Remove unwanted elements
             for tag_name in self.ignore_tags:
@@ -110,9 +152,8 @@ class ConfluenceParser:
             logger.error(f"Failed to parse HTML content: {e}")
             raise
 
-    async def _parse_xml(self, content: str, metadata: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """
-        Parse Confluence XML export.
+    async def _parse_xml(self, content: str, metadata: dict[str, Any]) -> list[dict[str, Any]]:
+        """Parse Confluence XML export.
 
         Args:
             content: XML content
@@ -150,9 +191,8 @@ class ConfluenceParser:
             logger.error(f"Failed to parse XML content: {e}")
             raise
 
-    def _extract_pages_from_html(self, soup: BeautifulSoup) -> List[BeautifulSoup]:
-        """
-        Extract individual pages from HTML soup.
+    def _extract_pages_from_html(self, soup: BeautifulSoup) -> list[BeautifulSoup]:
+        """Extract individual pages from HTML soup.
 
         Args:
             soup: BeautifulSoup object
@@ -204,10 +244,9 @@ class ConfluenceParser:
         return pages
 
     async def _parse_html_page(
-        self, page_soup: BeautifulSoup, metadata: Dict[str, Any], page_index: int
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Parse a single HTML page.
+        self, page_soup: BeautifulSoup, metadata: dict[str, Any], page_index: int
+    ) -> Optional[dict[str, Any]]:
+        """Parse a single HTML page.
 
         Args:
             page_soup: BeautifulSoup object for the page
@@ -254,10 +293,9 @@ class ConfluenceParser:
             return None
 
     async def _parse_xml_element(
-        self, element: Element, metadata: Dict[str, Any], page_index: int
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Parse a single XML element as a page.
+        self, element: Element, metadata: dict[str, Any], page_index: int
+    ) -> Optional[dict[str, Any]]:
+        """Parse a single XML element as a page.
 
         Args:
             element: XML element
@@ -447,7 +485,7 @@ class ConfluenceParser:
 
         return ""
 
-    def _extract_metadata_from_html(self, soup: BeautifulSoup) -> Dict[str, Any]:
+    def _extract_metadata_from_html(self, soup: BeautifulSoup) -> dict[str, Any]:
         """Extract metadata from HTML soup."""
         metadata = {}
 
@@ -471,7 +509,7 @@ class ConfluenceParser:
 
         return metadata
 
-    def _extract_metadata_from_xml(self, element: Element) -> Dict[str, Any]:
+    def _extract_metadata_from_xml(self, element: Element) -> dict[str, Any]:
         """Extract metadata from XML element."""
         metadata = {}
 
@@ -491,8 +529,7 @@ class ConfluenceParser:
         return metadata
 
     def validate_format(self, content: str) -> bool:
-        """
-        Validate if content is valid Confluence HTML/XML.
+        """Validate if content is valid Confluence HTML/XML.
 
         Args:
             content: Content to validate

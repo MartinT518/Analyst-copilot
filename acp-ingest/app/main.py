@@ -4,15 +4,16 @@ import os
 from contextlib import asynccontextmanager
 
 import uvicorn
-from app.api import health, ingest, search
-from app.config import get_settings
-from app.database import Base, engine
-from app.utils.file_utils import ensure_directory
-from app.utils.logging_config import LoggingMiddleware, get_logger, setup_logging
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
+
+from app.api import auth, health, ingest, search
+from app.config import get_settings
+from app.database import Base, engine
+from app.utils.file_utils import ensure_directory
+from app.utils.logging_config import LoggingMiddleware, get_logger, setup_logging
 
 # Setup logging
 settings = get_settings()
@@ -144,6 +145,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 # Include API routers
 app.include_router(health.router)
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(ingest.router, prefix="/api/v1")
 app.include_router(search.router, prefix="/api/v1")
 

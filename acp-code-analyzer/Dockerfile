@@ -1,4 +1,4 @@
-# Multi-stage build for ACP Agents Service
+# Multi-stage build for ACP Code Analyzer Service
 
 # Stage 1: Builder - Install dependencies and build tools
 FROM python:3.11-slim as builder
@@ -64,11 +64,11 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser && \
 USER appuser
 
 # Expose port
-EXPOSE 8001
+EXPOSE 8002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8001/health/live || exit 1
+    CMD curl -f http://localhost:8002/health/live || exit 1
 
 # Default command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8002"]

@@ -6,6 +6,8 @@ from .db_schema_parser import DatabaseSchemaParser
 from .jira_parser import JiraParser
 from .markdown_parser import MarkdownParser
 from .pdf_parser import PDFParser
+from .streaming_markdown_parser import StreamingMarkdownParser
+from .text_parser import StreamingTextParser, TextParser
 
 __all__ = [
     "CodeParser",
@@ -14,4 +16,7 @@ __all__ = [
     "JiraParser",
     "MarkdownParser",
     "PDFParser",
+    "TextParser",
+    "StreamingTextParser",
+    "StreamingMarkdownParser",
 ]

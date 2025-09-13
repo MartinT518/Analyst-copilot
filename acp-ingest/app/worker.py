@@ -1,18 +1,18 @@
 """Celery worker for background job processing."""
 
-import asyncio
 import os
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 from uuid import UUID
+
+from celery import Celery
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
 
 from app.config import get_settings
 from app.models import IngestJob
 from app.services.ingest_service import IngestService
 from app.utils.logging_config import get_logger, setup_logging
-from celery import Celery
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
 
 # Setup logging
 settings = get_settings()
@@ -77,9 +77,8 @@ def get_db_session():
 
 
 @celery_app.task(bind=True, name="app.worker.process_ingest_job")
-def process_ingest_job(self, job_id: str) -> Dict[str, Any]:
-    """
-    Process an ingest job in the background.
+def process_ingest_job(self, job_id: str) -> dict[str, Any]:
+    """Process an ingest job in the background.
 
     Args:
         job_id: ID of the job to process
@@ -109,16 +108,10 @@ def process_ingest_job(self, job_id: str) -> Dict[str, Any]:
         # Create ingest service and process job
         ingest_service = IngestService()
 
-        # Run async processing in sync context
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-        try:
-            result = loop.run_until_complete(ingest_service.process_job_async(UUID(job_id), db))
-            logger.info("Job processing completed", job_id=job_id, result=result)
-            return result
-        finally:
-            loop.close()
+        # Use sync processing method directly
+        result = ingest_service.process_job_sync(UUID(job_id), db)
+        logger.info("Job processing completed", job_id=job_id, result=result)
+        return result
 
     except Exception as e:
         logger.error("Job processing failed", job_id=job_id, error=str(e))
@@ -142,9 +135,8 @@ def process_ingest_job(self, job_id: str) -> Dict[str, Any]:
 
 
 @celery_app.task(name="app.worker.cleanup_old_jobs")
-def cleanup_old_jobs() -> Dict[str, Any]:
-    """
-    Clean up old completed and failed jobs.
+def cleanup_old_jobs() -> dict[str, Any]:
+    """Clean up old completed and failed jobs.
 
     Returns:
         Dict[str, Any]: Cleanup result
@@ -216,9 +208,8 @@ def cleanup_old_jobs() -> Dict[str, Any]:
 
 
 @celery_app.task(name="app.worker.health_check_task")
-def health_check_task() -> Dict[str, Any]:
-    """
-    Periodic health check task.
+def health_check_task() -> dict[str, Any]:
+    """Periodic health check task.
 
     Returns:
         Dict[str, Any]: Health check result
@@ -267,9 +258,8 @@ def health_check_task() -> Dict[str, Any]:
 
 
 @celery_app.task(name="app.worker.reprocess_failed_jobs")
-def reprocess_failed_jobs(max_retries: int = 3) -> Dict[str, Any]:
-    """
-    Reprocess failed jobs that might be recoverable.
+def reprocess_failed_jobs(max_retries: int = 3) -> dict[str, Any]:
+    """Reprocess failed jobs that might be recoverable.
 
     Args:
         max_retries: Maximum number of retries for a job
@@ -345,9 +335,8 @@ def reprocess_failed_jobs(max_retries: int = 3) -> Dict[str, Any]:
 
 
 @celery_app.task(name="app.worker.update_job_metrics")
-def update_job_metrics() -> Dict[str, Any]:
-    """
-    Update job processing metrics.
+def update_job_metrics() -> dict[str, Any]:
+    """Update job processing metrics.
 
     Returns:
         Dict[str, Any]: Metrics update result

@@ -1,6 +1,6 @@
 """Knowledge service for context retrieval."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import httpx
 import structlog
@@ -9,6 +9,20 @@ from ..config import get_settings
 
 logger = structlog.get_logger(__name__)
 settings = get_settings()
+
+# Import circuit breaker functionality
+try:
+    from acp_ingest.app.resilience.circuit_breaker import CircuitBreakerError, circuit_breaker
+except ImportError:
+    # Fallback if circuit breaker is not available
+    def circuit_breaker(name, **kwargs):
+        def decorator(func):
+            return func
+
+        return decorator
+
+    class CircuitBreakerError(Exception):
+        pass
 
 
 class KnowledgeReference:
@@ -20,7 +34,7 @@ class KnowledgeReference:
         content: str,
         source: str,
         relevance_score: float,
-        metadata: Dict[str, Any],
+        metadata: dict[str, Any],
     ):
         self.chunk_id = chunk_id
         self.content = content
@@ -60,9 +74,15 @@ class KnowledgeService:
             self.logger.error("Knowledge service initialization failed", error=str(e))
             return False
 
+    @circuit_breaker(
+        name="knowledge_search",
+        failure_threshold=3,
+        recovery_timeout=30,
+        expected_exception=(httpx.HTTPError, httpx.TimeoutException, httpx.ConnectError),
+    )
     async def search(
-        self, query: str, limit: int = 10, filters: Optional[Dict[str, Any]] = None
-    ) -> List[KnowledgeReference]:
+        self, query: str, limit: int = 10, filters: Optional[dict[str, Any]] = None
+    ) -> list[KnowledgeReference]:
         """Search knowledge base.
 
         Args:
@@ -115,6 +135,12 @@ class KnowledgeService:
             self.logger.error("Unexpected error in knowledge search", error=str(e))
             raise
 
+    @circuit_breaker(
+        name="knowledge_get_chunk",
+        failure_threshold=3,
+        recovery_timeout=30,
+        expected_exception=(httpx.HTTPError, httpx.TimeoutException, httpx.ConnectError),
+    )
     async def get_chunk(self, chunk_id: str) -> Optional[KnowledgeReference]:
         """Get specific knowledge chunk.
 
@@ -152,7 +178,7 @@ class KnowledgeService:
             self.logger.error("Failed to get knowledge chunk", chunk_id=chunk_id, error=str(e))
             return None
 
-    async def get_related_chunks(self, chunk_id: str, limit: int = 5) -> List[KnowledgeReference]:
+    async def get_related_chunks(self, chunk_id: str, limit: int = 5) -> list[KnowledgeReference]:
         """Get chunks related to a specific chunk.
 
         Args:
@@ -179,6 +205,12 @@ class KnowledgeService:
             self.logger.error("Failed to get related chunks", chunk_id=chunk_id, error=str(e))
             return []
 
+    @circuit_breaker(
+        name="knowledge_health_check",
+        failure_threshold=2,
+        recovery_timeout=15,
+        expected_exception=(httpx.HTTPError, httpx.TimeoutException, httpx.ConnectError),
+    )
     async def health_check(self) -> bool:
         """Check knowledge service health.
 
