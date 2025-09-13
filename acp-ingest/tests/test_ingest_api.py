@@ -66,7 +66,7 @@ def test_get_job_status(test_client: TestClient, db_session: Session):
     db_session.add(job)
     db_session.commit()
 
-    response = test_client.get(f"/api/v1/ingest/jobs/{job.id}")
+    response = test_client.get(f"/api/v1/ingest/status/{job.id}")
 
     assert response.status_code == 200
     data = response.json()
