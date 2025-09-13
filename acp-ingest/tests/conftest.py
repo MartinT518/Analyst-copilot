@@ -18,8 +18,8 @@ def mock_auth(monkeypatch):
     """Mock authentication for all tests."""
     # Mock the auth service to bypass real authentication
     monkeypatch.setattr(
-        "app.services.auth_service.verify_token",
-        lambda *a, **kw: {"user_id": "test-user", "username": "test-user"},
+        "app.services.auth_service.auth_service.verify_token",
+        lambda *a, **kw: {"sub": "test-user", "user_id": "test-user"},
     )
     monkeypatch.setattr(
         "app.services.auth_service.get_current_user",
@@ -87,9 +87,8 @@ def test_settings():
 @pytest.fixture(scope="function")
 def test_client():
     """Create a test client for API testing."""
-    from fastapi.testclient import TestClient
-
     # Import the real app to get all routers and middleware
     from app.main import app
+    from fastapi.testclient import TestClient
 
     return TestClient(app)
