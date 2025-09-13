@@ -162,8 +162,6 @@ def setup_logging(
                 logger.addHandler(file_handler)
             except (PermissionError, OSError) as e:
                 # Fall back to console logging if file logging fails
-                import structlog
-
                 logger = structlog.get_logger(__name__)
                 logger.warning(
                     "Failed to setup file logging, falling back to console", error=str(e)
