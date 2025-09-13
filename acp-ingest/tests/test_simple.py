@@ -1,6 +1,7 @@
 """Simple tests to verify basic functionality."""
 
 import os
+
 import pytest
 
 # Set test environment variables before any imports
@@ -68,7 +69,7 @@ class TestLogging:
 
     def test_logging_setup(self):
         """Test that logging can be set up."""
-        from app.observability.logging import setup_logging, get_logger
+        from app.observability.logging import get_logger, setup_logging
 
         setup_logging(
             service_name="test-service",
