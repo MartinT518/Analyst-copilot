@@ -157,7 +157,7 @@ async def request_logging_middleware(request: Request, call_next):
     request.state.correlation_id = correlation_id
 
     # Process request
-    response = call_next(request)
+    response = await call_next(request)
 
     # Log request completion
     duration_ms = (time.time() - start_time) * 1000

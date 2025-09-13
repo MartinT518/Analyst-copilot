@@ -14,8 +14,6 @@ from app.resilience.dead_letter_queue import DeadLetterQueue, JobStatus
 from app.resilience.retry import RetryConfig, RetryManager
 from app.security_config import SecurityConfig
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 
 class TestSecurityConfig:
@@ -235,14 +233,6 @@ class TestResilience:
     def test_dead_letter_queue(self):
         """Test dead letter queue functionality."""
         # Use in-memory SQLite for testing
-        engine = create_engine("sqlite:///:memory:")
-        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-        # Create tables
-        from app.resilience.dead_letter_queue import Base
-
-        Base.metadata.create_all(bind=engine)
-
         dlq = DeadLetterQueue("sqlite:///:memory:")
 
         # Test adding failed job
