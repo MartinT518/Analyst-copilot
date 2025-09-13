@@ -49,5 +49,3 @@ While not recommended for production, you can also deploy the Analyst Copilot ma
    ```bash
    celery -A app.worker.celery_app worker -l info
    ```
-
-

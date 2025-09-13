@@ -63,5 +63,3 @@ sequenceDiagram
 - **Messaging**: Redis, Celery
 - **Frontend**: (To be determined)
 - **Deployment**: Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker, Docker Compose
-
-

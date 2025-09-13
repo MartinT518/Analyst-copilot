@@ -40,14 +40,38 @@ cd analyst-copilot
 
 2. Copy and configure environment variables:
 ```bash
-cp config/env.example config/.env
-# Edit config/.env with your local endpoints and credentials
+cp env.example .env
+# Edit .env with your local endpoints and credentials
 ```
 
-3. Start the development environment:
+3. **IMPORTANT**: Configure secure secrets in `.env`:
+```bash
+# These MUST be set - system will fail to start without them
+SECRET_KEY=your-secure-secret-key-change-this-in-production
+JWT_SECRET_KEY=your-jwt-secret-key-change-this-in-production
+ENCRYPTION_KEY=your-encryption-key-change-this-in-production
+
+# OAuth2 configuration (required for authentication)
+OAUTH2_CLIENT_ID=your-oauth2-client-id
+OAUTH2_CLIENT_SECRET=your-oauth2-client-secret
+OAUTH2_AUTHORIZATION_URL=https://your-auth-provider.com/oauth/authorize
+OAUTH2_TOKEN_URL=https://your-auth-provider.com/oauth/token
+OAUTH2_USERINFO_URL=https://your-auth-provider.com/oauth/userinfo
+OAUTH2_REDIRECT_URI=http://localhost:3000/auth/callback
+```
+
+4. Start the development environment:
 ```bash
 docker-compose up -d
 ```
+
+5. **Create initial admin user** (first time only):
+```bash
+cd acp-ingest
+python scripts/bootstrap_admin.py
+```
+
+6. **Security Note**: Change the admin password immediately after first login!
 
 4. Install CLI tool:
 ```bash
@@ -91,6 +115,52 @@ Once running, visit `http://localhost:8000/docs` for interactive API documentati
 
 ## Development
 
+### Pre-commit Hooks Setup
+
+To ensure consistent code quality and formatting, we use pre-commit hooks. Set them up once:
+
+```bash
+# Install pre-commit
+pip install pre-commit
+
+# Install the git hook scripts
+pre-commit install
+
+# Optional: Run against all files
+pre-commit run --all-files
+```
+
+The pre-commit hooks will automatically:
+- Format code with Black
+- Sort imports with isort
+- Lint with flake8
+- Run security scans with Bandit
+- Check for common issues (trailing whitespace, large files, etc.)
+
+### Development Workflow
+
+1. **Clone and setup**:
+```bash
+git clone <repository-url>
+cd Analyst-copilot
+pip install -r acp-ingest/requirements.txt
+pre-commit install
+```
+
+2. **Make changes** and commit:
+```bash
+git add .
+git commit -m "Your commit message"
+# Pre-commit hooks run automatically
+```
+
+3. **If hooks fail**, fix the issues and commit again:
+```bash
+# Hooks will auto-fix formatting issues
+git add .
+git commit -m "Fix formatting issues"
+```
+
 See [Development Guide](docs/development.md) for detailed development instructions.
 
 ## Deployment
@@ -100,4 +170,3 @@ See [Deployment Guide](docs/deployment.md) for production deployment instruction
 ## License
 
 [Your License Here]
-

@@ -77,5 +77,3 @@ Now that you have successfully set up the Analyst Copilot and performed your fir
 - **Search your data:** Use the `/api/v1/search` endpoint to perform semantic searches on your ingested data.
 - **Explore the API:** Check out the API documentation at `http://localhost:8000/docs` for a complete list of available endpoints.
 - **Customize the system:** Learn how to extend the system with your own parsers and services in the [Architecture](./architecture.md) documentation.
-
-

@@ -1,9 +1,12 @@
 """Setup script for ACP Ingest CLI."""
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
+try:
+    with open("README.md", "r", encoding="utf-8") as fh:
+        long_description = fh.read()
+except FileNotFoundError:
+    long_description = "On-premises AI-powered analysis system for processing exported data"
 
 setup(
     name="acp-ingest",
@@ -30,7 +33,7 @@ setup(
         "click==8.1.7",
         "rich==13.7.0",
         "httpx==0.25.2",
-        "pydantic==2.5.0",
+        "pydantic==2.9.2",
     ],
     entry_points={
         "console_scripts": [
@@ -42,4 +45,3 @@ setup(
         "app": ["*.py"],
     },
 )
-

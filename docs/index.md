@@ -16,5 +16,3 @@ This documentation provides a comprehensive guide to setting up, configuring, an
 - [Troubleshooting](./troubleshooting.md)
 - [Contributing](./contributing.md)
 - [License](./license.md)
-
-

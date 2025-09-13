@@ -35,5 +35,3 @@ All new features should be documented in the appropriate section of the document
 ```bash
 (cd docs && mkdocs build)
 ```
-
-

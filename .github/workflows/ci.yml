@@ -1,0 +1,414 @@
+name: CI Pipeline (Optimized)
+
+on:
+  push:
+    branches: [master, develop, "feature/*"]
+  pull_request:
+    branches: [master, develop]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Job 1: Dependency Validation
+  validate-dependencies:
+    name: Validate Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install pip-tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-tools
+
+      - name: Validate all dependencies exist on PyPI
+        run: |
+          echo "🔍 Validating dependencies in requirements.in and requirements-dev.in..."
+          python scripts/validate_dependencies.py
+
+      - name: Validate each package individually with pip index versions
+        run: |
+          echo "🔍 Validating each package individually..."
+          # Use our validation script which properly extracts package names
+          python scripts/validate_dependencies.py --individual-check
+
+      - name: Verify pip-compile works without errors
+        run: |
+          echo "🔧 Testing pip-compile compilation..."
+          pip-compile --dry-run requirements.in
+          pip-compile --dry-run requirements-dev.in
+
+  # Job 2: Code Quality and Linting
+  lint-and-format:
+    name: Lint and Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-lint-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-lint-
+            ${{ runner.os }}-pip-
+
+      - name: Install linting dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Clear pip cache if it exists to avoid corrupted cache issues
+          pip cache purge || true
+          pip install --only-binary=:all: --cache-dir ~/.cache/pip -r requirements-dev.txt
+
+      - name: Validate dependencies with pip check
+        run: |
+          pip check
+
+      - name: Check code formatting with Black
+        run: |
+          black --check --diff .
+
+      - name: Check import sorting with isort
+        run: |
+          isort --check-only --diff .
+
+      - name: Lint with flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+
+      - name: Type check with mypy
+        run: |
+          # Run mypy on each service separately to avoid module conflicts
+          if [ -d "acp-ingest" ]; then
+            echo "Running mypy on acp-ingest..."
+            mypy --config-file mypy.ini --ignore-missing-imports acp-ingest/ || true
+          fi
+          if [ -d "acp-agents" ]; then
+            echo "Running mypy on acp-agents..."
+            mypy --config-file mypy.ini --ignore-missing-imports acp-agents/ || true
+          fi
+          if [ -d "acp-code-analyzer" ]; then
+            echo "Running mypy on acp-code-analyzer..."
+            mypy --config-file mypy.ini --ignore-missing-imports acp-code-analyzer/ || true
+          fi
+          if [ -d "acp-improvement" ]; then
+            echo "Running mypy on acp-improvement..."
+            mypy --config-file mypy.ini --ignore-missing-imports acp-improvement/ || true
+          fi
+
+  # Job 2: Security Scanning
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-security-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-security-
+            ${{ runner.os }}-pip-
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/lib/python3.11/site-packages
+          key: ${{ runner.os }}-pip-packages-security-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-packages-security-
+            ${{ runner.os }}-pip-packages-
+
+      - name: Install security scanning tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install --cache-dir ~/.cache/pip -r requirements-dev.txt
+
+      - name: Validate dependencies with pip check
+        run: |
+          pip check
+
+      - name: Run Bandit security scan
+        run: |
+          bandit -r . -f json -o bandit-report.json || true
+          bandit -r . --severity-level medium
+
+      - name: Run pip-audit for dependency vulnerabilities
+        run: |
+          pip-audit -r requirements.txt
+
+      - name: Run Safety check
+        run: |
+          safety check -r requirements.txt
+
+      - name: Upload Bandit results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-results
+          path: bandit-report.json
+
+  # Job 3: Test Matrix (Optimized)
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"] # Reduced to single version for speed
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: acp_password
+          POSTGRES_USER: acp_user
+          POSTGRES_DB: acp_test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ matrix.python-version }}-
+            ${{ runner.os }}-pip-
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/lib/python${{ matrix.python-version }}/site-packages
+          key: ${{ runner.os }}-pip-packages-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-packages-${{ matrix.python-version }}-
+            ${{ runner.os }}-pip-packages-
+
+      - name: Cache pytest cache
+        uses: actions/cache@v4
+        with:
+          path: .pytest_cache
+          key: ${{ runner.os }}-pytest-${{ matrix.python-version }}-${{ hashFiles('**/test_*.py', '**/*_test.py', '**/conftest.py') }}
+          restore-keys: |
+            ${{ runner.os }}-pytest-${{ matrix.python-version }}-
+            ${{ runner.os }}-pytest-
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Clear pip cache to avoid corrupted cache from failed builds
+          pip cache purge || true
+          pip install --only-binary=:all: --cache-dir ~/.cache/pip -r requirements-dev.txt
+
+          # Install services in editable mode for proper imports
+          if [ -f acp-ingest/setup.py ]; then
+            pip install -e ./acp-ingest
+          fi
+          if [ -f acp-agents/setup.py ]; then
+            pip install -e ./acp-agents
+          fi
+          if [ -f acp-code-analyzer/setup.py ]; then
+            pip install -e ./acp-code-analyzer
+          fi
+          if [ -f acp-improvement/setup.py ]; then
+            pip install -e ./acp-improvement
+          fi
+
+      - name: Validate dependencies with pip check
+        run: |
+          pip check
+
+      - name: Set up test environment
+        env:
+          DATABASE_URL: postgresql://acp_user:acp_password@localhost:5432/acp_test_db
+          REDIS_URL: redis://localhost:6379/0
+          TESTING: true
+          USE_SQLITE_FOR_TESTS: "true"
+        run: |
+          # Create test databases
+          PGPASSWORD=acp_password createdb -h localhost -U acp_user acp_ingest_test || true
+          PGPASSWORD=acp_password createdb -h localhost -U acp_user acp_agents_test || true
+
+      - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql://acp_user:acp_password@localhost:5432/acp_test_db
+          REDIS_URL: redis://localhost:6379/0
+          TESTING: true
+          USE_SQLITE_FOR_TESTS: "true"
+          COVERAGE_THRESHOLD: 80
+        run: |
+          # Run tests for each service with caching
+          coverage run --source=. -m pytest -v --tb=short --cache-clear
+
+          # Generate coverage report
+          coverage report --fail-under=$COVERAGE_THRESHOLD
+          coverage xml
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+          flags: unittests
+
+  # Job 4: CLI Tests (Optimized)
+  cli-tests:
+    name: CLI Tests
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-cli-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-cli-
+            ${{ runner.os }}-pip-
+
+      - name: Install CLI dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install --cache-dir ~/.cache/pip -r requirements-dev.txt
+          pip install -e ./acp-cli
+
+      - name: Validate dependencies with pip check
+        run: |
+          pip check
+
+      - name: Test CLI installation
+        run: |
+          acp --help
+          acp version
+
+      - name: Run CLI tests
+        run: |
+          cd acp-cli && python -m pytest tests/ -v --cache-clear
+
+  # Job 5: Docker Build (Optimized)
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, security-scan]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Dockerfile', '**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build acp-ingest image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./acp-ingest
+          push: false
+          tags: acp-ingest:test
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Build acp-agents image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./acp-agents
+          push: false
+          tags: acp-agents:test
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Test Docker images
+        run: |
+          # Test that images can start
+          docker run --rm acp-ingest:test python -c "import app; print('acp-ingest OK')"
+          docker run --rm acp-agents:test python -c "print('acp-agents OK')"
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  # Job 6: All Checks (Final validation)
+  all-checks:
+    name: All Checks Passed
+    runs-on: ubuntu-latest
+    needs: [lint-and-format, security-scan, test, cli-tests, docker-build]
+    if: always()
+    steps:
+      - name: Check all jobs
+        run: |
+          if [[ "${{ needs.lint-and-format.result }}" != "success" ||
+                "${{ needs.security-scan.result }}" != "success" ||
+                "${{ needs.test.result }}" != "success" ||
+                "${{ needs.cli-tests.result }}" != "success" ||
+                "${{ needs.docker-build.result }}" != "success" ]]; then
+            echo "One or more jobs failed"
+            exit 1
+          fi
+          echo "All checks passed successfully!"

@@ -1,0 +1,10 @@
+exclude_dirs:
+  - tests
+  - venv
+  - .venv
+  - .git
+skips:
+  - B105
+  - B106
+severity: MEDIUM
+confidence: MEDIUM
