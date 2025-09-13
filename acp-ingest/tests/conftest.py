@@ -46,3 +46,12 @@ def db_session():
 def test_settings():
     """Get test settings."""
     return settings
+
+
+@pytest.fixture(scope="function")
+def test_client():
+    """Create a test client for API testing."""
+    from app.main import app
+    from fastapi.testclient import TestClient
+
+    return TestClient(app)
