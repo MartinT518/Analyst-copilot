@@ -89,7 +89,7 @@ jobs:
 
       - name: Check import sorting and linting with Ruff
         run: |
-          ruff check --fix .
+          ruff check .
 
       - name: Type check with mypy
         run: |
