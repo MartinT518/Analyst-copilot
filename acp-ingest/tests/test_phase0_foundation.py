@@ -268,10 +268,9 @@ class TestIntegration:
     @pytest.fixture
     def client(self):
         """Create test client."""
-        from fastapi.testclient import TestClient
-
         # Import the real app to get all routers and middleware
         from app.main import app
+        from fastapi.testclient import TestClient
 
         return TestClient(app)
 
